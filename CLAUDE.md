@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-EduCanvas is a student management system for educational institutions (hakwon/academy). It's built with Next.js 15, React 19, and Supabase, focusing on RBAC (Role-Based Access Control), drag-and-drop class management, and high-performance handling of large datasets.
+EduCanvas is a revolutionary student management system for educational institutions (hakwon/academy), featuring the industry's first drag-and-drop class management interface (ClassFlow). Built with Next.js 15, React 19, and Supabase, it focuses on intuitive UI/UX, enterprise-grade RBAC, and high-performance handling of large datasets.
+
+**Current Phase**: Ready for MVP development (Week 1/10 of development plan)  
+**Key Innovation**: ClassFlow - drag-and-drop student management with 60fps performance  
+**Target**: 10-week MVP completion timeline (2025-08-12 ~ 2025-10-17)
 
 ## Development Commands
 
@@ -70,20 +74,29 @@ The project uses TypeScript path aliases configured in tsconfig.json:
 
 ## Database & API Architecture
 
-- **Database**: Supabase PostgreSQL with Row Level Security (RLS)
-- **Authentication**: Supabase Auth with RBAC
-- **API**: Next.js App Router API routes + Supabase client-side queries
-- **Real-time**: Supabase real-time subscriptions for live updates
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) - **Schema v2.0**
+- **Authentication**: Supabase Auth with comprehensive RBAC (admin/instructor/staff/viewer)
+- **API**: RESTful API with Next.js App Router + Supabase client-side queries
+- **Real-time**: Supabase real-time subscriptions for ClassFlow and live updates
+- **Complex Systems**: Advanced billing types (5 types) and salary policies (7 types)
 
-Key entities: Students, Classes, Users with role-based permissions.
+**Schema v2.0 Key Features**:
+- 5 billing types: monthly, sessions, hours, package, drop_in
+- 7 salary policy types: fixed_monthly, fixed_hourly, commission, tiered_commission, etc.
+- Automatic enrollment usage tracking and salary calculations
+- Complete discount policy management system
+
+Key entities: Students, Classes, Users, Course Packages, Student Enrollments, Salary Policies.
 
 ## State Management Pattern
 
 Uses Zustand for state management with separate stores for different domains:
-- `studentsStore.ts` - Student data and operations
-- `classesStore.ts` - Class/group management
-- `useAuthStore.ts` - Authentication state
-- `useModalStore.ts` - Modal/dialog state
+- `classflowStore.ts` - Drag-and-drop state and student movement operations (핵심)
+- `studentsStore.ts` - Student data management and CRUD operations  
+- `classesStore.ts` - Class/group management and statistics
+- `useAuthStore.ts` - Authentication state and user permissions
+- `useModalStore.ts` - Modal/dialog state management
+- `paymentsStore.ts` - Enrollment and payment data management
 
 ## Design System
 
@@ -114,13 +127,37 @@ Required environment variables:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-## Project Management
+## Comprehensive Documentation
 
-The project follows an organized approach with documentation in `/project/`:
-- `OVERVIEW.md` - Project goals and structure
-- `ROADMAP.md` - Development timeline
-- `SPRINTS/` - Sprint planning and tracking
-- `TASKS/` - Individual task management
-- `DECISIONS/` - Architecture Decision Records (ADRs)
+**⚠️ IMPORTANT**: Complete zero-base project reorganization completed on 2025-08-08. All documentation updated to reflect schema v2.0 and MVP focus.
 
-Current focus: P0 features (RBAC, drag-and-drop class management, transaction APIs) with emphasis on performance and stability.
+### Core Documentation (`/docs/`)
+- `database_design.md` - **v2.0** Complete database schema documentation (schema_v2.sql 기반)
+- `기능요구서.md` - **v2.0** MVP-focused feature requirements (P0 only)  
+- `development_plan.md` - **NEW** Complete 10-week MVP development roadmap
+- `api_specification.md` - **NEW** Comprehensive RESTful API documentation
+- `database_schema_v2.sql` - Production-ready database schema
+
+### Template Files (`/project/`)
+- `BACKLOG.md` - Task backlog template
+- `ROADMAP.md` - High-level roadmap template
+- **Note**: These are templates and not directly related to current project
+
+### Archived Documentation (`/docs/archive/`)
+- Outdated v1.0 documents moved here during reorganization
+- Previous competitor analysis and planning documents
+
+## Current Development Status
+
+**Phase**: MVP Development Ready (Post-reorganization)  
+**Timeline**: Week 1/10 (2025-08-12 ~ 2025-10-17)  
+**Next Steps**: Begin Phase 1 infrastructure development as per development_plan.md
+
+**P0 MVP Features (10-week timeline)**:
+1. **ClassFlow** (3주) - 드래그앤드롭 학생 관리 (킬러 기능)
+2. **학생 관리** (2주) - CRUD, 출결, 상태 관리
+3. **강사 관리** (1주) - 기본 정보, 반 배정, 급여 정책  
+4. **결제 관리** (3주) - 복합 수강권 시스템 (schema_v2 기반)
+5. **권한 관리** (1주) - RBAC 완전 구현
+
+**Success Criteria**: ClassFlow 60fps + 1000+ students + WCAG 2.1 AA + 99.9% uptime
