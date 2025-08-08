@@ -1,0 +1,57 @@
+name: "🚀 GitHub Projects 초기 설정"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Priority Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: "P0", color: "d73a4a", description: "반드시 이번 스프린트 완료" },
+              { name: "P1", color: "fbca04", description: "이번 스프린트 권장" },
+              { name: "P2", color: "0e8a16", description: "후순위" },
+              { name: "feature", color: "0052cc", description: "신규 기능" },
+              { name: "bug", color: "d73a4a", description: "버그" }
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label
+                });
+                core.info(`✅ Created label: ${label.name}`);
+              } catch (error) {
+                if (error.status === 422) {
+                  core.info(`ℹ️ Label already exists: ${label.name}`);
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+      - name: Create Project (If not exists)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const projectName = "Development Board";
+            const { data: projects } = await github.rest.projects.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            if (!projects.find(p => p.name === projectName)) {
+              await github.rest.projects.createForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: projectName,
+                body: "개발 작업 관리용 칸반 보드"
+              });
+              core.info(`✅ Created Project: ${projectName}`);
+            } else {
+              core.info(`ℹ️ Project already exists: ${projectName}`);
+            }

@@ -1,0 +1,92 @@
+name: "💻 개발 작업"
+description: "기능 개발, 버그 수정, 성능 최적화 등 모든 개발 관련 이슈 템플릿"
+title: "[Feature] "
+labels:
+  - "feature"
+assignees: []
+
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "우선순위"
+      description: "이 작업의 우선순위를 선택하세요."
+      options:
+        - P0 - 반드시 이번 스프린트 완료
+        - P1 - 이번 스프린트 권장
+        - P2 - 후순위
+    validations:
+      required: true
+
+  - type: input
+    id: epic
+    attributes:
+      label: "Epic/기능 그룹"
+      description: "이 작업이 속하는 Epic(상위 기능) 또는 기능 그룹명"
+      placeholder: "예: 인증/RBAC, 반 박스 UI, 분석 대시보드"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "작업 요약"
+      description: "이 작업의 목적과 개요를 간략히 설명하세요."
+      placeholder: |
+        예) 학생 반 이동 시 Optimistic UI 적용 및 롤백 처리
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: "작업 상세"
+      description: "구체적인 구현 내용, API, UI 변경 사항을 작성하세요."
+      placeholder: |
+        - API: POST /enrollments/move
+        - DnD 키보드/터치 지원
+        - position_in_class 재정렬
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "수용 기준 (DoD)"
+      description: "완료로 인정받기 위한 조건을 작성하세요."
+      placeholder: |
+        - API 성공 시 UI 즉시 반영
+        - 실패 시 상태 롤백 + 토스트 알림
+        - 접근성 점수 ≥ 90
+    validations:
+      required: true
+
+  - type: textarea
+    id: testcases
+    attributes:
+      label: "테스트 시나리오"
+      description: "QA 또는 개발자가 재현할 수 있는 테스트 절차를 작성하세요."
+      placeholder: |
+        1. 반 박스에서 학생을 다른 반으로 드래그
+        2. 네트워크 차단 → 롤백 확인
+        3. 키보드로 이동 가능 여부 확인
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "의존성"
+      description: "이 작업 전에 완료되어야 할 이슈나 기능"
+      placeholder: "예: #12 API 서버 엔드포인트 구현"
+    validations:
+      required: false
+
+  - type: input
+    id: estimate
+    attributes:
+      label: "예상 공수"
+      description: "이 작업에 필요한 예상 시간"
+      placeholder: "예: 1.5d"
+    validations:
+      required: false
