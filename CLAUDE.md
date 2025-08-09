@@ -109,39 +109,152 @@ Custom design system built on TailwindCSS with:
 
 ## Development Guidelines
 
+### Code Quality Standards 🏆
+**MANDATORY**: All code MUST follow the comprehensive `/docs/coding-standards.md` - enterprise-grade development guidelines covering:
+
+**Core Requirements**:
+- **TypeScript Strict Mode**: No `any`, complete type coverage, strict null checks
+- **React Performance**: memo(), useCallback(), useMemo() mandatory for ClassFlow components
+- **60fps ClassFlow Guarantee**: Virtualization, batch updates, optimized reconciliation
+- **WCAG 2.1 AA Compliance**: Keyboard navigation, screen readers, color contrast
+- **Test Coverage 80%+**: Unit, integration, E2E tests for all features
+- **Error Handling**: Try-catch blocks, custom error types, Sentry integration
+- **Code Review**: Mandatory PR reviews, automated quality checks
+
 ### Performance Requirements
 - Support 10,000+ student records with virtualization
-- Maintain 50+ FPS during drag-and-drop operations
-- Use react-window for large data sets
+- Maintain 60+ FPS during drag-and-drop operations (ClassFlow)
+- Use react-window for large data sets (1000+ items)
+- Bundle size < 500KB per chunk
+- Memory usage < 50MB peak
 
-### Code Patterns
-- Feature-based folder structure
-- Custom hooks for business logic
-- Zustand stores for state management
-- Zod schemas for validation
-- Error boundaries with Sentry integration
+### Mandatory Code Patterns 
+**CRITICAL**: Follow these patterns exactly as specified in `/docs/coding-standards.md`:
 
-### Environment Variables
-Required environment variables:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+```typescript
+// ✅ Required React Component Pattern
+const StudentCard = memo<StudentCardProps>(({ student, onUpdate }) => {
+  // 1. Hooks (order matters)
+  const { isLoading, error } = useStudentData(student.id);
+  const handleClick = useCallback(() => onUpdate(student), [student, onUpdate]);
+  const memoizedData = useMemo(() => computeExpensive(student), [student]);
+  
+  // 2. Early returns for loading/error states
+  if (isLoading) return <SkeletonCard />;
+  if (error) return <ErrorCard error={error} />;
+  
+  // 3. Main render
+  return (
+    <Card role="button" tabIndex={0} onClick={handleClick}>
+      {memoizedData.display}
+    </Card>
+  );
+});
+StudentCard.displayName = 'StudentCard';
+
+// ✅ Required Zustand Store Pattern 
+const useStudentsStore = create<StudentsState>()((set, get) => ({
+  students: [],
+  loading: false,
+  error: null,
+  actions: {
+    updateStudent: (id: string, updates: Partial<Student>) =>
+      set(produce(draft => {
+        const index = draft.students.findIndex(s => s.id === id);
+        if (index !== -1) Object.assign(draft.students[index], updates);
+      })),
+  },
+}));
+```
+
+### File Naming & Organization Standards
+**STRICT ENFORCEMENT**: Follow exact naming conventions from `/docs/coding-standards.md`:
+- **React Components**: `PascalCase.tsx` (`StudentCard.tsx`, `ClassFlowPanel.tsx`)
+- **Custom Hooks**: `camelCase.ts` with `use` prefix (`useStudentData.ts`, `useClassFlow.ts`)
+- **Utility Functions**: `camelCase.ts` (`formatDate.ts`, `validateEmail.ts`)
+- **Type Definitions**: `PascalCase.types.ts` (`Student.types.ts`, `ClassFlow.types.ts`)
+- **Constants**: `UPPER_SNAKE_CASE.ts` (`API_ENDPOINTS.ts`, `PERFORMANCE_THRESHOLDS.ts`)
+- **Stores**: `camelCaseStore.ts` (`studentsStore.ts`, `classflowStore.ts`)
+- **API Routes**: `kebab-case` (`/api/student-enrollment`, `/api/class-schedule`)
+
+### Testing Standards (80%+ Coverage Required)
+**MANDATORY TESTING**: Comprehensive test coverage as specified in `/docs/coding-standards.md`:
+- **Unit Tests**: 80%+ coverage for utilities, hooks, pure functions
+- **Component Tests**: React Testing Library for all interactive components
+- **Integration Tests**: API routes, database operations, user workflows
+- **E2E Tests**: Playwright for critical business processes (ClassFlow, payments)
+- **Performance Tests**: 60fps validation, memory usage, bundle size monitoring
+- **Accessibility Tests**: axe-core integration, keyboard navigation testing
+- **Test File Naming**: `Component.test.tsx`, `utils.test.ts`, `integration.test.ts`
+
+### Error Handling & Logging Standards
+**CRITICAL RELIABILITY**: Comprehensive error handling as specified in `/docs/coding-standards.md`:
+
+```typescript
+// ✅ Required Error Boundary Pattern
+<ErrorBoundary
+  fallback={<ClassFlowErrorFallback />}
+  onError={(error, errorInfo) => Sentry.captureException(error, { extra: errorInfo })}
+>
+  <ClassFlowPanel />
+</ErrorBoundary>
+
+// ✅ Required API Error Handling with Type Safety
+try {
+  const result = await supabase.from('students').select();
+  if (result.error) throw new DatabaseError(result.error.message);
+  return result.data;
+} catch (error) {
+  if (error instanceof DatabaseError) {
+    toast.error('Database connection failed');
+    logger.error('Database error', { error, context: 'student-fetch' });
+  }
+  Sentry.captureException(error, { tags: { component: 'StudentList' } });
+  throw error;
+}
+
+// ✅ Required Custom Error Types
+class ClassFlowError extends Error {
+  constructor(message: string, public code: string, public retryable = false) {
+    super(message);
+    this.name = 'ClassFlowError';
+  }
+}
+```
+
+### Environment Variables & Security
+**MANDATORY SECURITY**: Environment configuration as per `/docs/coding-standards.md`:
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Public anon key
+- `SUPABASE_SERVICE_ROLE_KEY` - Server-side operations (NEVER expose to client)
+- `SENTRY_DSN` - Error tracking configuration
+- `NODE_ENV` - Environment detection (development/production)
+- `NEXTAUTH_SECRET` - Authentication encryption key
+- `NEXT_PUBLIC_APP_URL` - Application base URL for callbacks
 
 ## Comprehensive Documentation
 
 **⚠️ IMPORTANT**: Complete zero-base project reorganization completed on 2025-08-08. All documentation updated to reflect schema v2.0 and MVP focus.
 
 ### Core Documentation (`/docs/`)
+- `coding-standards.md` - **🏆 MANDATORY** Enterprise-grade development guidelines (TypeScript, React, Testing, Performance, Accessibility)
 - `database_design.md` - **v2.0** Complete database schema documentation (schema_v2.sql 기반)
 - `기능요구서.md` - **v2.0** MVP-focused feature requirements (P0 only)  
-- `development_plan.md` - **NEW** Complete 10-week MVP development roadmap
-- `api_specification.md` - **NEW** Comprehensive RESTful API documentation
-- `database_schema_v2.sql` - Production-ready database schema
+- `development_plan.md` - **v2.0** Complete 10-week MVP development roadmap
+- `api_specification.md` - **v2.0** Comprehensive RESTful API documentation
+- `database_schema_v2.sql` - Production-ready database schema (MVP)
+- `database_schema_v3.sql` - **NEW** Extended schema for Phase 4-10 features
+- `extended_roadmap.md` - **NEW** 3-year development roadmap (2025-2028)
+- `feature_priority_matrix.md` - **NEW** Feature prioritization analysis
+- `competitive_features_integration.md` - **NEW** Competitive feature integration strategy
 
-### Template Files (`/project/`)
-- `BACKLOG.md` - Task backlog template
-- `ROADMAP.md` - High-level roadmap template
-- **Note**: These are templates and not directly related to current project
+### Project Management (`/docs/project/`)
+- `BACKLOG.md` - **UPDATED** Comprehensive 150+ task backlog (MVP + 3-year expansion)
+- `ROADMAP.md` - **UPDATED** Integrated MVP + long-term roadmap
+- `OVERVIEW.md` - **UPDATED** Project overview with expanded vision
+- `TASKS/` - Individual development task specifications
+- `SPRINTS/` - Sprint planning and retrospectives
+- `DECISIONS/` - Architecture Decision Records (ADRs)
 
 ### Archived Documentation (`/docs/archive/`)
 - Outdated v1.0 documents moved here during reorganization
