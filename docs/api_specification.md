@@ -1,29 +1,29 @@
-# EduCanvas API 명세서 v3.0
+# EduCanvas API 명세서 v4.1
 
-**작성일**: 2025-08-08  
+**작성일**: 2025-08-10  
 **최종 업데이트**: 2025-08-10  
 **프로젝트**: EduCanvas 학원관리 시스템  
-**API 버전**: v3.0 (MVP + 확장 API)  
-**데이터베이스**: database_schema_v3.sql
+**API 버전**: v4.1 (멀티테넌트 + YouTube 통합)  
+**데이터베이스**: database_schema_v4.1_video_integrated.sql
 
 ---
 
 ## 📋 목차
 
 1. [API 개요](#1-api-개요)
-2. [인증 및 권한](#2-인증-및-권한)
-3. [MVP 핵심 API](#3-mvp-핵심-api)
-   - 3.1 [학생 관리 API](#31-학생-관리-api)
-   - 3.2 [클래스 관리 API](#32-클래스-관리-api)
+2. [멀티테넌트 인증 및 권한](#2-멀티테넌트-인증-및-권한)
+3. [MVP 핵심 API (v4.1)](#3-mvp-핵심-api-v41)
+   - 3.1 [테넌트 관리 API](#31-테넌트-관리-api)
+   - 3.2 [학생 관리 API](#32-학생-관리-api)
    - 3.3 [ClassFlow API](#33-classflow-api)
-   - 3.4 [결제 시스템 API](#34-결제-시스템-api)
-4. [확장 기능 API (v3.0)](#4-확장-기능-api-v30)
+   - 3.4 [YouTube 비디오 학습 API](#34-youtube-비디오-학습-api)
+   - 3.5 [결제 시스템 API](#35-결제-시스템-api)
+4. [확장 기능 API](#4-확장-기능-api)
    - 4.1 [교실 관리 API](#41-교실-관리-api)
    - 4.2 [시간표 관리 API](#42-시간표-관리-api)
    - 4.3 [성적 관리 API](#43-성적-관리-api)
    - 4.4 [문서 관리 API](#44-문서-관리-api)
-   - 4.5 [히스토리 추적 API](#45-히스토리-추적-api)
-   - 4.6 [상담 관리 API](#46-상담-관리-api)
+   - 4.5 [분석 및 리포트 API](#45-분석-및-리포트-api)
 5. [실시간 API](#5-실시간-api)
 6. [에러 처리](#6-에러-처리)
 7. [API 사용 예시](#7-api-사용-예시)
@@ -66,41 +66,51 @@ Rate Limiting: 1000 requests/hour per user
 └─────────────────────────────────────────────┘
 ```
 
-### 1.3 API 설계 원칙
+### 1.3 API 설계 원칙 (v4.1)
 - **RESTful**: HTTP 메서드와 상태 코드 표준 준수
+- **멀티테넌트**: 완전한 테넌트 데이터 격리
 - **일관성**: 동일한 응답 형식 및 에러 처리
-- **보안**: JWT 인증 + RLS 기반 권한 제어
+- **보안**: JWT 인증 + 멀티테넌트 RLS 기반 권한 제어
 - **성능**: 페이지네이션, 캐싱, 최적화된 쿼리
 - **확장성**: 버전 관리 및 하위 호환성
+- **실시간**: YouTube 진도 추적 및 WebSocket 지원
 
 ---
 
-## 2. 인증 및 권한
+## 2. 멀티테넌트 인증 및 권한
 
-### 2.1 인증 흐름
+### 2.1 멀티테넌트 인증 흐름 (v4.1)
 ```yaml
-JWT 기반 인증:
-  1. 로그인 요청 → Access Token 발급
-  2. API 요청 시 Authorization 헤더에 토큰 포함
-  3. 서버에서 토큰 검증 및 권한 확인
-  4. RLS를 통한 데이터 접근 제어
+멀티테넌트 JWT 기반 인증:
+  1. 테넌트 선택 + 로그인 요청 → Access Token 발급
+  2. API 요청 시 Authorization 헤더 + X-Tenant-ID 헤더 포함
+  3. 서버에서 토큰 검증 + 테넌트 멤버십 확인
+  4. RLS를 통한 테넌트별 데이터 접근 제어
 
 토큰 구조:
-  Access Token: 1시간 유효
+  Access Token: 1시간 유효 (테넌트 정보 포함)
   Refresh Token: 30일 유효
+  Tenant Context: JWT 클레임에 테넌트 정보 포함
   자동 갱신: 만료 10분 전 자동 갱신
+
+헤더 구조:
+  Authorization: Bearer <jwt_token>
+  X-Tenant-ID: <tenant_uuid>
+  X-Tenant-Subdomain: <subdomain>
 ```
 
-### 2.2 인증 API
+### 2.2 멀티테넌트 인증 API
 
-#### 로그인
+#### 테넌트별 로그인
 ```http
 POST /auth/login
 Content-Type: application/json
 
 {
   "email": "admin@example.com",
-  "password": "password123"
+  "password": "password123",
+  "tenant_id": "tenant-uuid-123",
+  "subdomain": "myacademy"
 }
 ```
 
@@ -112,10 +122,25 @@ Content-Type: application/json
     "user": {
       "id": "123e4567-e89b-12d3-a456-426614174000",
       "email": "admin@example.com",
-      "name": "관리자",
+      "name": "관리자"
+    },
+    "tenant_user": {
+      "tenant_id": "tenant-uuid-123",
       "role": "admin",
-      "avatar_url": null,
-      "last_login": "2025-08-08T10:30:00Z"
+      "permissions": {
+        "students": ["read", "write", "delete"],
+        "classes": ["read", "write", "delete"],
+        "videos": ["read", "write", "delete"],
+        "payments": ["read", "write"]
+      },
+      "status": "active"
+    },
+    "tenant": {
+      "id": "tenant-uuid-123",
+      "name": "마이아카데미",
+      "subdomain": "myacademy",
+      "subscription_tier": "pro",
+      "student_limit": 500
     },
     "session": {
       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -124,6 +149,37 @@ Content-Type: application/json
     }
   },
   "message": "로그인 성공"
+}
+```
+
+#### 사용자 테넌트 목록 조회
+```http
+GET /auth/tenants
+Authorization: Bearer <access_token>
+```
+
+**응답 (200 OK)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "tenant_id": "tenant-uuid-123",
+      "tenant_name": "마이아카데미",
+      "subdomain": "myacademy",
+      "role": "admin",
+      "status": "active",
+      "last_accessed": "2025-08-08T10:30:00Z"
+    },
+    {
+      "tenant_id": "tenant-uuid-456",
+      "tenant_name": "스마트학원",
+      "subdomain": "smart",
+      "role": "instructor",
+      "status": "active",
+      "last_accessed": "2025-08-07T15:20:00Z"
+    }
+  ]
 }
 ```
 
@@ -143,37 +199,92 @@ POST /auth/logout
 Authorization: Bearer <access_token>
 ```
 
-### 2.3 권한 체계 (RBAC)
+### 2.3 멀티테넌트 권한 체계 (RBAC) - v4.1
 ```yaml
-역할 계층:
-  admin: 모든 권한 (최고 권한)
-    ├── 사용자 관리
-    ├── 시스템 설정
-    └── 모든 데이터 접근
+테넌트별 역할 계층:
+  owner: 테넌트 소유자 (최고 권한)
+    ├── 테넌트 설정 관리
+    ├── 사용자 초대/제거
+    ├── 구독 및 결제 관리
+    ├── 모든 데이터 접근
+    └── YouTube API 설정
   
-  staff: 일반 업무 권한
+  admin: 테넌트 관리자
+    ├── 사용자 관리 (소유자 제외)
+    ├── 학생/클래스/강사 관리
+    ├── 비디오 학습 관리
+    ├── 결제 및 급여 관리
+    └── 분석 및 리포트
+  
+  instructor: 강사
+    ├── 담당 클래스만 접근
+    ├── 담당 학생 관리
+    ├── 비디오 배정 및 진도 확인
+    ├── 출결 및 성적 관리
+    └── 본인 급여 조회
+  
+  staff: 직원
     ├── 학생 관리 (등록/수정/조회)
     ├── 출결 관리
     ├── 결제 처리
     └── 상담 기록
   
-  instructor: 담당 클래스 권한
-    ├── 담당 학생만 조회/수정
-    ├── 담당 클래스 출결 관리
-    ├── 본인 급여 조회
-    └── 성적 입력
-  
-  viewer: 읽기 전용 권한
+  viewer: 조회 전용
     ├── 데이터 조회만 가능
     ├── 보고서 확인
     └── 수정/삭제 불가
+
+권한 매트릭스:
+  Resource     | Owner | Admin | Instructor | Staff | Viewer
+  -------------|-------|-------|------------|-------|--------
+  Tenants      |  ALL  |   -   |     -      |   -   |   -
+  Users        |  ALL  |  ALL  |     -      |   -   |   R
+  Students     |  ALL  |  ALL  |   ASSIGNED |  RW   |   R
+  Classes      |  ALL  |  ALL  |   ASSIGNED |   R   |   R
+  Videos       |  ALL  |  ALL  |   ASSIGNED |   -   |   R
+  Payments     |  ALL  |  ALL  |     -      |  RW   |   R
+  Reports      |  ALL  |  ALL  |     R      |   R   |   R
+  
+  ALL: 모든 권한, RW: 읽기/쓰기, R: 읽기만, ASSIGNED: 담당 항목만, -: 접근 불가
 ```
 
 ---
 
-## 3. 학생 관리 API
+## 3. MVP 핵심 API (v4.1)
 
-### 3.1 학생 목록 조회
+### 3.1 테넌트 관리 API
+
+#### 테넌트 생성 (SaaS 온보딩)
+```http
+POST /tenants
+Content-Type: application/json
+Authorization: Bearer <global_admin_token>
+
+{
+  "name": "마이아카데미",
+  "subdomain": "myacademy",
+  "owner_email": "owner@myacademy.com",
+  "subscription_tier": "pro"
+}
+```
+
+#### 테넌트 설정 조회
+```http
+GET /tenants/current
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+```
+
+#### 테넌트 사용량 통계
+```http
+GET /tenants/current/usage
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+```
+
+### 3.2 학생 관리 API
+
+#### 학생 목록 조회
 ```http
 GET /students?page=1&limit=20&class_id=<uuid>&status=active&search=김철수
 Authorization: Bearer <access_token>
@@ -551,6 +662,228 @@ Authorization: Bearer <access_token>
     {"student_id": "456e7890-e89b-12d3-a456-426614174001", "position": 2},
     {"student_id": "789e0123-e89b-12d3-a456-426614174002", "position": 3}
   ]
+}
+```
+
+---
+
+## 5.5. YouTube 비디오 학습 API (v4.1 신규)
+
+### 5.5.1 YouTube 비디오 추가
+```http
+POST /videos/youtube
+Content-Type: application/json
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+
+{
+  "youtube_id": "dQw4w9WgXcQ",
+  "category": "수학",
+  "tags": ["기초", "중등", "함수"],
+  "auto_assign_classes": ["class-uuid-1", "class-uuid-2"]
+}
+```
+
+**응답 (201 Created)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "video-uuid-123",
+    "tenant_id": "tenant-uuid-123",
+    "youtube_id": "dQw4w9WgXcQ",
+    "title": "중등 수학 기초 - 함수의 개념",
+    "description": "함수의 기본 개념을 이해하고 그래프를 그리는 방법을 배웁니다",
+    "duration": 1800,
+    "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+    "channel_title": "수학쌤TV",
+    "published_at": "2025-08-01T10:00:00Z",
+    "category": "수학",
+    "tags": ["기초", "중등", "함수"],
+    "quality_levels": ["360p", "720p", "1080p"],
+    "captions_available": true,
+    "status": "active",
+    "assigned_classes": [
+      {
+        "class_id": "class-uuid-1",
+        "class_name": "중등 수학 A반",
+        "assigned_students": 15
+      }
+    ]
+  }
+}
+```
+
+### 5.5.2 비디오 목록 조회
+```http
+GET /videos?page=1&limit=20&category=수학&status=active&class_id=<uuid>
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+```
+
+### 5.5.3 학생 비디오 진도 조회
+```http
+GET /videos/{video_id}/progress?student_id=<uuid>
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+```
+
+**응답 (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "video_id": "video-uuid-123",
+    "student_id": "student-uuid-456",
+    "video_info": {
+      "title": "중등 수학 기초 - 함수의 개념",
+      "duration": 1800,
+      "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+    },
+    "progress": {
+      "watched_duration": 1200,
+      "total_duration": 1800,
+      "completion_percentage": 67,
+      "last_watched_at": "2025-08-10T14:30:00Z",
+      "completed_at": null,
+      "watch_sessions": [
+        {
+          "start_time": 0,
+          "end_time": 600,
+          "watched_at": "2025-08-10T10:00:00Z",
+          "quality": "720p",
+          "device": "desktop"
+        },
+        {
+          "start_time": 600,
+          "end_time": 1200,
+          "watched_at": "2025-08-10T14:30:00Z",
+          "quality": "1080p", 
+          "device": "mobile"
+        }
+      ]
+    },
+    "notes": "함수의 정의 부분이 이해하기 어려웠음",
+    "interactions": [
+      {
+        "type": "bookmark",
+        "timestamp": 300,
+        "content": "중요한 공식",
+        "created_at": "2025-08-10T10:05:00Z"
+      }
+    ]
+  }
+}
+```
+
+### 5.5.4 비디오 시청 진도 업데이트 (실시간)
+```http
+PUT /videos/{video_id}/progress/{student_id}
+Content-Type: application/json
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+
+{
+  "watched_duration": 1350,
+  "current_timestamp": 1350,
+  "quality": "1080p",
+  "device": "mobile",
+  "session_data": {
+    "start_time": 1200,
+    "end_time": 1350,
+    "playback_speed": 1.0,
+    "volume_level": 0.8
+  }
+}
+```
+
+### 5.5.5 비디오 상호작용 추가
+```http
+POST /videos/{video_id}/interactions
+Content-Type: application/json
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+
+{
+  "student_id": "student-uuid-456",
+  "type": "question",
+  "timestamp": 900,
+  "content": "이 부분에서 x의 값은 어떻게 구하나요?",
+  "metadata": {
+    "priority": "high",
+    "tags": ["질문", "함수"]
+  }
+}
+```
+
+### 5.5.6 클래스별 비디오 학습 분석
+```http
+GET /classes/{class_id}/video-analytics?start_date=2025-08-01&end_date=2025-08-31
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+```
+
+**응답 (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "class_info": {
+      "id": "class-uuid-1",
+      "name": "중등 수학 A반",
+      "total_students": 15
+    },
+    "period": {
+      "start_date": "2025-08-01",
+      "end_date": "2025-08-31"
+    },
+    "overall_stats": {
+      "total_videos": 12,
+      "total_watch_time": 185400,
+      "average_completion_rate": 78.5,
+      "active_students": 14
+    },
+    "video_performance": [
+      {
+        "video_id": "video-uuid-123",
+        "title": "함수의 개념",
+        "total_students": 15,
+        "completed_students": 12,
+        "average_completion_rate": 85.2,
+        "total_watch_time": 18900,
+        "engagement_score": 8.7,
+        "difficulty_rating": "medium"
+      }
+    ],
+    "student_performance": [
+      {
+        "student_id": "student-uuid-456",
+        "student_name": "김철수",
+        "total_videos_assigned": 12,
+        "completed_videos": 10,
+        "average_completion_rate": 92.3,
+        "total_watch_time": 15600,
+        "learning_pace": "fast"
+      }
+    ]
+  }
+}
+```
+
+### 5.5.7 비디오 배정 관리
+```http
+POST /classes/{class_id}/video-assignments
+Content-Type: application/json
+Authorization: Bearer <access_token>
+X-Tenant-ID: <tenant_uuid>
+
+{
+  "video_ids": ["video-uuid-123", "video-uuid-456"],
+  "assignment_type": "homework",
+  "due_date": "2025-08-20T23:59:59Z",
+  "instructions": "함수 개념 이해 후 연습문제 풀이",
+  "student_ids": ["student-uuid-1", "student-uuid-2"],
+  "notification_enabled": true
 }
 ```
 

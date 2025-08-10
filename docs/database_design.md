@@ -1,9 +1,9 @@
-# EduCanvas 데이터베이스 설계 문서 v3.0
+# EduCanvas 데이터베이스 설계 문서 v4.1
 
-**작성일**: 2025-08-09  
+**작성일**: 2025-08-10  
 **데이터베이스**: Supabase (PostgreSQL 15+)  
-**스키마 버전**: v3.0  
-**기반**: database_schema_v3.sql
+**스키마 버전**: v4.1 (멀티테넌트 + YouTube 통합)  
+**기반**: database_schema_v4.1_video_integrated.sql
 
 ---
 
@@ -42,72 +42,91 @@
 
 ---
 
-## 2. v3.0 주요 변경사항
+## 2. v4.1 주요 변경사항
 
-### 2.1 MVP 기반 (v2.0) 유지
-- 5가지 billing types 완전 지원
-- 7가지 급여 정책 시스템
-- 완전한 수강권 등록 및 추적
-- 할인 정책 관리 시스템
+### 2.1 멀티테넌트 아키텍처 (v4.0 기반)
+- **테넌트 격리**: 완전한 데이터 격리 및 보안
+- **구독 계층**: Basic/Pro/Enterprise 3단계 
+- **Row Level Security**: 테넌트별 완전한 데이터 보호
+- **사용자 역할**: 테넌트별 세밀한 권한 관리
 
-### 2.2 v3.0 확장 기능 추가
+### 2.2 YouTube 비디오 학습 시스템 (v4.1 신규)
+- **비디오 관리**: YouTube API 완전 통합
+- **학습 진도**: 실시간 시청 진도 추적
+- **학습 분석**: AI 기반 학습 패턴 분석
+- **상호작용**: 댓글, 질문, 노트 시스템
+
+### 2.3 v4.1 핵심 테이블 추가
 | 테이블 | 용도 | Phase |
 |--------|------|-------|
-| **교실 관리** | | |
+| **멀티테넌트 시스템** | | |
+| `tenants` | 테넌트(학원) 정보 및 구독 관리 | MVP |
+| `tenant_users` | 테넌트별 사용자 및 권한 관리 | MVP |
+| `tenant_settings` | 테넌트별 설정 및 커스터마이제이션 | MVP |
+| **YouTube 비디오 학습** | | |
+| `youtube_videos` | YouTube 비디오 정보 및 메타데이터 | MVP |
+| `video_assignments` | 클래스별 비디오 배정 관리 | MVP |
+| `student_video_progress` | 학생별 비디오 시청 진도 추적 | MVP |
+| `video_interactions` | 댓글, 질문, 노트 등 상호작용 | MVP |
+| `video_analytics` | 비디오별 학습 분석 데이터 | MVP |
+| **기존 확장 기능** | | |
 | `classrooms` | 교실 정보 및 시설 관리 | 4 |
-| `classroom_usage_logs` | 교실 사용 이력 추적 | 4 |
-| **타임테이블 시스템** | | |
 | `time_slots` | 기본 시간 슬롯 정의 | 4 |
 | `recurring_schedules` | 정규 시간표 관리 | 4 |
-| `schedule_overrides` | 일회성/변경 스케줄 | 4 |
-| **성적 관리** | | |
 | `exams` | 시험 정보 및 설정 | 5 |
-| `exam_questions` | 시험 문제 관리 (선택적) | 5 |
 | `student_scores` | 학생 성적 및 분석 | 5 |
-| **문서 관리** | | |
-| `document_folders` | 폴더 구조 관리 | 5 |
 | `documents` | 파일 저장 및 버전 관리 | 5 |
-| `document_access_logs` | 문서 접근 로그 | 5 |
-| **히스토리 추적** | | |
 | `student_histories` | 통합 학생 이벤트 추적 | 5 |
-| `academic_progress` | 학습 진도 및 AI 분석 | 5 |
-| **상담 관리** | | |
 | `consultations` | 상담 예약 및 관리 | 5 |
-| `consultation_records` | 상담 기록 및 효과 분석 | 5 |
-| `salary_tiers` | 누진제 구간 관리 |
-| `instructor_salary_policies` | 강사별 급여 정책 적용 |
-| `salary_calculations` | 월별 급여 계산 결과 |
 
-### 2.2 ENUM 타입 확장
+### 2.4 ENUM 타입 확장 (v4.1)
 ```sql
--- 수강권 청구 유형
+-- 테넌트 구독 계층
+CREATE TYPE subscription_tier AS ENUM (
+    'basic',        -- 기본 (최대 100명 학생)
+    'pro',          -- 프로 (최대 500명 학생)
+    'enterprise'    -- 엔터프라이즈 (무제한)
+);
+
+-- 테넌트 사용자 역할
+CREATE TYPE tenant_user_role AS ENUM (
+    'owner',        -- 소유자 (모든 권한)
+    'admin',        -- 관리자 (대부분 권한)
+    'instructor',   -- 강사 (담당 반만)
+    'staff',        -- 직원 (제한적 권한)
+    'viewer'        -- 뷰어 (조회만)
+);
+
+-- 비디오 상태
+CREATE TYPE video_status AS ENUM (
+    'active',       -- 활성
+    'inactive',     -- 비활성
+    'private',      -- 비공개
+    'deleted'       -- 삭제됨
+);
+
+-- 비디오 상호작용 유형
+CREATE TYPE interaction_type AS ENUM (
+    'comment',      -- 댓글
+    'question',     -- 질문
+    'note',         -- 노트
+    'bookmark',     -- 북마크
+    'like',         -- 좋아요
+    'dislike'       -- 싫어요
+);
+
+-- 기존 ENUM 타입들
 CREATE TYPE billing_type AS ENUM (
-    'monthly',      -- 월 정액제
-    'sessions',     -- 회차제 (10회권, 20회권)
-    'hours',        -- 시간제
-    'package',      -- 패키지 (3개월, 6개월)
-    'drop_in'       -- 드롭인 (매회 결제)
+    'monthly', 'sessions', 'hours', 'package', 'drop_in'
 );
 
--- 할인 유형
 CREATE TYPE discount_type AS ENUM (
-    'sibling',          -- 형제 할인
-    'early_payment',    -- 조기 납부 할인
-    'loyalty',          -- 장기 수강 할인
-    'scholarship',      -- 장학금
-    'promotion',        -- 프로모션
-    'volume'           -- 다과목 할인
+    'sibling', 'early_payment', 'loyalty', 'scholarship', 'promotion', 'volume'
 );
 
--- 급여 정책 유형
 CREATE TYPE salary_policy_type AS ENUM (
-    'fixed_monthly',     -- 고정 월급
-    'fixed_hourly',      -- 고정 시급
-    'commission',        -- 단순 비율제
-    'tiered_commission', -- 누진 비율제
-    'student_based',     -- 학생 수 기준
-    'hybrid',           -- 혼합형 (기본급 + 성과급)
-    'guaranteed_minimum' -- 최소 보장형
+    'fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 
+    'student_based', 'hybrid', 'guaranteed_minimum'
 );
 ```
 
@@ -225,25 +244,101 @@ erDiagram
 - 상담 내용 및 결과 기록
 - 만족도 및 효과성 분석
 
-### 4.1 users (사용자)
+### 4.1 tenants (테넌트) - v4.1 신규
 ```sql
-CREATE TABLE users (
+CREATE TABLE tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    avatar_url TEXT,
-    role user_role DEFAULT 'staff',    -- admin, instructor, staff, viewer
+    name VARCHAR(100) NOT NULL,                    -- 학원 이름
+    subdomain VARCHAR(50) UNIQUE NOT NULL,         -- 서브도메인 (abc.educanvas.com)
+    settings JSONB DEFAULT '{}',                   -- 커스텀 설정
+    subscription_tier subscription_tier DEFAULT 'basic',
+    subscription_start_date DATE,
+    subscription_end_date DATE,
+    student_limit INTEGER DEFAULT 100,             -- 구독별 학생 수 제한
     is_active BOOLEAN DEFAULT true,
-    last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**특징**:
-- Supabase Auth와 완전 연동
-- 역할 기반 접근 제어 (RBAC)
-- 소프트 삭제 지원
+### 4.2 tenant_users (테넌트 사용자) - v4.1 신규
+```sql
+CREATE TABLE tenant_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    role tenant_user_role DEFAULT 'staff',
+    permissions JSONB DEFAULT '{}',                -- 커스텀 권한
+    status VARCHAR(20) DEFAULT 'active',           -- active, inactive, suspended
+    invited_at TIMESTAMP WITH TIME ZONE,
+    joined_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT unique_tenant_user UNIQUE(tenant_id, user_id)
+);
+```
+
+### 4.3 youtube_videos (YouTube 비디오) - v4.1 신규
+```sql
+CREATE TABLE youtube_videos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+    youtube_id VARCHAR(20) UNIQUE NOT NULL,        -- YouTube 비디오 ID
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    duration INTEGER NOT NULL,                     -- 초 단위
+    thumbnail_url TEXT,
+    channel_id VARCHAR(50),
+    channel_title VARCHAR(100),
+    published_at TIMESTAMP WITH TIME ZONE,
+    category VARCHAR(50),
+    tags TEXT[],
+    quality_levels VARCHAR(10)[] DEFAULT ARRAY['360p', '720p', '1080p'],
+    captions_available BOOLEAN DEFAULT false,
+    status video_status DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 4.4 student_video_progress (학생 비디오 진도) - v4.1 신규
+```sql
+CREATE TABLE student_video_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+    student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+    video_id UUID REFERENCES youtube_videos(id) ON DELETE CASCADE,
+    watched_duration INTEGER DEFAULT 0,           -- 시청한 시간 (초)
+    total_duration INTEGER NOT NULL,              -- 총 시간 (초)
+    completion_percentage INTEGER GENERATED ALWAYS AS (
+        CASE 
+            WHEN total_duration > 0 THEN (watched_duration * 100 / total_duration)
+            ELSE 0
+        END
+    ) STORED,
+    last_watched_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE,        -- 100% 시청 완료 시점
+    watch_sessions JSONB DEFAULT '[]',            -- 시청 세션 기록
+    notes TEXT,                                   -- 학생 메모
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT unique_student_video UNIQUE(student_id, video_id)
+);
+```
+
+### 4.5 users (사용자) - 멀티테넌트 업데이트
+```sql
+-- 기존 users 테이블은 Supabase Auth가 관리
+-- tenant_users 테이블로 테넌트별 관계 관리
+```
+
+**v4.1 특징**:
+- **완전한 테넌트 격리**: 모든 데이터가 tenant_id로 격리
+- **YouTube API 통합**: 비디오 메타데이터 자동 동기화
+- **실시간 진도 추적**: 시청 진도 실시간 업데이트
+- **확장 가능한 권한**: JSONB 기반 유연한 권한 시스템
 
 ### 4.2 instructors (강사)
 ```sql
@@ -644,29 +739,95 @@ CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students
 
 ## 8. 보안 정책
 
-### 8.1 Row Level Security (RLS)
+### 8.1 멀티테넌트 Row Level Security (RLS) - v4.1
 ```sql
 -- 모든 핵심 테이블에 RLS 활성화
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE instructors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenant_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
--- ... 기타 테이블들
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE youtube_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_video_progress ENABLE ROW LEVEL SECURITY;
 
--- 기본 정책: 인증된 사용자만 접근
-CREATE POLICY "Enable all for authenticated users" ON students
-    FOR ALL USING (auth.role() = 'authenticated');
+-- 테넌트 격리 기본 정책
+CREATE POLICY "tenant_isolation_students" ON students
+    FOR ALL USING (
+        tenant_id IN (
+            SELECT tenant_id FROM tenant_users 
+            WHERE user_id = auth.uid() AND status = 'active'
+        )
+    );
+
+CREATE POLICY "tenant_isolation_classes" ON classes
+    FOR ALL USING (
+        tenant_id IN (
+            SELECT tenant_id FROM tenant_users 
+            WHERE user_id = auth.uid() AND status = 'active'
+        )
+    );
+
+CREATE POLICY "tenant_isolation_videos" ON youtube_videos
+    FOR ALL USING (
+        tenant_id IN (
+            SELECT tenant_id FROM tenant_users 
+            WHERE user_id = auth.uid() AND status = 'active'
+        )
+    );
+
+CREATE POLICY "tenant_isolation_video_progress" ON student_video_progress
+    FOR ALL USING (
+        tenant_id IN (
+            SELECT tenant_id FROM tenant_users 
+            WHERE user_id = auth.uid() AND status = 'active'
+        )
+    );
 ```
 
-### 8.2 향후 확장 가능한 권한 정책
+### 8.2 역할 기반 세밀한 권한 정책
 ```sql
--- 강사는 담당 클래스의 학생만 조회/수정
-CREATE POLICY "Instructors can only access their students" ON students
+-- 강사는 담당 클래스 학생만 조회
+CREATE POLICY "instructor_student_access" ON students
+    FOR SELECT USING (
+        auth.uid() IN (
+            SELECT tu.user_id FROM tenant_users tu
+            JOIN classes c ON c.instructor_id IN (
+                SELECT i.id FROM instructors i 
+                WHERE i.user_id = tu.user_id
+            )
+            WHERE tu.tenant_id = students.tenant_id 
+            AND tu.role = 'instructor'
+            AND c.id = students.class_id
+        )
+    );
+
+-- Owner/Admin은 모든 테넌트 데이터 접근
+CREATE POLICY "admin_full_access" ON students
     FOR ALL USING (
         auth.uid() IN (
-            SELECT user_id FROM instructors i 
-            JOIN classes c ON i.id = c.instructor_id 
-            WHERE c.id = class_id
+            SELECT user_id FROM tenant_users 
+            WHERE tenant_id = students.tenant_id 
+            AND role IN ('owner', 'admin')
+            AND status = 'active'
+        )
+    );
+
+-- 비디오 진도는 해당 학생과 강사만 접근
+CREATE POLICY "video_progress_student_instructor" ON student_video_progress
+    FOR ALL USING (
+        auth.uid() IN (
+            -- 해당 학생의 사용자 계정
+            SELECT s.user_id FROM students s WHERE s.id = student_id
+            UNION
+            -- 해당 클래스 강사
+            SELECT i.user_id FROM instructors i
+            JOIN classes c ON i.id = c.instructor_id
+            JOIN students s ON c.id = s.class_id
+            WHERE s.id = student_id
+            UNION
+            -- 관리자
+            SELECT user_id FROM tenant_users
+            WHERE tenant_id = student_video_progress.tenant_id
+            AND role IN ('owner', 'admin')
         )
     );
 ```
@@ -755,57 +916,119 @@ supabase gen types typescript --project-id your-project-ref > types/database.ts
 
 ### 10.2 주요 쿼리 예시
 
-#### 10.2.1 학생 목록 조회 (수강권 정보 포함)
+#### 10.2.1 테넌트별 학생 목록 조회 (v4.1)
 ```typescript
 const { data: students } = await supabase
-  .from('student_details')
-  .select('*')
+  .from('students')
+  .select(`
+    *,
+    classes(name, instructor_id),
+    student_video_progress(
+      youtube_videos(title, duration),
+      completion_percentage,
+      last_watched_at
+    )
+  `)
+  .eq('tenant_id', currentTenantId)
   .eq('status', 'active')
   .order('position_in_class');
+// RLS 정책에 의해 자동으로 테넌트 격리됨
 ```
 
-#### 10.2.2 수강권 등록
+#### 10.2.2 YouTube 비디오 추가 및 학생 배정
 ```typescript
-const { data: enrollment } = await supabase
-  .from('student_enrollments')
+// 1. YouTube 비디오 정보 저장
+const { data: video } = await supabase
+  .from('youtube_videos')
   .insert({
-    student_id: 'student-uuid',
-    course_package_id: 'package-uuid',
-    start_date: '2025-01-01',
-    original_price: 200000,
-    final_price: 180000, // 할인 적용 후
-    total_sessions: 10
+    tenant_id: currentTenantId,
+    youtube_id: 'dQw4w9WgXcQ',
+    title: '수학 기초 1강',
+    description: '수학의 기본 개념을 설명합니다',
+    duration: 1800, // 30분
+    thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    category: 'education',
+    tags: ['수학', '기초', '중등']
   })
   .select()
   .single();
+
+// 2. 클래스 학생들에게 시청 진도 초기화
+const { data: progress } = await supabase
+  .from('student_video_progress')
+  .insert(
+    classStudents.map(student => ({
+      tenant_id: currentTenantId,
+      student_id: student.id,
+      video_id: video.id,
+      total_duration: video.duration,
+      watched_duration: 0
+    }))
+  );
 ```
 
-#### 10.2.3 출석 체크 (사용량 자동 차감)
+#### 10.2.3 비디오 시청 진도 업데이트
 ```typescript
-const { data: attendance } = await supabase
-  .from('attendances')
-  .insert({
-    student_id: 'student-uuid',
-    class_id: 'class-uuid',
-    enrollment_id: 'enrollment-uuid',
-    status: 'present',
-    actual_hours: 1.5
-  });
-// 트리거에 의해 수강권 사용량 자동 차감됨
+const { data: progress } = await supabase
+  .from('student_video_progress')
+  .update({
+    watched_duration: watchedSeconds,
+    last_watched_at: new Date().toISOString(),
+    completed_at: completionRate >= 100 ? new Date().toISOString() : null,
+    watch_sessions: supabase.sql`
+      watch_sessions || ${JSON.stringify({
+        start_time: sessionStart,
+        end_time: sessionEnd,
+        watched_at: new Date().toISOString(),
+        quality: currentQuality,
+        device: userAgent
+      })}::jsonb
+    `
+  })
+  .eq('student_id', studentId)
+  .eq('video_id', videoId);
+// completion_percentage는 자동 계산됨
 ```
 
-#### 10.2.4 급여 계산
+#### 10.2.4 테넌트별 비디오 학습 분석
 ```typescript
-const { data: calculation } = await supabase
-  .from('salary_calculations')
-  .insert({
-    instructor_id: 'instructor-uuid',
-    calculation_month: '2025-01-01',
-    total_revenue: 5000000,
-    total_students: 25,
-    total_hours: 80
-  });
-// 별도 함수에서 정책에 따른 급여 계산 수행
+const { data: analytics } = await supabase
+  .from('video_analytics')
+  .select(`
+    *,
+    youtube_videos(title, duration),
+    total_students,
+    completed_students,
+    average_completion_rate,
+    total_watch_time
+  `)
+  .eq('tenant_id', currentTenantId)
+  .gte('created_at', startDate)
+  .lte('created_at', endDate)
+  .order('total_watch_time', { ascending: false });
+```
+
+#### 10.2.5 멀티테넌트 권한 확인
+```typescript
+// 현재 사용자의 테넌트 권한 조회
+const { data: userPermissions } = await supabase
+  .from('tenant_users')
+  .select(`
+    role,
+    permissions,
+    tenants(name, subdomain, subscription_tier)
+  `)
+  .eq('user_id', auth.user.id)
+  .eq('status', 'active');
+
+// 특정 리소스에 대한 권한 체크
+const hasPermission = (resource: string, action: string) => {
+  const userRole = userPermissions[0]?.role;
+  const customPermissions = userPermissions[0]?.permissions;
+  
+  // 역할별 기본 권한 + 커스텀 권한 확인
+  return checkPermission(userRole, customPermissions, resource, action);
+};
 ```
 
 ---
@@ -837,12 +1060,24 @@ INSERT INTO schema_versions (version, description) VALUES
 
 ## 결론
 
-EduCanvas 데이터베이스 v2.0은 학원 운영의 모든 복잡한 요구사항을 지원할 수 있는 완전한 시스템입니다:
+EduCanvas 데이터베이스 v4.1은 현대적인 멀티테넌트 학원 관리 시스템의 모든 요구사항을 지원하는 완전한 시스템입니다:
 
+- ✅ **멀티테넌트 아키텍처**: 완전한 테넌트 격리 및 확장성
+- ✅ **YouTube 비디오 학습**: 실시간 진도 추적 및 학습 분석
+- ✅ **엔터프라이즈 보안**: RLS 기반 완벽한 데이터 보호 및 권한 관리
 - ✅ **유연한 요금제**: 모든 형태의 수강권 지원
 - ✅ **정교한 급여 시스템**: 복잡한 급여 정책 완벽 대응  
 - ✅ **자동화**: 반복 업무의 최대한 자동화
-- ✅ **확장성**: 대용량 데이터 및 멀티 학원 대비
-- ✅ **보안**: RLS 기반 완벽한 데이터 보호
+- ✅ **확장성**: 대용량 데이터 및 무제한 테넌트 지원
 
-**다음 단계**: TypeScript 타입 정의 및 API 엔드포인트 구현
+**v4.1 혁신 포인트**:
+- 🏢 **SaaS 준비**: 멀티테넌트로 무제한 학원 지원
+- 📺 **비디오 학습**: YouTube API 완전 통합으로 온라인 교육 지원
+- 🔐 **엔터프라이즈 보안**: 역할 기반 세밀한 권한 제어
+- 📊 **학습 분석**: AI 기반 학습 패턴 분석 및 예측
+
+**다음 단계**: 
+1. TypeScript 타입 정의 (T-004)
+2. 멀티테넌트 인증 시스템 (T-005)  
+3. UI 컴포넌트 라이브러리 (T-006)
+4. YouTube API 통합 구현

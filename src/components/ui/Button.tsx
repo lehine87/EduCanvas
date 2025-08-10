@@ -49,13 +49,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
     
     const variants = {
-      primary: 'bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand-500',
-      secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 focus:ring-gray-500',
+      primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500',
+      secondary: 'bg-secondary-100 hover:bg-secondary-200 text-secondary-900 focus:ring-secondary-500',
       success: 'bg-success-500 hover:bg-success-600 text-white focus:ring-success-500',
       warning: 'bg-warning-500 hover:bg-warning-600 text-white focus:ring-warning-500',
       error: 'bg-error-500 hover:bg-error-600 text-white focus:ring-error-500',
-      ghost: 'hover:bg-gray-100 text-gray-700 focus:ring-gray-500',
-      outline: 'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 focus:ring-gray-500',
+      ghost: 'hover:bg-secondary-100 text-secondary-700 focus:ring-secondary-500',
+      outline: 'border border-secondary-300 bg-white hover:bg-secondary-50 text-secondary-700 focus:ring-secondary-500',
     };
 
     const sizes = {

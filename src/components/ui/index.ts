@@ -102,29 +102,29 @@ export { cn } from '@/lib/utils';
  * Basic UI Components
  * For standard form elements and basic interactions
  */
-export const BasicComponents = {
-  Button,
-  Input,
-  Textarea,
-  Modal,
-  ConfirmModal,
-  Table,
-  SimpleTable,
-} as const;
+// export const BasicComponents = {
+//   Button,
+//   Input,
+//   Textarea,
+//   Modal,
+//   ConfirmModal,
+//   Table,
+//   SimpleTable,
+// } as const;
 
 /**
  * ClassFlow Components
  * Specialized components for drag-and-drop student management
  */
-export const ClassFlowComponents = {
-  DragHandle,
-  StudentCard,
-  ClassContainer,
-  LoadingPlaceholder,
-  StudentCardLoader,
-  ClassContainerLoader,
-  TableRowLoader,
-} as const;
+// export const ClassFlowComponents = {
+//   DragHandle,
+//   StudentCard,
+//   ClassContainer,
+//   LoadingPlaceholder,
+//   StudentCardLoader,
+//   ClassContainerLoader,
+//   TableRowLoader,
+// } as const;
 
 // =============================================================================
 // VERSION INFORMATION
