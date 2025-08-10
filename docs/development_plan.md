@@ -104,8 +104,10 @@ src/
 ```
 
 ### 2.3 데이터베이스 설계
-- **기반**: database_schema_v2.sql
+- **MVP 기반**: database_schema_v2.sql (Phase 1-3 완료)
+- **확장 구조**: database_schema_v3.sql (Phase 4-10 준비)
 - **핵심**: 복잡한 요금제 및 급여 시스템 완벽 지원
+- **확장**: 교실, 시간표, 성적, 문서, 히스토리 시스템 완비
 - **보안**: Row Level Security (RLS) 완전 구현
 - **성능**: 적절한 인덱싱 및 뷰 활용
 

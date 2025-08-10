@@ -74,19 +74,20 @@ The project uses TypeScript path aliases configured in tsconfig.json:
 
 ## Database & API Architecture
 
-- **Database**: Supabase PostgreSQL with Row Level Security (RLS) - **Schema v2.0**
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) - **Schema v3.0**
 - **Authentication**: Supabase Auth with comprehensive RBAC (admin/instructor/staff/viewer)
 - **API**: RESTful API with Next.js App Router + Supabase client-side queries
 - **Real-time**: Supabase real-time subscriptions for ClassFlow and live updates
 - **Complex Systems**: Advanced billing types (5 types) and salary policies (7 types)
 
-**Schema v2.0 Key Features**:
-- 5 billing types: monthly, sessions, hours, package, drop_in
-- 7 salary policy types: fixed_monthly, fixed_hourly, commission, tiered_commission, etc.
-- Automatic enrollment usage tracking and salary calculations
-- Complete discount policy management system
+**Schema v3.0 Key Features**:
+- **MVP Core** (v2.0): 5 billing types, 7 salary policies, complete enrollment tracking
+- **Extended Features** (v3.0): Classroom management, timetable system, grade management
+- **Document Management**: File storage with version control and OCR text extraction
+- **Student History**: Comprehensive tracking with AI-powered academic progress analysis
+- **Consultation System**: Structured counseling management with effectiveness tracking
 
-Key entities: Students, Classes, Users, Course Packages, Student Enrollments, Salary Policies.
+**Key Entities**: Students, Classes, Users, Course Packages, Student Enrollments, Salary Policies, Classrooms, Exams, Documents, Student Histories, Consultations.
 
 ## State Management Pattern
 
@@ -242,8 +243,8 @@ class ClassFlowError extends Error {
 - `기능요구서.md` - **v2.0** MVP-focused feature requirements (P0 only)  
 - `development_plan.md` - **v2.0** Complete 10-week MVP development roadmap
 - `api_specification.md` - **v2.0** Comprehensive RESTful API documentation
-- `database_schema_v2.sql` - Production-ready database schema (MVP)
-- `database_schema_v3.sql` - **NEW** Extended schema for Phase 4-10 features
+- `database_schema_v2.sql` - MVP-focused database schema (Phase 1-3)
+- `database_schema_v3.sql` - Extended database schema for Phase 4-10 features (Current)
 - `extended_roadmap.md` - **NEW** 3-year development roadmap (2025-2028)
 - `feature_priority_matrix.md` - **NEW** Feature prioritization analysis
 - `competitive_features_integration.md` - **NEW** Competitive feature integration strategy
