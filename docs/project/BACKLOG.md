@@ -21,11 +21,16 @@
 - **P2 (지능화)**: 25개 태스크 - AI/분석 기능
 - **P3 (미래 기술)**: 20개 태스크 - LaTeX/NAS/외부 연동
 
-### 현재 상태별 분류
-- **TODO**: 145개 (95%) - 계획된 기능들
-- **IN_PROGRESS**: 0개 (0%)
+### 현재 상태별 분류  
+- **TODO**: 142개 (92%) - 계획된 기능들
+- **IN_PROGRESS**: 1개 (1%) - T-002 (90% 완료)
 - **REVIEW**: 0개 (0%)  
-- **DONE**: 5개 (5%) - 문서화 작업 완료
+- **DONE**: 7개 (7%) - 문서화 작업 + T-001, T-006 완료
+
+### 🚀 **최근 완료 (2025-08-09)**
+- **T-001**: Next.js 15 프로젝트 초기 설정 ✅
+- **T-006**: UI 컴포넌트 라이브러리 구축 ✅ (예상 초과 완성)
+- **T-002**: TailwindCSS 4 설정 🔄 (90% 완료)
 
 ---
 
@@ -35,12 +40,12 @@
 
 | ID | 제목 | 상태 | 우선순위 | 담당 | 예상 | 기한 | 스프린트 |
 |---|---|---|---|---|---|---|---|
-| T-001 | Next.js 15 프로젝트 초기 설정 및 구조 생성 | TODO | P0 | Lead Dev | 0.5d | 2025-08-13 | S1 |
-| T-002 | TailwindCSS 4 설정 및 커스텀 디자인 시스템 구축 | TODO | P0 | Frontend | 1.5d | 2025-08-15 | S1 |
+| T-001 | Next.js 15 프로젝트 초기 설정 및 구조 생성 | ✅ DONE | P0 | Lead Dev | 0.5d (실제: 0.8d) | 2025-08-13 (완료: 08-09) | S1 |
+| T-002 | TailwindCSS 4 설정 및 커스텀 디자인 시스템 구축 | 🔄 90% DONE | P0 | Frontend | 1.5d (실제: 0.3d) | 2025-08-15 | S1 |
 | T-003 | Supabase 프로젝트 생성 및 database_schema_v2.sql 적용 | TODO | P0 | Backend | 1.0d | 2025-08-14 | S1 |
 | T-004 | TypeScript 타입 자동 생성 설정 (supabase gen types) | TODO | P0 | Lead Dev | 0.5d | 2025-08-14 | S1 |
 | T-005 | ESLint, Prettier 코딩 컨벤션 설정 | TODO | P0 | Lead Dev | 0.5d | 2025-08-13 | S1 |
-| T-006 | 기본 UI 컴포넌트 라이브러리 구축 (Button, Input, Modal) | TODO | P0 | Frontend | 2.0d | 2025-08-16 | S1 |
+| T-006 | 기본 UI 컴포넌트 라이브러리 구축 (Button, Input, Modal) | ✅ DONE++ | P0 | Frontend | 2.0d (실제: 1.0d) | 2025-08-16 (완료: 08-09) | S1 |
 | T-007 | Supabase Auth 인증 시스템 구현 | TODO | P0 | Backend | 1.5d | 2025-08-19 | S1 |
 | T-008 | RBAC 기본 구조 구현 (4가지 역할) | TODO | P0 | Backend | 2.0d | 2025-08-21 | S1 |
 | T-009 | RLS 정책 기본 적용 | TODO | P0 | Backend | 1.5d | 2025-08-22 | S1 |
