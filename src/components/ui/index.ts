@@ -185,19 +185,21 @@ export const COMPONENT_REGISTRY = {
 /**
  * Check if component exists in registry
  */
-export const hasComponent = (componentName: string): boolean => {
-  return [
-    ...COMPONENT_REGISTRY.basic,
-    ...COMPONENT_REGISTRY.classflow,
-  ].includes(componentName);
+type ComponentName = typeof COMPONENT_REGISTRY.basic[number] | typeof COMPONENT_REGISTRY.classflow[number];
+
+export const hasComponent = (componentName: string): componentName is ComponentName => {
+  return (
+    COMPONENT_REGISTRY.basic.includes(componentName as typeof COMPONENT_REGISTRY.basic[number]) ||
+    COMPONENT_REGISTRY.classflow.includes(componentName as typeof COMPONENT_REGISTRY.classflow[number])
+  );
 };
 
 /**
  * Get component category
  */
 export const getComponentCategory = (componentName: string): 'basic' | 'classflow' | null => {
-  if (COMPONENT_REGISTRY.basic.includes(componentName)) return 'basic';
-  if (COMPONENT_REGISTRY.classflow.includes(componentName)) return 'classflow';
+  if (COMPONENT_REGISTRY.basic.includes(componentName as typeof COMPONENT_REGISTRY.basic[number])) return 'basic';
+  if (COMPONENT_REGISTRY.classflow.includes(componentName as typeof COMPONENT_REGISTRY.classflow[number])) return 'classflow';
   return null;
 };
 

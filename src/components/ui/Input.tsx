@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 /**
  * Input component props interface
  */
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /** Label text for the input */
   label?: string;
   /** Helper text displayed below the input */

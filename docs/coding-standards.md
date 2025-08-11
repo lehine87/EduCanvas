@@ -2353,8 +2353,9 @@ interface CodeQualityMetrics {
   outdatedDocs: number;
 }
 
-// 품질 기준
+// 품질 기준 (보안 메트릭 포함)
 const QUALITY_STANDARDS: CodeQualityMetrics = {
+  // 기존 코드 품질 메트릭
   typeErrors: 0,                    // TypeScript 에러 0개
   anyUsageCount: 5,                 // any 사용 최대 5회
   bundleSize: 500 * 1024,          // 500KB 이하
@@ -2365,6 +2366,23 @@ const QUALITY_STANDARDS: CodeQualityMetrics = {
   testCoverage: 80,                 // 커버리지 80% 이상
   testCount: 100,                   // 최소 100개 테스트
   flakyTests: 0,                    // 불안정한 테스트 0개
+  
+  // 🔒 보안 메트릭 (CRITICAL)
+  securityVulnerabilities: 0,       // 보안 취약점 0개 (Snyk/OWASP ZAP)
+  memoryLeaks: 0,                  // 메모리 누수 0개 (자동 감지)
+  csrfProtectionCoverage: 100,     // CSRF 보호 100% (모든 상태 변경 API)
+  inputValidationCoverage: 100,    // 입력 검증 100% (모든 사용자 입력)
+  dataEncryptionCoverage: 100,     // 민감데이터 암호화 100%
+  accessControlChecks: 100,        // 권한 체크 100% (모든 보호된 리소스)
+  securityHeaders: 100,            // 보안 헤더 100% (CSP, HSTS 등)
+  auditLogCoverage: 100,          // 감사 로그 커버리지 100% (중요 작업)
+  
+  // 🧠 메모리 보안 메트릭
+  sensitiveDataLifetime: 100,      // 민감데이터 수명 관리 100ms 이하
+  memoryOverwriteCompliance: 100,  // 메모리 덮어쓰기 준수율 100%
+  weakMapUsageRate: 80,           // WeakMap 사용률 80% (캐싱에서)
+  blobUrlCleanupRate: 100,        // Blob URL 정리율 100%
+  subscriptionCleanupRate: 100,   // 구독 해제율 100%
   cyclomaticComplexity: 10,         // 복잡도 10 이하
   duplicatedLines: 3,               // 중복 코드 3% 이하
   undocumentedFunctions: 0,         // 미문서화 함수 0개
@@ -2384,6 +2402,638 @@ async function runQualityCheck(): Promise<CodeQualityMetrics> {
   
   return aggregateMetrics(results);
 }
+```
+
+---
+
+## 13. 메모리 보안 및 누수 방지 🧠🔒
+
+**⚠️ CRITICAL**: 메모리 누수는 성능 문제가 아닌 **보안 취약점**으로 간주합니다. 민감한 학생 데이터가 메모리에 남아있으면 보안 위험이 됩니다.
+
+### 13.1 메모리 누수 방지 필수 패턴
+
+```typescript
+// ✅ WeakMap을 활용한 메모리 효율적 캐싱
+const studentDataCache = new WeakMap<Student, ProcessedStudentData>();
+const classSubscriptionCache = new WeakMap<Class, Subscription>();
+
+// ✅ 대용량 배열 처리 시 메모리 분할
+const processBulkStudents = async (students: Student[]) => {
+  const CHUNK_SIZE = 100; // 메모리 제한 고려
+  const results: ProcessedStudent[] = [];
+  
+  for (let i = 0; i < students.length; i += CHUNK_SIZE) {
+    const chunk = students.slice(i, i + CHUNK_SIZE);
+    const processedChunk = await processStudentChunk(chunk);
+    results.push(...processedChunk);
+    
+    // 명시적 메모리 해제
+    chunk.length = 0;
+    
+    // 가비지 컬렉션 힌트
+    if (global.gc && process.env.NODE_ENV === 'development') {
+      global.gc();
+    }
+  }
+  
+  return results;
+};
+
+// ✅ 민감데이터 메모리 보안 처리
+const createSecureSensitiveDataHandler = () => {
+  let sensitiveDataRef: { current: string | null } = { current: null };
+  
+  return {
+    store: (data: string): void => {
+      // 기존 데이터가 있으면 덮어쓰기
+      if (sensitiveDataRef.current) {
+        sensitiveDataRef.current = '\0'.repeat(sensitiveDataRef.current.length);
+      }
+      sensitiveDataRef.current = encrypt(data);
+    },
+    
+    retrieve: (): string | null => {
+      if (!sensitiveDataRef.current) return null;
+      return decrypt(sensitiveDataRef.current);
+    },
+    
+    clear: (): void => {
+      if (sensitiveDataRef.current) {
+        // 메모리 덮어쓰기로 완전 삭제
+        const length = sensitiveDataRef.current.length;
+        sensitiveDataRef.current = '\0'.repeat(length);
+        sensitiveDataRef.current = null;
+        
+        // 가비지 컬렉션 강제 실행 (개발 환경)
+        if (global.gc && process.env.NODE_ENV === 'development') {
+          global.gc();
+        }
+      }
+    }
+  };
+};
+```
+
+### 13.2 React 컴포넌트 메모리 관리
+
+```typescript
+// ✅ 메모리 누수 방지 훅
+const useSecureCleanup = () => {
+  const subscriptionsRef = useRef<Array<() => void>>([]);
+  const sensitiveDataRef = useRef<Map<string, any>>(new Map());
+  
+  const addSubscription = useCallback((cleanup: () => void) => {
+    subscriptionsRef.current.push(cleanup);
+  }, []);
+  
+  const storeSensitiveData = useCallback((key: string, data: any) => {
+    // 기존 데이터 덮어쓰기
+    if (sensitiveDataRef.current.has(key)) {
+      const oldData = sensitiveDataRef.current.get(key);
+      if (typeof oldData === 'string') {
+        oldData.replace(/./g, '\0'); // 메모리 덮어쓰기
+      }
+    }
+    sensitiveDataRef.current.set(key, data);
+  }, []);
+  
+  useEffect(() => {
+    return () => {
+      // 모든 구독 해제
+      subscriptionsRef.current.forEach(cleanup => {
+        try {
+          cleanup();
+        } catch (error) {
+          console.error('Cleanup error:', error);
+        }
+      });
+      
+      // 민감데이터 메모리 덮어쓰기
+      sensitiveDataRef.current.forEach((value, key) => {
+        if (typeof value === 'string') {
+          value.replace(/./g, '\0');
+        }
+        sensitiveDataRef.current.delete(key);
+      });
+      
+      // 배열 초기화
+      subscriptionsRef.current.length = 0;
+      sensitiveDataRef.current.clear();
+    };
+  }, []);
+  
+  return { addSubscription, storeSensitiveData };
+};
+
+// ✅ ClassFlow 컴포넌트 메모리 최적화
+const ClassFlowPanel = memo(() => {
+  const { addSubscription, storeSensitiveData } = useSecureCleanup();
+  
+  useEffect(() => {
+    const subscription = supabase
+      .channel('classflow-updates')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'student_enrollments' 
+      }, (payload) => {
+        // 민감데이터 임시 저장
+        if (payload.new?.student_data) {
+          storeSensitiveData('temp_student', payload.new.student_data);
+          // 처리 후 즉시 삭제
+          setTimeout(() => {
+            storeSensitiveData('temp_student', null);
+          }, 100);
+        }
+      })
+      .subscribe();
+    
+    // 정리 함수 등록
+    addSubscription(() => {
+      subscription.unsubscribe();
+    });
+  }, [addSubscription, storeSensitiveData]);
+  
+  // ... 컴포넌트 로직
+});
+```
+
+### 13.3 메모리 프로파일링 및 모니터링
+
+```typescript
+// ✅ 메모리 사용량 모니터링
+const useMemorySecurityMonitor = () => {
+  const lastMemoryCheckRef = useRef<number>(0);
+  const memoryLeakDetectorRef = useRef<NodeJS.Timeout | null>(null);
+  
+  useEffect(() => {
+    const checkMemoryUsage = () => {
+      if ('memory' in performance) {
+        const memory = (performance as any).memory;
+        const usedMB = memory.usedJSHeapSize / 1048576;
+        const totalMB = memory.totalJSHeapSize / 1048576;
+        const limitMB = memory.jsHeapSizeLimit / 1048576;
+        
+        // 메모리 사용량 급증 감지 (보안 위험 신호)
+        const memoryIncrease = usedMB - lastMemoryCheckRef.current;
+        if (memoryIncrease > 10) { // 10MB 이상 급증
+          Sentry.captureMessage('Suspicious memory spike detected', {
+            level: 'warning',
+            tags: { 
+              component: 'memory-security-monitor',
+              securityEvent: true 
+            },
+            extra: { 
+              memoryUsage: `${usedMB}MB`,
+              memoryIncrease: `${memoryIncrease}MB`,
+              totalMemory: `${totalMB}MB`,
+              memoryLimit: `${limitMB}MB`
+            }
+          });
+        }
+        
+        // 임계값 초과 시 보안 이벤트 발생
+        if (usedMB > 50) {
+          Sentry.captureMessage('High memory usage - potential security risk', {
+            level: 'error',
+            tags: { 
+              component: 'memory-security-monitor',
+              securityEvent: true,
+              criticalEvent: true
+            },
+            extra: { memoryUsage: `${usedMB}MB` }
+          });
+          
+          // 강제 가비지 컬렉션 (개발 환경)
+          if (global.gc && process.env.NODE_ENV === 'development') {
+            global.gc();
+          }
+        }
+        
+        lastMemoryCheckRef.current = usedMB;
+      }
+    };
+    
+    // 10초마다 메모리 체크
+    memoryLeakDetectorRef.current = setInterval(checkMemoryUsage, 10000);
+    
+    return () => {
+      if (memoryLeakDetectorRef.current) {
+        clearInterval(memoryLeakDetectorRef.current);
+        memoryLeakDetectorRef.current = null;
+      }
+    };
+  }, []);
+};
+
+// ✅ 메모리 누수 자동 감지
+const useMemoryLeakDetector = (componentName: string) => {
+  const mountTimeRef = useRef<number>(Date.now());
+  const initialMemoryRef = useRef<number>(0);
+  
+  useEffect(() => {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      initialMemoryRef.current = memory.usedJSHeapSize;
+    }
+    
+    return () => {
+      // 컴포넌트 언마운트 시 메모리 증가량 체크
+      if ('memory' in performance) {
+        const memory = (performance as any).memory;
+        const memoryGrowth = memory.usedJSHeapSize - initialMemoryRef.current;
+        const componentLifetime = Date.now() - mountTimeRef.current;
+        
+        // 컴포넌트 수명 대비 메모리 증가가 비정상적으로 큰 경우
+        if (memoryGrowth > 5 * 1048576 && componentLifetime > 30000) { // 5MB, 30초 이상
+          Sentry.captureMessage(`Memory leak detected in ${componentName}`, {
+            level: 'warning',
+            tags: { 
+              component: componentName,
+              memoryLeak: true 
+            },
+            extra: { 
+              memoryGrowth: `${memoryGrowth / 1048576}MB`,
+              componentLifetime: `${componentLifetime / 1000}s`
+            }
+          });
+        }
+      }
+    };
+  }, [componentName]);
+};
+```
+
+### 13.4 이미지 및 파일 메모리 관리
+
+```typescript
+// ✅ 이미지 메모리 관리
+const useSecureImageHandler = () => {
+  const imageRefsRef = useRef<Set<HTMLImageElement>>(new Set());
+  const blobUrlsRef = useRef<Set<string>>(new Set());
+  
+  const loadSecureImage = useCallback(async (file: File): Promise<string> => {
+    const imageUrl = URL.createObjectURL(file);
+    blobUrlsRef.current.add(imageUrl);
+    
+    const img = new Image();
+    img.onload = () => {
+      imageRefsRef.current.add(img);
+    };
+    
+    return imageUrl;
+  }, []);
+  
+  const cleanupImages = useCallback(() => {
+    // Blob URL 해제
+    blobUrlsRef.current.forEach(url => {
+      URL.revokeObjectURL(url);
+    });
+    blobUrlsRef.current.clear();
+    
+    // 이미지 참조 해제
+    imageRefsRef.current.forEach(img => {
+      img.src = '';
+      img.onload = null;
+      img.onerror = null;
+    });
+    imageRefsRef.current.clear();
+  }, []);
+  
+  useEffect(() => {
+    return () => {
+      cleanupImages();
+    };
+  }, [cleanupImages]);
+  
+  return { loadSecureImage, cleanupImages };
+};
+
+// ✅ 대용량 파일 처리 메모리 최적화
+const processLargeFile = async (file: File) => {
+  const CHUNK_SIZE = 64 * 1024; // 64KB chunks
+  const reader = new FileReader();
+  const chunks: ArrayBuffer[] = [];
+  
+  try {
+    for (let offset = 0; offset < file.size; offset += CHUNK_SIZE) {
+      const chunk = file.slice(offset, offset + CHUNK_SIZE);
+      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(chunk);
+      });
+      
+      // 청크 처리
+      await processChunk(arrayBuffer);
+      
+      // 메모리 해제 (TypedArray는 자동으로 GC 대상이 됨)
+      chunks.push(arrayBuffer);
+    }
+  } finally {
+    // 명시적 정리
+    chunks.length = 0;
+    reader.onload = null;
+    reader.onerror = null;
+  }
+};
+```
+
+---
+
+## 14. 입력 검증 및 XSS/CSRF 방지 🛡️
+
+**⚠️ CRITICAL**: 모든 사용자 입력은 잠재적 보안 위협으로 간주하고 철저히 검증해야 합니다.
+
+### 14.1 입력 검증 필수 패턴
+
+```typescript
+// ✅ 타입 가드를 활용한 런타임 검증
+const isValidStudentName = (input: unknown): input is string => {
+  return (
+    typeof input === 'string' &&
+    input.length > 0 &&
+    input.length <= 50 &&
+    /^[가-힣a-zA-Z\s'-]+$/.test(input) // 한글, 영문, 공백, 하이픈, 아포스트로피만 허용
+  );
+};
+
+const isValidPhoneNumber = (input: unknown): input is string => {
+  return (
+    typeof input === 'string' &&
+    /^01[0-9]-\d{4}-\d{4}$/.test(input) // 한국 휴대폰 번호 형식
+  );
+};
+
+const isValidEmail = (input: unknown): input is string => {
+  return (
+    typeof input === 'string' &&
+    input.length <= 255 &&
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(input)
+  );
+};
+
+// ✅ 종합 입력 검증 함수
+const validateStudentInput = (input: unknown): input is StudentInput => {
+  if (typeof input !== 'object' || input === null) return false;
+  
+  const data = input as Record<string, unknown>;
+  
+  return (
+    isValidStudentName(data.name) &&
+    isValidPhoneNumber(data.phone) &&
+    (!data.email || isValidEmail(data.email)) &&
+    (!data.address || (typeof data.address === 'string' && data.address.length <= 200))
+  );
+};
+
+// ✅ API 핸들러에서 입력 검증 사용
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    
+    // 입력 검증 실패 시 즉시 거부
+    if (!validateStudentInput(body)) {
+      return NextResponse.json(
+        { error: '입력 데이터가 올바르지 않습니다.' },
+        { status: 400 }
+      );
+    }
+    
+    // 검증된 데이터로 처리
+    const student = await createStudent(body);
+    return NextResponse.json(student);
+    
+  } catch (error) {
+    Sentry.captureException(error);
+    return NextResponse.json(
+      { error: '서버 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### 14.2 XSS (Cross-Site Scripting) 방지
+
+```typescript
+// ✅ HTML 출력 시 안전한 렌더링
+import DOMPurify from 'dompurify';
+
+const SafeHtmlRenderer = ({ content }: { content: string }) => {
+  const sanitizedHtml = useMemo(() => {
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
+      ALLOWED_ATTR: ['class'],
+      FORBID_SCRIPTS: true,
+      FORBID_TAGS: ['script', 'object', 'embed', 'link', 'style'],
+    });
+  }, [content]);
+  
+  return (
+    <div 
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+      className="safe-html-content"
+    />
+  );
+};
+
+// ✅ 텍스트 전용 안전 렌더링
+const SafeTextRenderer = ({ children }: { children: string }) => {
+  const escapedText = useMemo(() => {
+    return DOMPurify.sanitize(children, { 
+      ALLOWED_TAGS: [],
+      KEEP_CONTENT: true 
+    });
+  }, [children]);
+  
+  return <span>{escapedText}</span>;
+};
+
+// ✅ 사용자 입력 표시 시 이스케이프 처리
+const StudentCard = memo<StudentCardProps>(({ student }) => {
+  return (
+    <Card>
+      <SafeTextRenderer>{student.name}</SafeTextRenderer>
+      <SafeTextRenderer>{student.phone}</SafeTextRenderer>
+      {student.note && (
+        <SafeHtmlRenderer content={student.note} />
+      )}
+    </Card>
+  );
+});
+```
+
+### 14.3 CSRF (Cross-Site Request Forgery) 방지
+
+```typescript
+// ✅ CSRF 토큰 생성 및 검증
+const generateCSRFToken = (): string => {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+const verifyCSRFToken = (token: string, sessionToken: string): boolean => {
+  // 세션에서 저장된 토큰과 비교
+  return token === sessionToken && token.length === 64;
+};
+
+// ✅ API 클라이언트 CSRF 보호
+class SecureApiClient {
+  private csrfToken: string | null = null;
+  
+  async getCSRFToken(): Promise<string> {
+    if (!this.csrfToken) {
+      const response = await fetch('/api/csrf-token', {
+        credentials: 'same-origin',
+      });
+      const data = await response.json();
+      this.csrfToken = data.token;
+    }
+    return this.csrfToken;
+  }
+  
+  async post(url: string, data: any): Promise<Response> {
+    const csrfToken = await this.getCSRFToken();
+    
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest', // AJAX 요청 식별
+      },
+      body: JSON.stringify(data),
+    });
+  }
+  
+  async put(url: string, data: any): Promise<Response> {
+    const csrfToken = await this.getCSRFToken();
+    
+    return fetch(url, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify(data),
+    });
+  }
+  
+  async delete(url: string): Promise<Response> {
+    const csrfToken = await this.getCSRFToken();
+    
+    return fetch(url, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+  }
+}
+
+// ✅ API 라우트에서 CSRF 검증
+export async function POST(request: Request) {
+  try {
+    // CSRF 토큰 검증
+    const csrfToken = request.headers.get('X-CSRF-Token');
+    const session = await getServerSession(authOptions);
+    
+    if (!csrfToken || !verifyCSRFToken(csrfToken, session?.csrfToken)) {
+      return NextResponse.json(
+        { error: 'CSRF token validation failed' },
+        { status: 403 }
+      );
+    }
+    
+    // AJAX 요청 여부 확인
+    const requestedWith = request.headers.get('X-Requested-With');
+    if (requestedWith !== 'XMLHttpRequest') {
+      return NextResponse.json(
+        { error: 'Invalid request type' },
+        { status: 400 }
+      );
+    }
+    
+    // 실제 비즈니스 로직 처리
+    const body = await request.json();
+    if (!validateStudentInput(body)) {
+      return NextResponse.json(
+        { error: 'Invalid input data' },
+        { status: 400 }
+      );
+    }
+    
+    const result = await processStudentData(body);
+    return NextResponse.json(result);
+    
+  } catch (error) {
+    Sentry.captureException(error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### 14.4 SQL Injection 방지 (Supabase RLS + Parameterized Queries)
+
+```typescript
+// ✅ Supabase 클라이언트 안전한 쿼리 패턴
+const getStudentsSafely = async (searchTerm: string, classId: string) => {
+  // Supabase는 자동으로 SQL injection을 방지하지만, 추가 검증
+  const sanitizedSearchTerm = searchTerm.replace(/[%_]/g, '\\$&'); // LIKE 이스케이프
+  
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, name, phone, class_id')
+    .eq('class_id', classId) // 파라미터화된 쿼리
+    .ilike('name', `%${sanitizedSearchTerm}%`) // 안전한 LIKE 쿼리
+    .limit(100); // 결과 제한
+  
+  if (error) {
+    Sentry.captureException(error);
+    throw new DatabaseError('Failed to fetch students');
+  }
+  
+  return data;
+};
+
+// ✅ RLS(Row Level Security) 정책 예시 (SQL)
+/*
+-- 사용자는 자신의 테넌트 학생만 조회 가능
+CREATE POLICY "Users can only view students in their tenant"
+ON students FOR SELECT
+TO authenticated
+USING (
+  tenant_id IN (
+    SELECT tenant_id 
+    FROM user_tenant_roles 
+    WHERE user_id = auth.uid()
+  )
+);
+
+-- 관리자만 학생 데이터 수정 가능
+CREATE POLICY "Only admins can update students"
+ON students FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 
+    FROM user_tenant_roles 
+    WHERE user_id = auth.uid() 
+    AND tenant_id = students.tenant_id 
+    AND role IN ('admin', 'instructor')
+  )
+);
+*/
 ```
 
 ---

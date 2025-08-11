@@ -4,7 +4,7 @@
 import type { 
   User, Student, Class, Instructor, Attendance, Payment, 
   StudentStatus, UserRole, PaginationParams, PaginationResult,
-  StudentEnrollment, CoursePackage, SalaryCalculation 
+  StudentEnrollment, CoursePackage
 } from './database';
 import type { BillingCalculationResult, DiscountPolicy } from './billing';
 import type { SalaryCalculationResult, InstructorPerformanceMetrics } from './salary';

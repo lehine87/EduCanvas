@@ -1,4 +1,6 @@
 // src/types/class.ts
+export type ClassStatus = 'active' | 'inactive' | 'archived'
+
 export interface Class {
   id: string
   name: string
@@ -9,7 +11,7 @@ export interface Class {
   main_instructor_id?: string
   classroom?: string
   color: string
-  status: Status
+  status: ClassStatus
   start_date?: string
   end_date?: string
   order_index: number

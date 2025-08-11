@@ -79,7 +79,7 @@ export interface FormFieldState {
 /**
  * Extended button props with common variants
  */
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, BaseComponentProps {
+export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseComponentProps>, BaseComponentProps {
   /** Button visual variant */
   variant?: ComponentVariant;
   /** Button size */
@@ -97,7 +97,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Ba
 /**
  * Extended input props with validation
  */
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, BaseComponentProps {
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, keyof BaseComponentProps | 'size'>, BaseComponentProps {
   /** Input label */
   label?: string;
   /** Field state */

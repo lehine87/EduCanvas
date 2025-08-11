@@ -1,25 +1,23 @@
-// EduCanvas v2.0 Type Definitions Index
+// EduCanvas Type Definitions Index
 // 모든 타입 정의를 통합 export
 
 // ================================================================
-// 1. DATABASE TYPES (데이터베이스 기본 타입들)
+// 1. SUPABASE TYPES (자동 생성된 데이터베이스 타입들)
 // ================================================================
-export * from './database';
+export * from './supabase';
 
 // ================================================================  
-// 2. BILLING SYSTEM TYPES (요금제 시스템)
+// 2. APPLICATION TYPES (애플리케이션 레벨 타입들)
 // ================================================================
-export * from './billing';
+export * from './app.types';
 
 // ================================================================
-// 3. SALARY SYSTEM TYPES (급여 시스템)
+// 3. LEGACY TYPES (기존 시스템 호환성 - 점진적 제거 예정)
 // ================================================================
-export * from './salary';
-
-// ================================================================
-// 4. API TYPES (API 및 비즈니스 로직)
-// ================================================================
-export * from './api';
+// export * from './database'; // 제거됨 - supabase.ts로 대체
+// export * from './billing';  // app.types.ts로 통합됨
+// export * from './salary';   // app.types.ts로 통합됨  
+// export * from './api';      // app.types.ts로 통합됨
 
 // ================================================================
 // 5. COMMON UTILITY TYPES (공통 유틸리티 타입)
@@ -456,7 +454,7 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 export const SUPPORTED_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
-export const STATUS_COLORS: Record<StudentStatus, StatusColor> = {
+export const STATUS_COLORS: Record<string, StatusColor> = {
   active: 'success',
   waiting: 'warning', 
   inactive: 'info',

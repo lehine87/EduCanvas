@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { cn } from '@/lib/utils';
 
@@ -181,14 +181,47 @@ export function Table<T extends Record<string, any>>({
     return row[column.key as keyof T];
   };
 
-  const renderCell = (row: T, column: Column<T>, index: number) => {
+  // Select All Checkbox component with indeterminate support
+  const SelectAllCheckbox: React.FC<{
+    checked: boolean;
+    onChange: () => void;
+    indeterminate: boolean;
+  }> = ({ checked, onChange, indeterminate }) => {
+    const checkboxRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+      if (checkboxRef.current) {
+        checkboxRef.current.indeterminate = indeterminate;
+      }
+    }, [indeterminate]);
+
+    return (
+      <input
+        ref={checkboxRef}
+        type="checkbox"
+        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+        checked={checked}
+        onChange={onChange}
+      />
+    );
+  };
+
+  const renderCell = (row: T, column: Column<T>, index: number): React.ReactNode => {
+    if (!row) return null;
+    
     const value = getCellValue(row, column);
     
     if (column.render) {
       return column.render(value, row, index);
     }
     
-    return value;
+    // Safely render primitive values
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    
+    return '';
   };
 
   const TableHeader = () => (
@@ -196,9 +229,7 @@ export function Table<T extends Record<string, any>>({
       <tr>
         {selectable && (
           <th className="w-12 px-4 py-3 text-left">
-            <input
-              type="checkbox"
-              className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            <SelectAllCheckbox
               checked={selectedRows.size === sortedData.length && sortedData.length > 0}
               onChange={handleSelectAll}
               indeterminate={selectedRows.size > 0 && selectedRows.size < sortedData.length}
@@ -248,6 +279,8 @@ export function Table<T extends Record<string, any>>({
 
   const TableRow = ({ index, style }: { index: number; style?: React.CSSProperties }) => {
     const row = sortedData[index];
+    if (!row) return null;
+    
     const isSelected = selectedRows.has(index);
 
     return (
@@ -280,7 +313,7 @@ export function Table<T extends Record<string, any>>({
               'px-4 py-3 text-sm text-gray-900',
               column.align === 'center' && 'text-center',
               column.align === 'right' && 'text-right',
-              column.cellClassName?.(getCellValue(row, column), row)
+              column.cellClassName ? column.cellClassName(getCellValue(row, column), row) : undefined
             )}
             style={{ width: column.width }}
           >
@@ -346,9 +379,10 @@ export function Table<T extends Record<string, any>>({
           <TableHeader />
         </table>
         <List
-          height={height}
+          height={height || 400}
+          width="100%"
           itemCount={sortedData.length}
-          itemSize={rowHeight}
+          itemSize={rowHeight || 50}
           className="scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300"
         >
           {({ index, style }) => (

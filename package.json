@@ -6,7 +6,19 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "types:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/supabase.ts",
+    "types:generate:local": "supabase gen types typescript --local --schema public > src/types/supabase.ts",
+    "types:watch": "chokidar 'supabase/migrations/*.sql' -c 'npm run types:generate:local'",
+    "types:validate": "tsc --noEmit --strict",
+    "types:check": "tsc --noEmit && echo 'Type checking passed ✓'",
+    "db:types": "npm run types:generate:local && npm run types:validate",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:types": "vitest run src/utils/typeGuards.test.ts",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -42,10 +54,15 @@
     "@types/node": "^20.19.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chokidar-cli": "^3.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "jsdom": "^24.0.0",
     "supabase": "^2.33.9",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0"
   }
 }

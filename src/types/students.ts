@@ -1,4 +1,6 @@
 // src/types/student.ts
+export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended'
+
 export interface Student {
   id: string
   name: string
@@ -7,7 +9,7 @@ export interface Student {
   parent_phone: string
   grade?: string
   class_id?: string
-  status: Status
+  status: StudentStatus
   monthly_fee: number
   enrollment_date: string
   graduation_date?: string
@@ -21,7 +23,7 @@ export interface Student {
 
 export interface StudentFilters {
   search: string
-  status: Status | 'all'
+  status: StudentStatus | 'all'
   class: string | 'all'
   grade: string | 'all'
 }
