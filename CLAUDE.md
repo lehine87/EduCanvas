@@ -500,3 +500,5 @@ AUDIT_LOG_ENDPOINT="https://audit.educanvas.com/api/logs"
 5. **권한 관리** (1주) - RBAC 완전 구현
 
 **Success Criteria**: ClassFlow 60fps + 1000+ students + WCAG 2.1 AA + 99.9% uptime
+- 한국어로 답변해줘.
+- Supabase 접속은 항상 .env.local 정보를 이용해 npx supabase 명령어로 cli를 이용하도록 해

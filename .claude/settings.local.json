@@ -11,7 +11,8 @@
       "Bash(supabase:*)",
       "Bash(npx supabase:*)",
       "Bash(cp:*)",
-      "Bash(npm run types:check:*)"
+      "Bash(npm run types:check:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }
