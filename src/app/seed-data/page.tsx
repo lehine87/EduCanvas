@@ -34,9 +34,9 @@ export default function SeedDataPage() {
         const tenantData = tenant as { name: string; id: string; slug: string }
         const tenantResults = {
           tenantName: tenantData.name,
-          students: { success: 0, errors: [] },
-          classes: { success: 0, errors: [] },
-          instructors: { success: 0, errors: [] }
+          students: { success: 0, errors: [] as string[] },
+          classes: { success: 0, errors: [] as string[] },
+          instructors: { success: 0, errors: [] as string[] }
         }
 
         // 1. 샘플 학생 5명 생성
