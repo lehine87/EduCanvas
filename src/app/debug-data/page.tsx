@@ -118,35 +118,35 @@ export default function DebugDataPage() {
                 <div className="space-y-2">
                   <h3 className="font-medium text-gray-900">샘플 데이터:</h3>
                   <div className="max-h-40 overflow-y-auto">
-                    {info.data.slice(0, 3).map((item, index) => (
+                    {info.data.slice(0, 3).map((item: Record<string, unknown>, index: number) => (
                       <div key={index} className="p-2 bg-gray-50 rounded text-xs">
                         <div className="font-mono">
                           {tableName === 'tenants' && (
                             <div>
-                              <span className="font-semibold">ID:</span> {item.id}<br/>
-                              <span className="font-semibold">Name:</span> {item.name}<br/>
-                              <span className="font-semibold">Slug:</span> {item.slug}
+                              <span className="font-semibold">ID:</span> {String(item.id)}<br/>
+                              <span className="font-semibold">Name:</span> {String(item.name)}<br/>
+                              <span className="font-semibold">Slug:</span> {String(item.slug)}
                             </div>
                           )}
                           {tableName === 'students' && (
                             <div>
-                              <span className="font-semibold">ID:</span> {item.id}<br/>
-                              <span className="font-semibold">이름:</span> {item.name}<br/>
-                              <span className="font-semibold">테넌트:</span> {item.tenant_id}
+                              <span className="font-semibold">ID:</span> {String(item.id)}<br/>
+                              <span className="font-semibold">이름:</span> {String(item.name)}<br/>
+                              <span className="font-semibold">테넌트:</span> {String(item.tenant_id)}
                             </div>
                           )}
                           {tableName === 'classes' && (
                             <div>
-                              <span className="font-semibold">ID:</span> {item.id}<br/>
-                              <span className="font-semibold">이름:</span> {item.name}<br/>
-                              <span className="font-semibold">테넌트:</span> {item.tenant_id}
+                              <span className="font-semibold">ID:</span> {String(item.id)}<br/>
+                              <span className="font-semibold">이름:</span> {String(item.name)}<br/>
+                              <span className="font-semibold">테넌트:</span> {String(item.tenant_id)}
                             </div>
                           )}
                           {tableName === 'tenant_users' && (
                             <div>
-                              <span className="font-semibold">사용자 ID:</span> {item.user_id}<br/>
-                              <span className="font-semibold">테넌트 ID:</span> {item.tenant_id}<br/>
-                              <span className="font-semibold">역할:</span> {item.role}
+                              <span className="font-semibold">사용자 ID:</span> {String(item.user_id)}<br/>
+                              <span className="font-semibold">테넌트 ID:</span> {String(item.tenant_id)}<br/>
+                              <span className="font-semibold">역할:</span> {String(item.role)}
                             </div>
                           )}
                         </div>

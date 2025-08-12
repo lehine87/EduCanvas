@@ -162,19 +162,19 @@ export const useAuthStore = create<AuthState>()(
           // 사용자 데이터를 null로 덮어쓰기
           if (state.user) {
             Object.keys(state.user).forEach(key => {
-              delete (state.user as any)[key]
+              delete (state.user as Record<string, unknown>)[key]
             })
           }
           
           if (state.profile) {
             Object.keys(state.profile).forEach(key => {
-              delete (state.profile as any)[key]
+              delete (state.profile as Record<string, unknown>)[key]
             })
           }
           
           if (state.session) {
             Object.keys(state.session).forEach(key => {
-              delete (state.session as any)[key]
+              delete (state.session as Record<string, unknown>)[key]
             })
           }
           
@@ -189,8 +189,8 @@ export const useAuthStore = create<AuthState>()(
           })
           
           // 가비지 컬렉션 강제 실행 (개발환경)
-          if (process.env.NODE_ENV === 'development' && typeof global !== 'undefined' && (global as any).gc) {
-            (global as any).gc()
+          if (process.env.NODE_ENV === 'development' && typeof global !== 'undefined' && 'gc' in global && typeof (global as { gc?: () => void }).gc === 'function') {
+            (global as { gc: () => void }).gc()
           }
         },
 

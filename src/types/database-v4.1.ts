@@ -199,7 +199,7 @@ export type ClassUpdateV41 = Partial<Omit<ClassV41, 'id' | 'created_at' | 'updat
 // 5. API RESPONSE TYPES
 // ================================================================
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string

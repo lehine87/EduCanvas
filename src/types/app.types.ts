@@ -260,7 +260,7 @@ export interface VideoAssignmentFormData extends Omit<VideoAssignmentInsert, 'id
 // ================================================================
 // UI State Types
 // ================================================================
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T | string
   label: string
   sortable?: boolean
@@ -276,7 +276,7 @@ export interface TableState<T = Record<string, unknown>> {
   error: string | null
   sortBy: string | null
   sortOrder: 'asc' | 'desc'
-  filters: Record<string, any>
+  filters: Record<string, unknown>
   pagination: {
     page: number
     limit: number
@@ -345,7 +345,7 @@ export interface ReportConfiguration {
     includeInactive: boolean
     groupBy: string[]
     metrics: string[]
-    filters: Record<string, any>
+    filters: Record<string, unknown>
   }
   format: 'pdf' | 'excel' | 'csv'
   schedule?: {
@@ -411,7 +411,7 @@ export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>
 export type TypeGuard<T> = (value: unknown) => value is T
 
 // Event Types
-export interface AppEvent<T = any> {
+export interface AppEvent<T = unknown> {
   type: string
   payload: T
   timestamp: number

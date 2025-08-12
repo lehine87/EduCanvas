@@ -313,7 +313,7 @@ export interface DiscountPerformance {
 // 8. API REQUEST/RESPONSE TYPES
 // ================================================================
 
-export interface BillingApiResponse<T = any> {
+export interface BillingApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

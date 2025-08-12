@@ -315,7 +315,7 @@ export class AuthManager {
   /**
    * 권한 매트릭스 조회
    */
-  private getPermissions(role: string, overrides?: Record<string, any>): Record<string, string[]> {
+  private getPermissions(role: string, overrides?: Record<string, string[]>): Record<string, string[]> {
     const basePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.viewer
     
     // 권한 오버라이드 적용
