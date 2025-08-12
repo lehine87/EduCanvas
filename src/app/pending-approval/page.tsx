@@ -47,7 +47,7 @@ export default function PendingApprovalPage() {
         
         // 테넌트 정보도 함께 로드
         if (profile.tenants) {
-          setTenant(profile.tenants)
+          setTenant(profile.tenants as Tenant)
         }
         
         setIsLoading(false)

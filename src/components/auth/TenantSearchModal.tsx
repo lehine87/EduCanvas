@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Modal, Button, Input, Loading } from '@/components/ui'
-import type { Tenant } from '@/types/app.types'
+import type { Tenant } from '@/types/auth.types'
 
 interface TenantSearchModalProps {
   isOpen: boolean
@@ -15,7 +15,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<Tenant[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | undefined>(undefined)
   const [hasSearched, setHasSearched] = useState(false)
 
   const handleSearch = async () => {
@@ -31,7 +31,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
     }
 
     setIsSearching(true)
-    setError(null)
+    setError(undefined)
     setSearchResults([])
 
     try {
@@ -86,7 +86,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
   const handleClose = () => {
     setSearchQuery('')
     setSearchResults([])
-    setError(null)
+    setError(undefined)
     setHasSearched(false)
     setSearchType('code')
     onClose()

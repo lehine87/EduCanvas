@@ -10,6 +10,7 @@ import { TenantSearchModal } from './TenantSearchModal'
 import { createClient } from '@/lib/supabase/client'
 import type { Tenant } from '@/types/app.types'
 import type { User } from '@supabase/supabase-js'
+import type { UserProfile } from '@/types/auth.types'
 
 const onboardingSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
@@ -23,13 +24,6 @@ const onboardingSchema = z.object({
 })
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>
-
-interface UserProfile {
-  id?: string
-  name?: string
-  phone?: string
-  email?: string
-}
 
 interface OnboardingFormProps {
   user: {
@@ -55,7 +49,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       name: user.profile.name || '',
-      phone: user.profile.phone || '',
+      phone: user.profile.phone ?? '',
     },
     mode: 'onChange'
   })

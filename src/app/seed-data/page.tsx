@@ -31,8 +31,9 @@ export default function SeedDataPage() {
     
     try {
       for (const tenant of tenants) {
+        const tenantData = tenant as { name: string; id: string; slug: string }
         const tenantResults = {
-          tenantName: tenant.name,
+          tenantName: tenantData.name,
           students: { success: 0, errors: [] },
           classes: { success: 0, errors: [] },
           instructors: { success: 0, errors: [] }
@@ -42,8 +43,8 @@ export default function SeedDataPage() {
         for (let i = 1; i <= 5; i++) {
           try {
             const { error } = await supabase.from('students').insert({
-              tenant_id: tenant.id,
-              name: `테스트학생${i}_${tenant.name}`,
+              tenant_id: tenantData.id,
+              name: `테스트학생${i}_${tenantData.name}`,
               phone: `010-1234-${String(i).padStart(4, '0')}`,
               birth_date: `200${i}-01-15`,
               gender: i % 2 === 0 ? 'female' : 'male',
@@ -63,9 +64,9 @@ export default function SeedDataPage() {
         for (let i = 1; i <= 2; i++) {
           try {
             const { error } = await supabase.from('classes').insert({
-              tenant_id: tenant.id,
-              name: `테스트클래스${i}_${tenant.name}`,
-              description: `${tenant.name}의 테스트용 클래스 ${i}번`,
+              tenant_id: tenantData.id,
+              name: `테스트클래스${i}_${tenantData.name}`,
+              description: `${tenantData.name}의 테스트용 클래스 ${i}번`,
               status: 'active',
               max_students: 10,
               current_students: 0,
@@ -84,10 +85,10 @@ export default function SeedDataPage() {
         for (let i = 1; i <= 2; i++) {
           try {
             const { error } = await supabase.from('instructors').insert({
-              tenant_id: tenant.id,
-              name: `테스트강사${i}_${tenant.name}`,
+              tenant_id: tenantData.id,
+              name: `테스트강사${i}_${tenantData.name}`,
               phone: `010-9999-${String(i).padStart(4, '0')}`,
-              email: `instructor${i}@${tenant.slug}.test.com`,
+              email: `instructor${i}@${tenantData.slug}.test.com`,
               status: 'active',
               hire_date: new Date().toISOString().split('T')[0],
               created_at: new Date().toISOString(),
@@ -139,17 +140,20 @@ export default function SeedDataPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-bold mb-4">📋 생성 대상 테넌트</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tenants.map(tenant => (
-              <div key={tenant.id} className="p-4 border rounded-lg">
-                <h3 className="font-semibold">{tenant.name}</h3>
-                <p className="text-sm text-gray-600">Slug: {tenant.slug}</p>
+            {tenants.map(tenant => {
+              const tenantData = tenant as { name: string; id: string; slug: string }
+              return (
+              <div key={tenantData.id} className="p-4 border rounded-lg">
+                <h3 className="font-semibold">{tenantData.name}</h3>
+                <p className="text-sm text-gray-600">Slug: {tenantData.slug}</p>
                 <div className="mt-2 text-sm">
                   <div className="text-green-600">✅ 학생 5명</div>
                   <div className="text-blue-600">✅ 클래스 2개</div>
                   <div className="text-purple-600">✅ 강사 2명</div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
