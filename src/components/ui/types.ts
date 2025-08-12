@@ -157,7 +157,7 @@ export interface ModalProps extends BaseComponentProps {
 /**
  * Table column definition interface
  */
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   /** Column identifier */
   key: keyof T | string;
   /** Column header text */
@@ -167,9 +167,9 @@ export interface TableColumn<T = any> {
   /** Whether column is sortable */
   sortable?: boolean;
   /** Custom render function */
-  render?: (value: any, row: T, index: number) => ReactNode;
+  render?: (value: T[keyof T], row: T, index: number) => ReactNode;
   /** Cell CSS class function */
-  cellClassName?: (value: any, row: T) => string;
+  cellClassName?: (value: T[keyof T], row: T) => string;
   /** Header CSS classes */
   headerClassName?: string;
   /** Column alignment */
@@ -179,7 +179,7 @@ export interface TableColumn<T = any> {
 /**
  * Table props interface
  */
-export interface TableProps<T = any> extends BaseComponentProps {
+export interface TableProps<T = Record<string, unknown>> extends BaseComponentProps {
   /** Table data */
   data: T[];
   /** Column definitions */
@@ -257,7 +257,7 @@ export interface TooltipProps extends BaseComponentProps {
 /**
  * Dropdown/Select props interface
  */
-export interface DropdownProps<T = any> extends BaseComponentProps {
+export interface DropdownProps<T = unknown> extends BaseComponentProps {
   /** Available options */
   options: Array<{
     value: T;
@@ -436,18 +436,18 @@ export interface PaginationProps extends BaseComponentProps {
 /**
  * Filter props interface
  */
-export interface FilterProps<T = any> extends BaseComponentProps {
+export interface FilterProps<T = Record<string, unknown>> extends BaseComponentProps {
   /** Available filters */
   filters: Array<{
     key: keyof T;
     label: string;
     type: 'text' | 'select' | 'date' | 'range';
-    options?: Array<{ value: any; label: string }>;
+    options?: Array<{ value: unknown; label: string }>;
   }>;
   /** Current filter values */
-  values: Partial<Record<keyof T, any>>;
+  values: Partial<Record<keyof T, unknown>>;
   /** Filter change handler */
-  onChange: (values: Partial<Record<keyof T, any>>) => void;
+  onChange: (values: Partial<Record<keyof T, unknown>>) => void;
   /** Reset handler */
   onReset: () => void;
 }

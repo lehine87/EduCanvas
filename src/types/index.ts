@@ -2,28 +2,31 @@
 // 모든 타입 정의를 통합 export
 
 // ================================================================
-// 1. DATABASE TYPES (데이터베이스 타입들)
+// 1. CORE TYPES (핵심 타입들 - 우선순위 순)
 // ================================================================
-// Auto-generated Supabase types (raw)
-export * from './database.types';
-
-// v4.1 Enhanced types with T-005 findings
+// v4.1 Enhanced types (최신, 최우선)
 export * from './database-v4.1';
 
-// Legacy database types (being phased out)
-export * from './supabase';
-
-// ================================================================  
-// 2. APPLICATION TYPES (애플리케이션 레벨 타입들)
-// ================================================================
+// Application types (앱 레벨)
 export * from './app.types';
 
+// Auth types (인증)
+export * from './auth';
+
+// API types (선택적 사용)
+export * from './api';
+
 // ================================================================
-// 3. LEGACY TYPES (기존 시스템 호환성 - 점진적 제거 예정)
+// 2. SUPPORTING TYPES (지원 타입들)
 // ================================================================
-export * from './students';  // v4.1 updated - will be consolidated
-export * from './classes';   // v4.1 updated - will be consolidated
-export * from './database';  // Legacy v2.0 types - use database-v4.1.ts instead
+// Auto-generated Supabase types (필요시만)
+export type { Database, Json } from './database.types';
+
+// Legacy types (점진적 제거 예정)
+// export * from './supabase';    // 주석 처리 - 중복 방지
+// export * from './students';    // 주석 처리 - 중복 방지  
+// export * from './classes';     // 주석 처리 - 중복 방지
+// export * from './database';    // 주석 처리 - 중복 방지
 // export * from './billing';  // app.types.ts로 통합됨
 // export * from './salary';   // app.types.ts로 통합됨  
 // export * from './api';      // app.types.ts로 통합됨

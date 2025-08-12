@@ -666,6 +666,7 @@ AUDIT_LOG_ENDPOINT="https://audit.educanvas.com/api/logs"
 ### Core Documentation (`/docs/`)
 
 - `coding-standards.md` - **🏆 MANDATORY** Enterprise-grade development guidelines (TypeScript, React, Testing, Performance, Accessibility)
+- `typescript-type-dictionary.md` - **🏆 CRITICAL** Complete TypeScript type reference (v4.1 Schema, 500+ types, security-first)
 - `database_design.md` - **v2.0** Complete database schema documentation (schema_v2.sql 기반)
 - `기능요구서.md` - **v2.0** MVP-focused feature requirements (P0 only)
 - `development_plan.md` - **v2.0** Complete 10-week MVP development roadmap
@@ -711,3 +712,4 @@ AUDIT_LOG_ENDPOINT="https://audit.educanvas.com/api/logs"
 - 이 프로젝트에서는 로컬DB를 사용하지 않아. 항상 .env.local 파일의 정보를 이용해 supabase 클라우드 데이터베이스로 접속해야 해.
 
 - UI컴포넌트 사용시 docs/project_manual/UI-Components-Manual.md 파일을 봐야 해.
+- TypeScript 타입 사용시 docs/typescript-type-dictionary.md 타입 사전을 반드시 참고해야 해.
