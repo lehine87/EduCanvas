@@ -7,6 +7,8 @@ import React from 'react'
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
   role?: string | null  // 명시적으로 role 필드 추가
+  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
+  status?: string | null  // 명시적으로 status 필드 추가
   tenants?: {
     id: string
     name: string
