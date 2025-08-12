@@ -147,11 +147,22 @@ export class AuthClient {
   }
 
   async resetPassword(email: string) {
-    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`
+    // API Route를 통해 Rate Limiting이 적용된 비밀번호 재설정 요청
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
     })
 
-    if (error) throw error
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || '비밀번호 재설정 요청 실패')
+    }
+
+    const result = await response.json()
+    return result
   }
 
   async updatePassword(password: string) {
