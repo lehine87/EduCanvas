@@ -1,138 +1,57 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { Database } from '@/types/supabase'
+import { createClient } from '@/lib/supabase/middleware'
+import { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient<Database>({ req, res })
-  
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+export async function middleware(request: NextRequest) {
+  const { supabase, response } = createClient(request)
 
-  const url = req.nextUrl.clone()
-  
-  // Public paths that don't require authentication
-  const publicPaths = [
-    '/',
-    '/login',
-    '/register', 
-    '/forgot-password',
-    '/reset-password',
-    '/design-system-test' // Keep for development
-  ]
-  
-  // Admin paths that require authentication
-  const adminPaths = ['/admin']
-  const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path))
+  // 세션 새로고침 (중요: 만료된 토큰 자동 갱신)
+  await supabase.auth.getSession()
 
-  // Static files and API routes
+  const url = request.nextUrl.clone()
+  
+  // 정적 파일과 API 라우트는 건너뛰기
   if (
-    req.nextUrl.pathname.startsWith('/_next') ||
-    req.nextUrl.pathname.startsWith('/api') ||
-    req.nextUrl.pathname.includes('.') ||
-    req.nextUrl.pathname.startsWith('/test-db') // Allow for development
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api') ||
+    request.nextUrl.pathname.includes('.') ||
+    request.nextUrl.pathname.startsWith('/test-') || // 개발용 페이지들
+    request.nextUrl.pathname.startsWith('/debug-') ||
+    request.nextUrl.pathname.startsWith('/seed-') ||
+    request.nextUrl.pathname.startsWith('/design-system-test')
   ) {
-    return NextResponse.next()
-  }
-
-  // Redirect unauthenticated users from admin paths
-  if (!session && isAdminPath) {
-    url.pathname = '/login'
-    url.searchParams.set('redirect', req.nextUrl.pathname)
-    return NextResponse.redirect(url)
-  }
-
-  // Redirect authenticated users from login page
-  if (session && url.pathname === '/login') {
-    const redirectPath = url.searchParams.get('redirect')
-    url.pathname = redirectPath || '/admin/dashboard'
-    url.searchParams.delete('redirect')
-    return NextResponse.redirect(url)
-  }
-
-  // Tenant validation for admin paths
-  if (session && isAdminPath) {
-    const tenantId = req.headers.get('x-tenant-id') || 
-                   url.searchParams.get('tenant') ||
-                   req.cookies.get('current_tenant_id')?.value
-    
-    // If no tenant ID, check if user has tenant access
-    if (!tenantId) {
-      // Get user's available tenants
-      const { data: tenants, error } = await supabase
-        .from('tenant_users')
-        .select('tenant_id, tenants (name, slug)')
-        .eq('user_id', session.user.id)
-        .eq('status', 'active')
-      
-      if (error || !tenants || tenants.length === 0) {
-        // User has no tenant access - redirect to unauthorized
-        url.pathname = '/admin/unauthorized'
-        return NextResponse.redirect(url)
-      }
-      
-      // If user has only one tenant, auto-select it
-      if (tenants.length === 1) {
-        const response = NextResponse.next()
-        response.cookies.set('current_tenant_id', tenants[0].tenant_id, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 30 // 30 days
-        })
-        response.headers.set('x-tenant-id', tenants[0].tenant_id)
-        return response
-      }
-      
-      // Multiple tenants - redirect to tenant selection
-      url.pathname = '/admin/select-tenant'
-      return NextResponse.redirect(url)
-    }
-    
-    // Validate tenant membership
-    const { data: tenantUser, error } = await supabase
-      .from('tenant_users')
-      .select(`
-        *,
-        tenant_roles (
-          name,
-          hierarchy_level,
-          base_permissions
-        )
-      `)
-      .eq('user_id', session.user.id)
-      .eq('tenant_id', tenantId)
-      .eq('status', 'active')
-      .single()
-
-    if (error || !tenantUser) {
-      // Invalid tenant access
-      url.pathname = '/admin/unauthorized'
-      return NextResponse.redirect(url)
-    }
-    
-    // Add tenant and role information to headers
-    const response = NextResponse.next()
-    response.headers.set('x-tenant-id', tenantId)
-    response.headers.set('x-user-role', tenantUser.tenant_roles?.name || 'viewer')
-    response.headers.set('x-user-level', tenantUser.tenant_roles?.hierarchy_level?.toString() || '5')
-    
-    // Set tenant cookie if not already set
-    if (!req.cookies.get('current_tenant_id')) {
-      response.cookies.set('current_tenant_id', tenantId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30 // 30 days
-      })
-    }
-    
     return response
   }
 
-  return res
+  // 인증이 필요한 경로들
+  const protectedPaths = ['/admin', '/onboarding', '/pending-approval', '/system-admin', '/tenant-admin']
+  const isProtectedPath = protectedPaths.some(path => 
+    url.pathname.startsWith(path)
+  )
+
+  // 인증 페이지들
+  const authPaths = ['/auth']
+  const isAuthPath = authPaths.some(path => 
+    url.pathname.startsWith(path)
+  )
+
+  // 현재 사용자 세션 확인
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // 보호된 경로에 인증되지 않은 사용자가 접근하는 경우
+  if (isProtectedPath && !session) {
+    const redirectUrl = new URL('/auth/login', request.url)
+    redirectUrl.searchParams.set('next', url.pathname)
+    return Response.redirect(redirectUrl.toString())
+  }
+
+  // 인증된 사용자가 auth 페이지에 접근하는 경우
+  if (isAuthPath && session) {
+    const next = url.searchParams.get('next')
+    const redirectUrl = new URL(next || '/admin', request.url)
+    return Response.redirect(redirectUrl.toString())
+  }
+
+  return response
 }
 
 export const config = {

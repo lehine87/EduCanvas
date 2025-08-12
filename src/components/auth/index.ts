@@ -1,7 +1,10 @@
 // Authentication components
 export { LoginForm } from './LoginForm'
+export { SignUpForm } from './SignUpForm'
+export { ResetPasswordForm } from './ResetPasswordForm'
+export { AuthGuard } from './AuthGuard'
+export { AuthProvider } from './AuthProvider'
+export { OnboardingForm } from './OnboardingForm'
+export { TenantSearchModal } from './TenantSearchModal'
 export * from './PermissionGate'
 export * from './PermissionGuard'
-
-// Re-export from context for convenience
-export { useAuth, withAuth, AuthProvider } from '@/contexts/AuthContext'

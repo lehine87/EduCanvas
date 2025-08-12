@@ -1,10 +1,10 @@
 # EduCanvas 통합 백로그 (BACKLOG)
 
-**마지막 업데이트**: 2025-08-10  
-**MVP 기간**: 10주 (2025-08-12 ~ 2025-10-17) - v2.0 스키마 기반  
-**확장 기간**: 3년 (2025-10-18 ~ 2028-12-31) - v3.0 스키마 기반  
+**마지막 업데이트**: 2025-08-11  
+**MVP 기간**: 10주 (2025-08-12 ~ 2025-10-17) - **v4.1 스키마 기반**  
+**확장 기간**: 3년 (2025-10-18 ~ 2028-12-31) - v4.2+ 스키마 기반  
 **총 태스크**: 150+ 개 (MVP + 확장 기능)  
-**데이터베이스**: v2.0 (MVP) → v3.0 (확장 기능)
+**데이터베이스**: **v4.1** (MVP) → v4.2+ (확장 기능)
 
 ---
 
@@ -23,15 +23,23 @@
 - **P3 (미래 기술)**: 20개 태스크 - LaTeX/NAS/외부 연동
 
 ### 현재 상태별 분류  
-- **TODO**: 142개 (92%) - 계획된 기능들
-- **IN_PROGRESS**: 1개 (1%) - T-002 (90% 완료)
+- **TODO**: 140개 (90%) - 계획된 기능들
+- **IN_PROGRESS**: 2개 (1%) - T-006 (50% 완료), T-002 (90% 완료)
 - **REVIEW**: 0개 (0%)  
-- **DONE**: 7개 (7%) - 문서화 작업 + T-001, T-006 완료
+- **DONE**: 9개 (6%) - 문서화 작업 + T-001, T-003, T-004, T-005, T-023 완료
 
-### 🚀 **최근 완료 (2025-08-09)**
-- **T-001**: Next.js 15 프로젝트 초기 설정 ✅
-- **T-006**: UI 컴포넌트 라이브러리 구축 ✅ (예상 초과 완성)
-- **T-002**: TailwindCSS 4 설정 🔄 (90% 완료)
+### 🚀 **최근 완료 (2025-08-11)**
+- **T-001**: Next.js 15 프로젝트 초기 설정 ✅ (2025-08-09)
+- **T-003**: Supabase 프로젝트 생성 및 v4.1 스키마 적용 ✅ (2025-08-10)
+- **T-004**: TypeScript 타입 자동 생성 설정 ✅ (2025-08-11, v4.1 스키마 반영)
+- **T-005**: 권한 문제 해결 및 RLS 테스트 ✅ (2025-08-11)
+- **T-023**: Schema v4.1 업데이트 ✅ (학부모 복수 연락처, 클래스 학년/과정 컬럼)
+
+### ✅ **최신 완료 (2025-08-11)**
+- **T-006**: UI 컴포넌트 라이브러리 구축 ✅ (10개 기본 + 2개 ClassFlow 컴포넌트 완료)
+
+### 🔄 **현재 진행 중 (2025-08-11)**
+- **T-002**: TailwindCSS 4 설정 (90% 완료)
 
 ---
 
@@ -43,15 +51,79 @@
 |---|---|---|---|---|---|---|---|
 | T-001 | Next.js 15 프로젝트 초기 설정 및 구조 생성 | ✅ DONE | P0 | Lead Dev | 0.5d (실제: 0.8d) | 2025-08-13 (완료: 08-09) | S1 |
 | T-002 | TailwindCSS 4 설정 및 커스텀 디자인 시스템 구축 | 🔄 90% DONE | P0 | Frontend | 1.5d (실제: 0.3d) | 2025-08-15 | S1 |
-| T-003 | Supabase 프로젝트 생성 및 database_schema_v3.sql 적용 | TODO | P0 | Backend | 1.0d | 2025-08-14 | S1 |
-| T-004 | TypeScript 타입 자동 생성 설정 (supabase gen types) | TODO | P0 | Lead Dev | 0.5d | 2025-08-14 | S1 |
-| T-005 | ESLint, Prettier 코딩 컨벤션 설정 | TODO | P0 | Lead Dev | 0.5d | 2025-08-13 | S1 |
-| T-006 | 기본 UI 컴포넌트 라이브러리 구축 (Button, Input, Modal) | ✅ DONE++ | P0 | Frontend | 2.0d (실제: 1.0d) | 2025-08-16 (완료: 08-09) | S1 |
+| T-003 | Supabase 프로젝트 생성 및 **v4.1 스키마** 적용 | ✅ DONE | P0 | Backend | 1.0d (실제: 2.0d) | 2025-08-14 (완료: 08-10) | S1 |
+| T-004 | TypeScript 타입 자동 생성 설정 (supabase gen types) | ✅ DONE | P0 | Lead Dev | 0.5d (실제: 1.0d) | 2025-08-14 (완료: 08-11) | S1 |
+| T-005 | 멀티테넌트 RBAC 권한 시스템 테스트 및 RLS 검증 | ✅ DONE | P0 | Lead Dev | 1.0d (실제: 6.0h) | 2025-08-13 (완료: 08-11) | S1 |
+| T-023 | Schema v4.1 업데이트: 학부모/클래스 컬럼 확장 | ✅ DONE | P0 | Backend | 0.3d | 2025-08-11 | S1 |
+| T-024 | 스키마 변경사항 애플리케이션 레이어 적용 | TODO | P0 | Full Stack | 1.5d | 2025-08-14 | S1 |
+| T-006 | 기본 UI 컴포넌트 라이브러리 구축 (Button, Input, Modal) | ✅ DONE | P0 | Frontend | 2.0d (실제: 2.5d) | 2025-08-16 (완료: 08-11) | S1 |
 | T-007 | Supabase Auth 인증 시스템 구현 | TODO | P0 | Backend | 1.5d | 2025-08-19 | S1 |
 | T-008 | RBAC 기본 구조 구현 (4가지 역할) | TODO | P0 | Backend | 2.0d | 2025-08-21 | S1 |
 | T-009 | RLS 정책 기본 적용 | TODO | P0 | Backend | 1.5d | 2025-08-22 | S1 |
 | T-010 | 공통 레이아웃 컴포넌트 개발 | TODO | P0 | Frontend | 1.0d | 2025-08-20 | S1 |
 | T-011 | 에러 핸들링 시스템 구축 (Sentry 연동) | TODO | P0 | Lead Dev | 1.0d | 2025-08-23 | S1 |
+
+#### 📋 T-005 완료 보고 및 추가 발견사항 (2025-08-11)
+
+**작업 결과**: ✅ 완료 (예상: 1일 → 실제: 6시간)  
+**핵심 성과**: "Reality-First" 개발 철학 확립, User-first Architecture 완전 이해
+
+**주요 발견사항**:
+1. **문서 vs 실제 DB 괴리** - `classes.instructor_id → user_profiles.id` (NOT instructors.id!)
+2. **숨겨진 제약조건** - `students.student_number` 필수, `user_profiles.id → auth.users.id` FK
+3. **Schema v4.1 업데이트** - `parent_phone_1/2`, `email`, `grade`, `course` 컬럼 추가
+4. **TypeScript 타입 완전 재정비** - 실제 DB 구조 반영한 v4.1 타입 정의
+
+**생성된 핵심 문서**:
+- `docs/project/LESSONS-LEARNED-T005-database-deep-dive.md` - 완전한 반성 및 학습 기록
+- `docs/database-data-insertion-guide-v4.1.md` - 정확한 데이터 추가 가이드  
+- `src/types/database-v4.1.ts` - T-005 발견사항 반영 타입 정의
+- `simple_sample_data_final.sql` - 검증된 샘플 데이터 생성 스크립트
+
+**CLAUDE.md 업데이트** - "Reality-First" 철학, User-first Architecture, 제약조건 우선 사고 추가
+
+**현재 진행 중**: 
+- **T-006**: UI 컴포넌트 라이브러리 구축 (50% 완료 - Button, Input 완료, Card/Modal/Table 남음)
+
+**다음 우선순위**: 
+1. **T-006**: UI 컴포넌트 라이브러리 완료 (Card, Modal, Table, Badge, Loading)
+2. **T-024**: 스키마 변경사항 애플리케이션 레이어 적용 (v4.1 타입 정의 활용)
+3. **T-002**: TailwindCSS 4 설정 완료 (90% → 100%)
+
+**권장 작업 순서**: T-006 완료 → T-024 → T-002 (UI 컴포넌트가 완료되어야 애플리케이션 레이어 작업 가능)
+
+#### 📋 T-006 완료 보고 (2025-08-11)
+
+**작업 결과**: ✅ 완료 (예상: 2일 → 실제: 2.5일)  
+**핵심 성과**: 12개 UI 컴포넌트 + 사용법 매뉴얼 완성, WCAG 2.1 AA 준수, ClassFlow 60fps 최적화
+
+**완료된 항목**:
+- [x] **기본 컴포넌트 (10개)**: Button, Input, Card, Modal, Table, Badge, Loading + Skeleton
+- [x] **ClassFlow 전용 (2개)**: StudentCard, DropZone (+ ClassFlowDropZone)
+- [x] **Core 시스템**: 타입 정의, cn 유틸리티, 통합 index.ts
+- [x] **접근성**: WCAG 2.1 AA 완전 준수, 키보드 내비게이션, 스크린 리더 지원
+- [x] **성능 최적화**: React.memo, useCallback, 60fps ClassFlow 보장
+- [x] **사용법 매뉴얼**: `/docs/project_manual/UI-Components-Manual.md` 완성
+
+**생성된 핵심 파일**:
+- `src/components/ui/` - 12개 컴포넌트 완전 구현
+- `src/utils/cn.ts` - TailwindCSS 클래스 유틸리티
+- `docs/project_manual/UI-Components-Manual.md` - 완전한 사용법 가이드
+
+**다음 단계**: ClassFlow 드래그앤드롭 시스템 구현을 위한 기반 완료
+- [x] Input + Textarea 컴포넌트 (완전한 접근성 지원)
+
+**진행 중**:
+- [ ] Card 컴포넌트 (Layout 기반)
+- [ ] Modal 컴포넌트 (Portal 기반, 키보드 네비게이션)
+- [ ] Table 컴포넌트 (데이터 표시용)
+- [ ] Badge 컴포넌트 (상태 표시용)
+- [ ] Loading 컴포넌트 (Skeleton 포함)
+- [ ] ClassFlow 특화 StudentCard 컴포넌트
+- [ ] ClassFlow 특화 DropZone 컴포넌트
+- [ ] 컴포넌트 인덱스 파일 생성
+
+**예상 완료**: 2025-08-12 (추가 1일 소요 예상)
 
 ### Week 3-4: 핵심 데이터 관리 (2025-08-26 ~ 2025-09-08)
 

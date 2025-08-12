@@ -45,6 +45,17 @@ export interface User extends BaseEntity {
   last_login?: string;
 }
 
+export interface UserProfile extends BaseEntity {
+  email: string;        // NOT NULL 필수
+  name: string;         // NOT NULL 필수 (full_name이 아님!)
+  language?: string;    // DEFAULT 'ko'
+  timezone?: string;    // DEFAULT 'Asia/Seoul'
+  status?: string;      // DEFAULT 'active'
+  is_premium?: boolean; // DEFAULT false
+  is_admin?: boolean;   // DEFAULT false
+  points?: number;      // DEFAULT 0
+}
+
 export interface Instructor extends BaseEntity {
   user_id?: string;
   name: string;
@@ -141,6 +152,19 @@ export interface Database {
         Row: User;
         Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      user_profiles: {
+        Row: UserProfile;
+        Insert: Omit<UserProfile, 'id' | 'created_at' | 'updated_at' | 'language' | 'timezone' | 'status' | 'is_premium' | 'is_admin' | 'points'> & {
+          id: string; // 필수: auth.users.id와 동일해야 함
+          language?: string;
+          timezone?: string;
+          status?: string;
+          is_premium?: boolean;
+          is_admin?: boolean;
+          points?: number;
+        };
+        Update: Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>;
       };
       instructors: {
         Row: Instructor;

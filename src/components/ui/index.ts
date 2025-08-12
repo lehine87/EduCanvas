@@ -17,41 +17,46 @@ export { Button } from './Button';
 export type { ButtonProps } from './Button';
 
 // Input Components
-export { Input, Textarea } from './Input';
-export type { InputProps, TextareaProps } from './Input';
+export { Input } from './Input';
+export type { InputProps } from './Input';
+
+// Card Components
+export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from './Card';
+export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps } from './Card';
 
 // Modal Components
-export { Modal, ConfirmModal } from './Modal';
-export type { ModalProps, ConfirmModalProps } from './Modal';
+export { Modal, ModalHeader, ModalBody, ModalFooter, useModal } from './Modal';
+export type { ModalProps, ModalHeaderProps, ModalBodyProps, ModalFooterProps } from './Modal';
 
 // Table Components
-export { Table, SimpleTable } from './Table';
-export type { TableProps, Column } from './Table';
+export { Table } from './Table';
+export type { TableProps, TableColumn } from './Table';
+
+// Badge Components
+export { Badge, StatusBadge, CountBadge, TagBadge } from './Badge';
+export type { BadgeProps, StatusBadgeProps, CountBadgeProps, TagBadgeProps } from './Badge';
+
+// Loading Components
+export { 
+  Loading,
+  Skeleton,
+  CardSkeleton,
+  TableSkeleton,
+  ListSkeleton
+} from './Loading';
+export type { LoadingProps, SkeletonProps, TableSkeletonProps, ListSkeletonProps } from './Loading';
 
 // =============================================================================
 // CLASSFLOW SPECIFIC COMPONENTS
 // =============================================================================
 
-// Drag Handle Component
-export { DragHandle } from './classflow/DragHandle';
-export type { DragHandleProps } from './classflow/DragHandle';
-
 // Student Card Component
-export { StudentCard } from './classflow/StudentCard';
-export type { StudentCardProps, StudentCardData } from './classflow/StudentCard';
+export { StudentCard } from './StudentCard';
+export type { StudentCardProps, ClassFlowStudent } from './StudentCard';
 
-// Class Container Component
-export { ClassContainer } from './classflow/ClassContainer';
-export type { ClassContainerProps, ClassContainerData } from './classflow/ClassContainer';
-
-// Loading Placeholder Components
-export { 
-  LoadingPlaceholder,
-  StudentCardLoader,
-  ClassContainerLoader,
-  TableRowLoader 
-} from './classflow/LoadingPlaceholder';
-export type { LoadingPlaceholderProps } from './classflow/LoadingPlaceholder';
+// Drop Zone Components
+export { DropZone, ClassFlowDropZone } from './DropZone';
+export type { DropZoneProps, ClassFlowDropZoneProps } from './DropZone';
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -60,31 +65,9 @@ export type { LoadingPlaceholderProps } from './classflow/LoadingPlaceholder';
 // Common Types and Interfaces
 export type {
   BaseComponentProps,
-  InteractiveComponentProps,
+  AccessibilityProps,
   ComponentSize,
-  ComponentVariant,
-  ComponentAlignment,
-  StatusType,
-  FormFieldState,
-  AnimationProps,
-  DragDropProps,
-  LoadingProps,
-  ErrorProps,
-  EmptyProps,
-  PaginationProps,
-  FilterProps,
-  SearchProps,
-  
-  // ClassFlow Types
-  StudentData,
-  ClassData,
-  ClassFlowContainerProps,
-  
-  // Component-specific Types
-  CardProps,
-  BadgeProps,
-  TooltipProps,
-  DropdownProps
+  ComponentVariant
 } from './types';
 
 // =============================================================================
@@ -92,7 +75,7 @@ export type {
 // =============================================================================
 
 // Re-export cn utility for convenience
-export { cn } from '@/lib/utils';
+export { cn } from '@/utils/cn';
 
 // =============================================================================
 // COMPONENT GROUPS FOR ORGANIZED IMPORTS
@@ -141,7 +124,7 @@ export const UI_VERSION = '1.0.0' as const;
  */
 export const UI_METADATA = {
   version: UI_VERSION,
-  lastUpdated: '2025-08-09',
+  lastUpdated: '2025-08-11',
   framework: 'React 19 + TypeScript',
   styling: 'TailwindCSS 4',
   designSystem: 'EduCanvas Design System',
@@ -164,21 +147,17 @@ export const UI_METADATA = {
 export const COMPONENT_REGISTRY = {
   basic: [
     'Button',
-    'Input', 
-    'Textarea',
+    'Input',
+    'Card',
     'Modal',
-    'ConfirmModal',
     'Table',
-    'SimpleTable',
+    'Badge',
+    'Loading',
   ],
   classflow: [
-    'DragHandle',
     'StudentCard', 
-    'ClassContainer',
-    'LoadingPlaceholder',
-    'StudentCardLoader',
-    'ClassContainerLoader',
-    'TableRowLoader',
+    'DropZone',
+    'ClassFlowDropZone',
   ],
 } as const;
 

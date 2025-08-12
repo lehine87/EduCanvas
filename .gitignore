@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 임시 개발 파일들
+debug-*.sql
+fix-*.sql
+reset-*.sql
+add-*.sql
+test-*.html
+test-*.js
+move_*.js
+smtp-*.md
+cleanup-*.md
+
+# 개발 스크립트 폴더
+scripts/
+temp/
+database/
+
+# Supabase 임시 파일들
+supabase/complete_*.sql
+supabase/rls_policies*.sql
+supabase/sample_data*.sql
+supabase/schema_setup.sql

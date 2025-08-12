@@ -1,333 +1,349 @@
-import React, { useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
+'use client'
 
-/**
- * Modal component props interface
- */
-export interface ModalProps {
-  /** Whether the modal is open */
-  isOpen: boolean;
-  /** Function to call when modal should close */
-  onClose: () => void;
-  /** Modal content */
-  children: React.ReactNode;
-  /** Modal title */
-  title?: string;
-  /** Modal size */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Whether clicking outside closes modal */
-  closeOnOverlayClick?: boolean;
-  /** Whether pressing Escape closes modal */
-  closeOnEscape?: boolean;
-  /** Show close button */
-  showCloseButton?: boolean;
-  /** Additional CSS classes for modal content */
-  className?: string;
-  /** Additional CSS classes for overlay */
-  overlayClassName?: string;
-  /** Prevent body scroll when modal is open */
-  preventBodyScroll?: boolean;
-  /** Custom header content */
-  header?: React.ReactNode;
-  /** Custom footer content */
-  footer?: React.ReactNode;
+import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { cn } from '@/utils/cn'
+import { Button } from './Button'
+import type { BaseComponentProps, AccessibilityProps, ComponentSize } from './types'
+
+interface ModalProps extends BaseComponentProps, AccessibilityProps {
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+  size?: ComponentSize | 'full'
+  closable?: boolean
+  footer?: React.ReactNode
+  closeOnOverlayClick?: boolean
+  closeOnEscape?: boolean
 }
 
-/**
- * Reusable Modal component with overlay and accessibility features
- * 
- * @example
- * ```tsx
- * <Modal
- *   isOpen={isModalOpen}
- *   onClose={() => setIsModalOpen(false)}
- *   title="Delete Student"
- *   size="md"
- * >
- *   <p>Are you sure you want to delete this student?</p>
- * </Modal>
- * ```
- */
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  children,
-  title,
+export function Modal({ 
+  isOpen, 
+  onClose, 
+  title, 
   size = 'md',
+  closable = true,
+  footer,
   closeOnOverlayClick = true,
   closeOnEscape = true,
-  showCloseButton = true,
-  className,
-  overlayClassName,
-  preventBodyScroll = true,
-  header,
-  footer,
-}) => {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
-
-  const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-full mx-4',
-  };
+  className, 
+  children,
+  'data-testid': testId,
+  'aria-label': ariaLabel,
+  'aria-describedby': ariaDescribedBy,
+  ...props
+}: ModalProps) {
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (isOpen) {
-      // Store previously focused element
-      previouslyFocusedElementRef.current = document.activeElement as HTMLElement;
+      // Store current focus
+      previousFocusRef.current = document.activeElement as HTMLElement
       
       // Prevent body scroll
-      if (preventBodyScroll) {
-        document.body.style.overflow = 'hidden';
-      }
+      document.body.style.overflow = 'hidden'
       
-      // Focus modal
+      // Focus trap - focus first focusable element
       setTimeout(() => {
-        modalRef.current?.focus();
-      }, 100);
-    } else {
-      // Restore body scroll
-      if (preventBodyScroll) {
-        document.body.style.overflow = '';
-      }
+        const focusableElement = modalRef.current?.querySelector(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+        ) as HTMLElement
+        
+        focusableElement?.focus()
+      }, 100)
       
-      // Restore focus to previously focused element
-      if (previouslyFocusedElementRef.current) {
-        previouslyFocusedElementRef.current.focus();
+      return () => {
+        document.body.style.overflow = ''
+        // Restore focus
+        if (previousFocusRef.current && document.contains(previousFocusRef.current)) {
+          previousFocusRef.current.focus()
+        }
       }
     }
-
-    return () => {
-      if (preventBodyScroll) {
-        document.body.style.overflow = '';
-      }
-    };
-  }, [isOpen, preventBodyScroll]);
+  }, [isOpen])
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && closeOnEscape && isOpen) {
-        onClose();
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && closeOnEscape && closable) {
+        event.preventDefault()
+        onClose()
       }
-    };
+    }
+
+    function handleFocusTrap(event: KeyboardEvent) {
+      if (!isOpen || event.key !== 'Tab' || !modalRef.current) return
+
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+      ) as NodeListOf<HTMLElement>
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          event.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleFocusTrap)
+      
+      return () => {
+        document.removeEventListener('keydown', handleEscape)
+        document.removeEventListener('keydown', handleFocusTrap)
+      }
     }
+  }, [isOpen, closable, closeOnEscape, onClose])
 
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, closeOnEscape, onClose]);
+  if (!isOpen) return null
 
-  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (closeOnOverlayClick && event.target === event.currentTarget) {
-      onClose();
-    }
-  };
-
-  if (!isOpen) {
-    return null;
+  const sizeClasses = {
+    xs: 'max-w-xs',
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-2xl',
+    full: 'max-w-full h-full m-0'
   }
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        {/* Overlay */}
-        <div
-          className={cn(
-            'fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity',
-            'animate-fade-in',
-            overlayClassName
-          )}
-          onClick={handleOverlayClick}
-          aria-hidden="true"
-        />
+  function handleOverlayClick(event: React.MouseEvent) {
+    if (event.target === overlayRef.current && closeOnOverlayClick && closable) {
+      onClose()
+    }
+  }
 
-        {/* Modal */}
-        <div
-          ref={modalRef}
-          className={cn(
-            'relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all',
-            'animate-scale-in',
-            'w-full',
-            sizes[size],
-            className
-          )}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={title ? 'modal-title' : undefined}
-          tabIndex={-1}
-        >
-          {/* Header */}
-          {(title || header || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 pb-4">
-              <div className="flex-1">
-                {header || (
-                  title && (
-                    <h3
-                      id="modal-title"
-                      className="text-lg font-medium leading-6 text-gray-900"
-                    >
-                      {title}
-                    </h3>
-                  )
-                )}
-              </div>
-              {showCloseButton && (
-                <button
-                  type="button"
-                  className="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
-                  onClick={onClose}
-                  aria-label="Close modal"
+  const modalContent = (
+    <div 
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      onClick={handleOverlayClick}
+      data-testid={testId}
+    >
+      <div 
+        ref={modalRef}
+        className={cn(
+          'bg-white rounded-lg shadow-xl w-full relative',
+          sizeClasses[size],
+          size === 'full' ? 'h-full' : 'max-h-[90vh] overflow-y-auto',
+          'animate-in fade-in-0 zoom-in-95 duration-200',
+          className
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        {...props}
+      >
+        {(title || closable) && (
+          <div className="flex items-center justify-between p-6 border-b">
+            {title && (
+              <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
+                {title}
+              </h2>
+            )}
+            {closable && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                aria-label="모달 닫기"
+                className="p-2 h-auto"
+                data-testid={`${testId}-close-button`}
+              >
+                <svg 
+                  className="w-5 h-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Content */}
-          <div className={cn('px-6', !(title || header || showCloseButton) && 'pt-6', !footer && 'pb-6')}>
-            {children}
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </Button>
+            )}
           </div>
-
-          {/* Footer */}
-          {footer && (
-            <div className="px-6 pb-6 pt-4">
-              {footer}
-            </div>
-          )}
+        )}
+        
+        <div className="p-6">
+          {children}
         </div>
+        
+        {footer && (
+          <div className="flex justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-lg">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
-  );
-};
+  )
 
-/**
- * Modal confirmation dialog component
- */
-export interface ConfirmModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title?: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
-  loading?: boolean;
+  return createPortal(modalContent, document.body)
 }
 
-export const ConfirmModal: React.FC<ConfirmModalProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title = 'Confirm Action',
+// Confirmation Modal
+interface ConfirmModalProps extends Omit<ModalProps, 'children'> {
+  message: string
+  confirmText?: string
+  cancelText?: string
+  variant?: 'danger' | 'warning' | 'info'
+  loading?: boolean
+  onConfirm: () => void
+}
+
+export function ConfirmModal({
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = '확인',
+  cancelText = '취소',
   variant = 'info',
   loading = false,
-}) => {
+  onConfirm,
+  onClose,
+  ...props
+}: ConfirmModalProps) {
   const variantStyles = {
-    danger: 'bg-error-600 hover:bg-error-700 focus:ring-error-500',
-    warning: 'bg-warning-600 hover:bg-warning-700 focus:ring-warning-500',
-    info: 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500',
-  };
+    danger: 'error',
+    warning: 'warning', 
+    info: 'primary'
+  } as const
 
-  const variantIcons = {
+  const icons = {
     danger: (
-      <svg className="h-6 w-6 text-error-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
     ),
     warning: (
-      <svg className="h-6 w-6 text-warning-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
     ),
     info: (
-      <svg className="h-6 w-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-    ),
-  };
+    )
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
+    <Modal
+      onClose={onClose}
+      size="sm"
+      footer={
+        <>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={loading}
+          >
+            {cancelText}
+          </Button>
+          <Button
+            variant={variantStyles[variant]}
+            onClick={onConfirm}
+            loading={loading}
+            disabled={loading}
+          >
+            {confirmText}
+          </Button>
+        </>
+      }
+      {...props}
+    >
       <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          {variantIcons[variant]}
+        <div className="flex-shrink-0 mt-1">
+          {icons[variant]}
         </div>
         <div className="flex-1">
-          <p className="text-sm text-gray-500">{message}</p>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {message}
+          </p>
         </div>
       </div>
-      
-      <div className="mt-6 flex space-x-3 justify-end">
-        <button
-          type="button"
-          className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 sm:text-sm"
+    </Modal>
+  )
+}
+
+// Alert Modal (non-blocking notification)
+interface AlertModalProps extends Omit<ModalProps, 'children' | 'footer'> {
+  message: string
+  variant?: 'success' | 'error' | 'warning' | 'info'
+  confirmText?: string
+}
+
+export function AlertModal({
+  message,
+  variant = 'info',
+  confirmText = '확인',
+  onClose,
+  ...props
+}: AlertModalProps) {
+  const variantStyles = {
+    success: 'success',
+    error: 'error',
+    warning: 'warning',
+    info: 'primary'
+  } as const
+
+  const icons = {
+    success: (
+      <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    error: (
+      <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    warning: (
+      <svg className="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+    ),
+    info: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )
+  }
+
+  return (
+    <Modal
+      onClose={onClose}
+      size="sm"
+      footer={
+        <Button
+          variant={variantStyles[variant]}
           onClick={onClose}
-          disabled={loading}
+          fullWidth
         >
-          {cancelText}
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed',
-            variantStyles[variant]
-          )}
-          onClick={onConfirm}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Loading...
-            </>
-          ) : (
-            confirmText
-          )}
-        </button>
+          {confirmText}
+        </Button>
+      }
+      {...props}
+    >
+      <div className="flex items-start space-x-4">
+        <div className="flex-shrink-0 mt-1">
+          {icons[variant]}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {message}
+          </p>
+        </div>
       </div>
     </Modal>
-  );
-};
+  )
+}

@@ -2,8 +2,15 @@
 // 모든 타입 정의를 통합 export
 
 // ================================================================
-// 1. SUPABASE TYPES (자동 생성된 데이터베이스 타입들)
+// 1. DATABASE TYPES (데이터베이스 타입들)
 // ================================================================
+// Auto-generated Supabase types (raw)
+export * from './database.types';
+
+// v4.1 Enhanced types with T-005 findings
+export * from './database-v4.1';
+
+// Legacy database types (being phased out)
 export * from './supabase';
 
 // ================================================================  
@@ -14,7 +21,9 @@ export * from './app.types';
 // ================================================================
 // 3. LEGACY TYPES (기존 시스템 호환성 - 점진적 제거 예정)
 // ================================================================
-// export * from './database'; // 제거됨 - supabase.ts로 대체
+export * from './students';  // v4.1 updated - will be consolidated
+export * from './classes';   // v4.1 updated - will be consolidated
+export * from './database';  // Legacy v2.0 types - use database-v4.1.ts instead
 // export * from './billing';  // app.types.ts로 통합됨
 // export * from './salary';   // app.types.ts로 통합됨  
 // export * from './api';      // app.types.ts로 통합됨

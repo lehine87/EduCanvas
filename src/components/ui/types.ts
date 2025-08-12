@@ -22,13 +22,29 @@ export interface BaseComponentProps {
 /**
  * Interactive component props for clickable elements
  */
-export interface InteractiveComponentProps extends BaseComponentProps {
+export interface InteractiveProps {
   /** Whether the component is disabled */
   disabled?: boolean;
   /** Loading state */
   loading?: boolean;
   /** Click handler */
   onClick?: () => void;
+}
+
+/**
+ * Accessibility props for WCAG 2.1 AA compliance
+ */
+export interface AccessibilityProps {
+  /** Accessible name for screen readers */
+  'aria-label'?: string;
+  /** ID of element that describes this element */
+  'aria-describedby'?: string;
+  /** Indicates if element is expanded (for collapsible elements) */
+  'aria-expanded'?: boolean;
+  /** ARIA role override */
+  role?: string;
+  /** Tab index for keyboard navigation */
+  tabIndex?: number;
 }
 
 /**

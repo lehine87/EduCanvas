@@ -12,7 +12,12 @@
       "Bash(npx supabase:*)",
       "Bash(cp:*)",
       "Bash(npm run types:check:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

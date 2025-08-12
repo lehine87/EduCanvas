@@ -1,24 +1,31 @@
-// src/types/class.ts
+// src/types/classes.ts
+// Updated for Schema v4.1 (2025-08-11)
+// Key changes: grade, course columns, User-first Architecture
+
 export type ClassStatus = 'active' | 'inactive' | 'archived'
 
 export interface Class {
   id: string
   name: string
-  subject: string
-  grade_level?: string
-  max_students: number
-  monthly_fee: number
-  main_instructor_id?: string
-  classroom?: string
-  color: string
-  status: ClassStatus
+  subject?: string
+  grade?: string  // ⚠️ v4.1: New field for class grade level
+  course?: string  // ✅ v4.1: Course/curriculum field (corrected from "cource" typo)
+  level?: string  // Additional level classification
+  max_students?: number
+  min_students?: number  // ⚠️ v4.1: Minimum students requirement
+  instructor_id?: string  // ⚠️ CRITICAL: References user_profiles.id (NOT instructors.id!)
+  classroom_id?: string  // FK to classrooms table
+  color?: string
+  description?: string  // Additional description field
+  is_active?: boolean  // ⚠️ v4.1: Status field (boolean type)
   start_date?: string
   end_date?: string
-  order_index: number
-  memo?: string
-  academy_id: string
-  created_at: string
-  updated_at: string
+  schedule_config?: any  // JSON field for schedule configuration
+  custom_fields?: any    // JSON field for custom data
+  tenant_id?: string     // ⚠️ v4.1: Multitenant architecture
+  created_at?: string
+  updated_at?: string
+  created_by?: string    // FK to user_profiles.id
 }
 
 export interface ClassSchedule {
