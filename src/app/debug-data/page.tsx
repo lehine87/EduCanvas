@@ -31,22 +31,22 @@ export default function DebugDataPage() {
       setDataInfo({
         tenants: {
           count: tenantsResult.data?.length || 0,
-          data: tenantsResult.data || [],
+          data: tenantsResult.data || [] as any,
           error: tenantsResult.error?.message
         },
         students: {
           count: studentsResult.data?.length || 0,
-          data: studentsResult.data || [],
+          data: studentsResult.data || [] as any,
           error: studentsResult.error?.message
         },
         classes: {
           count: classesResult.data?.length || 0,
-          data: classesResult.data || [],
+          data: classesResult.data || [] as any,
           error: classesResult.error?.message
         },
         tenant_users: {
           count: tenantUsersResult.data?.length || 0,
-          data: tenantUsersResult.data || [],
+          data: tenantUsersResult.data || [] as any,
           error: tenantUsersResult.error?.message
         }
       })

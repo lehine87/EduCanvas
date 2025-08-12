@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '입력 데이터가 유효하지 않습니다.', details: error.errors },
+        { error: '입력 데이터가 유효하지 않습니다.', details: error.issues },
         { status: 400 }
       )
     }

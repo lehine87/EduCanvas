@@ -32,7 +32,7 @@ export default function AdminPage() {
     }
 
     // 일반 사용자(강사, 직원)인 경우
-    if (['instructor', 'staff'].includes(profile.role) && profile.tenant_id) {
+    if (profile.role && ['instructor', 'staff'].includes(profile.role) && profile.tenant_id) {
       console.log('👨‍🏫 일반 사용자로 인식, tenant-admin 페이지로 리다이렉트')
       router.push('/tenant-admin')
       return
