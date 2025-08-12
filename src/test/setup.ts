@@ -2,6 +2,7 @@
 // Global test setup and mocks
 
 import { beforeAll, afterAll, vi } from 'vitest'
+import '@testing-library/jest-dom'
 
 // Mock global performance API for Node.js environment
 if (typeof global.performance === 'undefined') {

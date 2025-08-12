@@ -8,8 +8,8 @@ import {
   isClass,
   isTenant,
   isInstructor,
-  isYouTubeVideo,
-  isVideoProgress,
+  isVideo,
+  isVideoWatchSession,
   isCoursePackage,
   isClassFlowStudent,
   isVideoWatchSession,
@@ -24,8 +24,8 @@ import {
   validateStudent,
   validateStudentInsert,
   validateClass,
-  validateYouTubeVideo,
-  validateVideoProgress,
+  validateVideo,
+  validateVideoWatchSession,
   
   // Utility Validators
   validateEmail,
@@ -57,8 +57,8 @@ import type {
   Class,
   Tenant,
   Instructor,
-  YouTubeVideo,
-  VideoProgress,
+  Video,
+  VideoWatchSession,
   CoursePackage,
   ClassFlowStudent,
   VideoWatchSession,
@@ -125,79 +125,64 @@ const validClass: Class = {
   updated_at: '2024-01-01T00:00:00Z'
 }
 
-const validYouTubeVideo: YouTubeVideo = {
+const validVideo: Video = {
   id: validUUID,
   tenant_id: validUUID,
-  youtube_id: 'dQw4w9WgXcQ',
+  youtube_video_id: 'dQw4w9WgXcQ',
+  youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
   title: 'Test Video',
   description: 'A test video for mathematics',
-  duration: 300,
+  duration_seconds: 300,
   thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-  channel_id: 'UC-test-channel',
-  published_at: '2024-01-01T00:00:00Z',
-  category: 'Education',
   tags: ['math', 'education', 'tutorial'],
-  quality_levels: ['720p', '1080p'],
-  captions_available: true,
+  learning_objectives: ['understand basic concepts'],
+  prerequisites: ['basic math knowledge'],
   instructor_id: validUUID,
   class_id: validUUID,
   video_type: 'lecture',
   status: 'published',
+  quality: '1080p',
   view_count: 1000,
   like_count: 50,
-  dislike_count: 2,
-  privacy_level: 'public',
-  is_age_restricted: false,
-  upload_date: '2024-01-01T00:00:00Z',
-  last_updated: '2024-01-01T12:00:00Z',
-  metadata: { quality: 'high', educational: true },
+  comment_count: 10,
+  order_index: 1,
+  is_public: true,
+  password_protected: false,
+  password_hash: null,
+  available_from: '2024-01-01T00:00:00Z',
+  available_until: null,
+  total_watch_time: 25000,
+  average_rating: 4.5,
+  created_by: validUUID,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z'
 }
 
-const validVideoProgress: VideoProgress = {
+const validVideoWatchSessionData: VideoWatchSession = {
   id: validUUID,
   tenant_id: validUUID,
   student_id: validUUID,
   video_id: validUUID,
-  watched_duration: 150,
-  total_duration: 300,
+  enrollment_id: validUUID,
+  session_start_time: '2024-01-01T11:00:00Z',
+  last_position_time: '2024-01-01T12:00:00Z',
+  progress_seconds: 150,
+  total_watch_time: 150,
   completion_percentage: 50,
-  last_watched_at: '2024-01-01T12:00:00Z',
-  completed_at: null,
-  watch_sessions: [],
-  notes: 'Watched halfway through',
-  quality_watched: '720p',
-  watch_speed: 1.0,
-  pause_count: 3,
-  rewind_count: 1,
-  forward_count: 0,
-  full_screen_duration: 100,
+  watch_status: 'in_progress',
+  playback_quality: '720p',
   device_type: 'desktop',
-  browser_type: 'Chrome',
+  user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
   ip_address: '192.168.1.1',
-  location_info: { country: 'KR', city: 'Seoul' },
+  play_count: 1,
+  is_liked: null,
+  rating: 4,
+  notes: 'Watched halfway through',
+  bookmarks: { positions: [45, 90] },
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T12:00:00Z'
 }
 
-const validVideoWatchSession: VideoWatchSession = {
-  id: validUUID,
-  startTime: 0,
-  endTime: 150,
-  watchedDuration: 150,
-  pauseCount: 3,
-  seekCount: 1,
-  quality: '720p',
-  speed: 1.0,
-  fullScreen: false,
-  timestamp: '2024-01-01T12:00:00Z',
-  deviceInfo: {
-    type: 'desktop',
-    browser: 'Chrome',
-    os: 'Windows'
-  }
-}
 
 // ================================================================
 // Type Guard Tests
@@ -291,17 +276,17 @@ describe('Entity Type Guards', () => {
   })
 
   test('should validate valid YouTube video object', () => {
-    expect(isYouTubeVideo(validYouTubeVideo)).toBe(true)
+    expect(isVideo(validVideo)).toBe(true)
   })
 
   test('should reject invalid YouTube video objects', () => {
-    expect(isYouTubeVideo({})).toBe(false)
-    expect(isYouTubeVideo({ ...validYouTubeVideo, duration: -1 })).toBe(false)
-    expect(isYouTubeVideo({ ...validYouTubeVideo, youtube_id: '' })).toBe(false)
+    expect(isVideo({})).toBe(false)
+    expect(isVideo({ ...validVideo, duration_seconds: -1 })).toBe(false)
+    expect(isVideo({ ...validVideo, youtube_video_id: '' })).toBe(false)
   })
 
   test('should validate valid video progress object', () => {
-    expect(isVideoProgress(validVideoProgress)).toBe(true)
+    expect(isVideoWatchSession(validVideoWatchSessionData)).toBe(true)
   })
 
   test('should validate valid video watch session object', () => {
@@ -343,12 +328,12 @@ describe('Entity Validation Functions', () => {
   })
 
   test('should validate YouTube video data', () => {
-    const result = validateYouTubeVideo(validYouTubeVideo)
+    const result = validateVideo(validVideo)
     expect(result.success).toBe(true)
   })
 
   test('should validate video progress data', () => {
-    const result = validateVideoProgress(validVideoProgress)
+    const result = validateVideoWatchSession(validVideoWatchSessionData)
     expect(result.success).toBe(true)
   })
 })
@@ -506,12 +491,12 @@ describe('Zod Schema Compilation', () => {
     expect(ValidationSchemas.Class.safeParse(validClass).success).toBe(true)
   })
 
-  test('should compile YouTubeVideo schema without errors', () => {
-    expect(ValidationSchemas.YouTubeVideo.safeParse(validYouTubeVideo).success).toBe(true)
+  test('should compile Video schema without errors', () => {
+    expect(ValidationSchemas.Video.safeParse(validVideo).success).toBe(true)
   })
 
-  test('should compile VideoProgress schema without errors', () => {
-    expect(ValidationSchemas.VideoProgress.safeParse(validVideoProgress).success).toBe(true)
+  test('should compile VideoWatchSession schema without errors', () => {
+    expect(ValidationSchemas.VideoWatchSession.safeParse(validVideoWatchSessionData).success).toBe(true)
   })
 
   test('should compile VideoWatchSession schema without errors', () => {
@@ -528,13 +513,13 @@ describe('Edge Cases', () => {
     expect(isStudent(null)).toBe(false)
     expect(isStudent(undefined)).toBe(false)
     expect(isClass(null)).toBe(false)
-    expect(isYouTubeVideo(undefined)).toBe(false)
+    expect(isVideo(undefined)).toBe(false)
   })
 
   test('should handle empty objects', () => {
     expect(isStudent({})).toBe(false)
     expect(isClass({})).toBe(false)
-    expect(isYouTubeVideo({})).toBe(false)
+    expect(isVideo({})).toBe(false)
   })
 
   test('should handle arrays', () => {
@@ -583,7 +568,7 @@ describe('Performance Tests', () => {
 
   test('should handle validation of complex objects efficiently', () => {
     const complexVideo = {
-      ...validYouTubeVideo,
+      ...validVideo,
       metadata: {
         chapters: Array.from({ length: 50 }, (_, i) => ({
           title: `Chapter ${i}`,
@@ -600,7 +585,7 @@ describe('Performance Tests', () => {
     }
 
     const start = performance.now()
-    const result = isYouTubeVideo(complexVideo)
+    const result = isVideo(complexVideo)
     const end = performance.now()
 
     expect(result).toBe(true)

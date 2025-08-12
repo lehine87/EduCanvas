@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/auth/supabaseAuth'
 
 export default function SeedDataPage() {
-  const [tenants, setTenants] = useState([])
+  const [tenants, setTenants] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<unknown[]>([])
 
   useEffect(() => {
     loadTenants()

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardBody, Loading } from '@/components/ui'
 import type { User } from '@supabase/supabase-js'
-import type { UserProfile, Tenant, hasTenantId } from '@/types/auth.types'
+import type { UserProfile, Tenant } from '@/types/auth.types'
+import { hasTenantId } from '@/types/auth.types'
 
 export default function PendingApprovalPage() {
   const [isLoading, setIsLoading] = useState(true)

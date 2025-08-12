@@ -438,6 +438,88 @@ export class AuthManager {
       return { user: null, error: '세션 복원 실패' }
     }
   }
+
+  /**
+   * 현재 사용자가 테넌트 소유자인지 확인
+   */
+  isOwner(): boolean {
+    if (!this.currentUser || !this.currentUser.role) {
+      return false
+    }
+    return this.currentUser.role === 'owner'
+  }
+
+  /**
+   * 현재 사용자가 관리자인지 확인
+   */
+  isAdmin(): boolean {
+    if (!this.currentUser || !this.currentUser.role) {
+      return false
+    }
+    return ['owner', 'admin'].includes(this.currentUser.role)
+  }
+
+  /**
+   * 현재 사용자가 강사인지 확인
+   */
+  isInstructor(): boolean {
+    if (!this.currentUser || !this.currentUser.role) {
+      return false
+    }
+    return ['owner', 'admin', 'instructor'].includes(this.currentUser.role)
+  }
+
+  /**
+   * 사용자 데이터를 새로고침
+   */
+  async refreshUserData(): Promise<{ user: AuthUser | null; error: string | null }> {
+    try {
+      if (!this.currentUser) {
+        return { user: null, error: '현재 사용자가 없습니다' }
+      }
+
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        return { user: null, error: '세션을 찾을 수 없습니다' }
+      }
+
+      // 사용자 정보 재조회
+      const userTenants = await this.getUserTenants(session.user.id)
+      if (!userTenants || userTenants.length === 0) {
+        return { user: null, error: '접근 가능한 테넌트가 없습니다' }
+      }
+
+      const isDeveloper = this.checkDeveloperAccess(session.user.email!, userTenants)
+      let availableTenants = userTenants
+      
+      if (isDeveloper) {
+        const allTenants = await this.getAllTenants()
+        availableTenants = allTenants || userTenants
+      }
+
+      // 현재 테넌트 정보 유지하면서 업데이트
+      const currentTenant = availableTenants.find(t => t.id === this.currentTenant) || availableTenants[0]
+
+      const authUser: AuthUser = {
+        ...session.user,
+        tenant_id: currentTenant.id,
+        role: currentTenant.role,
+        permissions: isDeveloper ? DEVELOPER_PERMISSIONS : this.getRolePermissions(currentTenant.role),
+        available_tenants: availableTenants,
+        is_developer: isDeveloper
+      }
+
+      this.currentUser = authUser
+      this.currentTenant = currentTenant.id
+
+      return { user: authUser, error: null }
+
+    } catch (error) {
+      console.error('User data refresh error:', error)
+      return { user: null, error: '사용자 데이터 새로고침 실패' }
+    }
+  }
 }
 
 // Export singleton instance

@@ -15,8 +15,8 @@ type StudentRow = Tables['students']['Row']
 type ClassRow = Tables['classes']['Row']
 type TenantRow = Tables['tenants']['Row']
 type InstructorRow = Tables['instructors']['Row']
-type YouTubeVideoRow = Tables['youtube_videos']['Row']
-type VideoProgressRow = Tables['video_progress']['Row']
+type VideoRow = Tables['videos']['Row']
+type VideoWatchSessionRow = Tables['video_watch_sessions']['Row']
 type CoursePackageRow = Tables['course_packages']['Row']
 
 // Insert types
@@ -24,8 +24,8 @@ type StudentInsert = Tables['students']['Insert']
 type ClassInsert = Tables['classes']['Insert']
 type TenantInsert = Tables['tenants']['Insert']
 type InstructorInsert = Tables['instructors']['Insert']
-type YouTubeVideoInsert = Tables['youtube_videos']['Insert']
-type VideoProgressInsert = Tables['video_progress']['Insert']
+type VideoInsert = Tables['videos']['Insert']
+type VideoWatchSessionInsert = Tables['video_watch_sessions']['Insert']
 type CoursePackageInsert = Tables['course_packages']['Insert']
 
 // Update types
@@ -33,8 +33,8 @@ type StudentUpdate = Tables['students']['Update']
 type ClassUpdate = Tables['classes']['Update']
 type TenantUpdate = Tables['tenants']['Update']
 type InstructorUpdate = Tables['instructors']['Update']
-type YouTubeVideoUpdate = Tables['youtube_videos']['Update']
-type VideoProgressUpdate = Tables['video_progress']['Update']
+type VideoUpdate = Tables['videos']['Update']
+type VideoWatchSessionUpdate = Tables['video_watch_sessions']['Update']
 type CoursePackageUpdate = Tables['course_packages']['Update']
 
 // Enum types
@@ -50,8 +50,8 @@ type PaymentStatus = Enums['payment_status']
 type Class = ClassRow
 type Tenant = TenantRow
 type Instructor = InstructorRow
-type YouTubeVideo = YouTubeVideoRow
-type VideoProgress = VideoProgressRow
+type Video = VideoRow
+type VideoWatchSession = VideoWatchSessionRow
 type CoursePackage = CoursePackageRow
 
 // Define missing permission types (these should be properly defined elsewhere)
@@ -222,99 +222,113 @@ export const InstructorInsertSchema = InstructorSchema.omit({
 export const InstructorUpdateSchema = InstructorInsertSchema.omit({ tenant_id: true }).partial()
 
 // YouTube Video Schemas
-export const YouTubeVideoSchema = z.object({
+export const VideoSchema = z.object({
   id: UUIDSchema,
-  tenant_id: UUIDSchema,
-  youtube_id: z.string().min(1, 'YouTube ID is required'),
-  title: z.string().min(1, 'Title is required').max(255),
+  tenant_id: UUIDSchema.nullable(),
+  youtube_video_id: z.string().min(1, 'YouTube video ID is required'),
+  youtube_url: z.string().url(),
+  title: z.string().min(1, 'Title is required'),
   description: z.string().nullable(),
-  duration: z.number().int().min(0),
+  duration_seconds: z.number().int().min(0).nullable(),
   thumbnail_url: z.string().url().nullable(),
-  channel_id: z.string().min(1, 'Channel ID is required'),
-  published_at: z.string().datetime(),
-  category: z.string().max(50).nullable(),
-  tags: z.array(z.string()).default([]),
-  quality_levels: z.array(VideoQualitySchema).default([]),
-  captions_available: z.boolean().default(false),
+  tags: z.array(z.string()).nullable(),
+  learning_objectives: z.array(z.string()).nullable(),
+  prerequisites: z.array(z.string()).nullable(),
   instructor_id: UUIDSchema.nullable(),
   class_id: UUIDSchema.nullable(),
-  video_type: VideoTypeSchema.default('lecture'),
-  status: VideoStatusSchema.default('draft'),
-  view_count: z.number().int().min(0).default(0),
+  video_type: VideoTypeSchema.optional(),
+  status: VideoStatusSchema.nullable(),
+  quality: VideoQualitySchema.nullable(),
+  view_count: z.number().int().min(0).nullable(),
   like_count: z.number().int().min(0).nullable(),
-  dislike_count: z.number().int().min(0).nullable(),
-  privacy_level: z.string().default('private'),
-  is_age_restricted: z.boolean().default(false),
-  upload_date: z.string().datetime().nullable(),
-  last_updated: z.string().datetime().nullable(),
-  metadata: z.record(z.string(), z.unknown()).default({}),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime()
+  comment_count: z.number().int().min(0).nullable(),
+  order_index: z.number().int().min(0).nullable(),
+  is_public: z.boolean().nullable(),
+  password_protected: z.boolean().nullable(),
+  password_hash: z.string().nullable(),
+  available_from: z.string().datetime().nullable(),
+  available_until: z.string().datetime().nullable(),
+  total_watch_time: z.number().int().min(0).nullable(),
+  average_rating: z.number().min(0).max(5).nullable(),
+  created_by: UUIDSchema.nullable(),
+  created_at: z.string().datetime().nullable(),
+  updated_at: z.string().datetime().nullable()
 })
 
-export const YouTubeVideoInsertSchema = YouTubeVideoSchema.omit({
+export const VideoInsertSchema = VideoSchema.omit({
   id: true,
   created_at: true,
   updated_at: true
 }).partial({
   tags: true,
-  quality_levels: true,
-  captions_available: true,
+  learning_objectives: true,
+  prerequisites: true,
   video_type: true,
   status: true,
+  quality: true,
   view_count: true,
-  privacy_level: true,
-  is_age_restricted: true,
-  metadata: true
+  like_count: true,
+  comment_count: true,
+  order_index: true,
+  is_public: true,
+  password_protected: true,
+  password_hash: true,
+  available_from: true,
+  available_until: true,
+  total_watch_time: true,
+  average_rating: true
 })
 
-export const YouTubeVideoUpdateSchema = YouTubeVideoInsertSchema.omit({ tenant_id: true, youtube_id: true }).partial()
+export const VideoUpdateSchema = VideoInsertSchema.omit({ tenant_id: true, youtube_video_id: true }).partial()
 
-// Video Progress Schemas
-export const VideoProgressSchema = z.object({
+// Video Watch Session Schemas
+export const VideoWatchSessionSchema = z.object({
   id: UUIDSchema,
-  tenant_id: UUIDSchema,
-  student_id: UUIDSchema,
-  video_id: UUIDSchema,
-  watched_duration: z.number().min(0).default(0),
-  total_duration: z.number().min(0),
-  completion_percentage: z.number().min(0).max(100).default(0),
-  last_watched_at: z.string().datetime(),
-  completed_at: z.string().datetime().nullable(),
-  watch_sessions: z.array(z.record(z.string(), z.unknown())).default([]),
+  tenant_id: UUIDSchema.nullable(),
+  student_id: UUIDSchema.nullable(),
+  video_id: UUIDSchema.nullable(),
+  enrollment_id: UUIDSchema.nullable(),
+  session_start_time: z.string().datetime().nullable(),
+  last_position_time: z.string().datetime().nullable(),
+  progress_seconds: z.number().int().min(0).nullable(),
+  total_watch_time: z.number().int().min(0).nullable(),
+  completion_percentage: z.number().min(0).max(100).nullable(),
+  watch_status: z.enum(['not_started', 'in_progress', 'completed', 'skipped']).nullable(),
+  playback_quality: VideoQualitySchema.nullable(),
+  device_type: z.string().nullable(),
+  user_agent: z.string().nullable(),
+  ip_address: z.unknown().nullable(),
+  play_count: z.number().int().min(0).nullable(),
+  is_liked: z.boolean().nullable(),
+  rating: z.number().int().min(1).max(5).nullable(),
   notes: z.string().nullable(),
-  quality_watched: VideoQualitySchema.nullable(),
-  watch_speed: z.number().min(0.25).max(3).default(1),
-  pause_count: z.number().int().min(0).default(0),
-  rewind_count: z.number().int().min(0).default(0),
-  forward_count: z.number().int().min(0).default(0),
-  full_screen_duration: z.number().min(0).nullable(),
-  device_type: z.string().max(50).nullable(),
-  browser_type: z.string().max(50).nullable(),
-  ip_address: z.string().nullable(),
-  location_info: z.record(z.string(), z.unknown()).nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime()
+  bookmarks: z.unknown().nullable(),
+  created_at: z.string().datetime().nullable(),
+  updated_at: z.string().datetime().nullable()
 })
 
-export const VideoProgressInsertSchema = VideoProgressSchema.omit({
+export const VideoWatchSessionInsertSchema = VideoWatchSessionSchema.omit({
   id: true,
   created_at: true,
   updated_at: true
 }).partial({
-  watched_duration: true,
+  progress_seconds: true,
+  total_watch_time: true,
   completion_percentage: true,
-  watch_sessions: true,
-  watch_speed: true,
-  pause_count: true,
-  rewind_count: true,
-  forward_count: true
+  watch_status: true,
+  playback_quality: true,
+  play_count: true,
+  is_liked: true,
+  rating: true,
+  notes: true,
+  bookmarks: true
 })
 
-export const VideoProgressUpdateSchema = VideoProgressInsertSchema.omit({
+export const VideoWatchSessionUpdateSchema = VideoWatchSessionInsertSchema.omit({
   tenant_id: true,
   student_id: true,
-  video_id: true
+  video_id: true,
+  enrollment_id: true
 }).partial()
 
 // Course Package Schemas
@@ -367,24 +381,6 @@ export const ClassFlowStudentSchema = StudentSchema.extend({
 })
 
 // Video Watch Session Schema
-export const VideoWatchSessionSchema = z.object({
-  id: UUIDSchema,
-  startTime: z.number().min(0),
-  endTime: z.number().min(0),
-  watchedDuration: z.number().min(0),
-  pauseCount: z.number().int().min(0),
-  seekCount: z.number().int().min(0),
-  quality: VideoQualitySchema,
-  speed: z.number().min(0.25).max(3),
-  fullScreen: z.boolean(),
-  timestamp: z.string().datetime(),
-  deviceInfo: z.object({
-    type: z.string(),
-    browser: z.string(),
-    os: z.string()
-  })
-})
-
 // Form Data Schemas
 export const StudentFormDataSchema = StudentInsertSchema.extend({
   confirmParentPhone: z.string().optional(),
@@ -401,11 +397,14 @@ export const StudentFormDataSchema = StudentInsertSchema.extend({
   }
 )
 
-export const VideoProgressFormDataSchema = z.object({
+export const VideoWatchSessionFormDataSchema = z.object({
   studentId: UUIDSchema,
   videoId: UUIDSchema,
-  watchedDuration: z.number().min(0),
-  totalDuration: z.number().min(0),
+  enrollmentId: UUIDSchema.optional(),
+  progressSeconds: z.number().int().min(0),
+  totalWatchTime: z.number().int().min(0),
+  completionPercentage: z.number().min(0).max(100),
+  watchStatus: z.enum(['not_started', 'in_progress', 'completed', 'skipped']),
   notes: z.string().optional(),
   sessionData: VideoWatchSessionSchema
 })
@@ -434,12 +433,8 @@ export function isInstructor(obj: unknown): obj is Instructor {
   return InstructorSchema.safeParse(obj).success
 }
 
-export function isYouTubeVideo(obj: unknown): obj is YouTubeVideo {
-  return YouTubeVideoSchema.safeParse(obj).success
-}
-
-export function isVideoProgress(obj: unknown): obj is VideoProgress {
-  return VideoProgressSchema.safeParse(obj).success
+export function isVideo(obj: unknown): obj is Video {
+  return VideoSchema.safeParse(obj).success
 }
 
 export function isCoursePackage(obj: unknown): obj is CoursePackage {
@@ -515,8 +510,8 @@ export function validateClass(data: unknown): { success: true; data: Class } | {
   }
 }
 
-export function validateYouTubeVideo(data: unknown): { success: true; data: YouTubeVideo } | { success: false; errors: string[] } {
-  const result = YouTubeVideoSchema.safeParse(data)
+export function validateVideo(data: unknown): { success: true; data: Video } | { success: false; errors: string[] } {
+  const result = VideoSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
@@ -527,8 +522,8 @@ export function validateYouTubeVideo(data: unknown): { success: true; data: YouT
   }
 }
 
-export function validateVideoProgress(data: unknown): { success: true; data: VideoProgress } | { success: false; errors: string[] } {
-  const result = VideoProgressSchema.safeParse(data)
+export function validateVideoWatchSession(data: unknown): { success: true; data: VideoWatchSession } | { success: false; errors: string[] } {
+  const result = VideoWatchSessionSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
@@ -659,17 +654,16 @@ export const ValidationSchemas = {
   Instructor: InstructorSchema,
   InstructorInsert: InstructorInsertSchema,
   InstructorUpdate: InstructorUpdateSchema,
-  YouTubeVideo: YouTubeVideoSchema,
-  YouTubeVideoInsert: YouTubeVideoInsertSchema,
-  YouTubeVideoUpdate: YouTubeVideoUpdateSchema,
-  VideoProgress: VideoProgressSchema,
-  VideoProgressInsert: VideoProgressInsertSchema,
-  VideoProgressUpdate: VideoProgressUpdateSchema,
+  Video: VideoSchema,
+  VideoInsert: VideoInsertSchema,
+  VideoUpdate: VideoUpdateSchema,
+  VideoWatchSession: VideoWatchSessionSchema,
+  VideoWatchSessionInsert: VideoWatchSessionInsertSchema,
+  VideoWatchSessionUpdate: VideoWatchSessionUpdateSchema,
   CoursePackage: CoursePackageSchema,
   CoursePackageInsert: CoursePackageInsertSchema,
   CoursePackageUpdate: CoursePackageUpdateSchema,
   ClassFlowStudent: ClassFlowStudentSchema,
-  VideoWatchSession: VideoWatchSessionSchema,
   StudentFormData: StudentFormDataSchema,
-  VideoProgressFormData: VideoProgressFormDataSchema
+  VideoWatchSessionFormData: VideoWatchSessionFormDataSchema
 } as const

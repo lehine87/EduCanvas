@@ -61,7 +61,7 @@ describe('AuthContext', () => {
   }
 
   beforeEach(() => {
-    mockAuthManager = AuthManager.getInstance()
+    mockAuthManager = AuthManager.getInstance() as unknown as typeof mockAuthManager
     vi.clearAllMocks()
   })
 
@@ -225,6 +225,17 @@ describe('AuthContext', () => {
 })
 
 describe('withAuth HOC', () => {
+  let mockAuthManager: {
+    getCurrentUser: ReturnType<typeof vi.fn>
+    getCurrentTenant: ReturnType<typeof vi.fn>
+    hasPermission: ReturnType<typeof vi.fn>
+  }
+
+  beforeEach(() => {
+    mockAuthManager = AuthManager.getInstance() as unknown as typeof mockAuthManager
+    vi.clearAllMocks()
+  })
+
   test('should redirect unauthenticated users', () => {
     const { withAuth } = require('@/contexts/AuthContext')
     

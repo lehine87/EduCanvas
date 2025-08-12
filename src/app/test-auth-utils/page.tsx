@@ -88,7 +88,7 @@ export default function AuthUtilsTestPage() {
       'nonexistent_role' // 존재하지 않는 역할
     ]
     
-    const results = {}
+    const results: Record<string, boolean> = {}
     
     testCases.forEach(role => {
       const roleKey = Array.isArray(role) ? role.join(',') : role
@@ -114,7 +114,7 @@ export default function AuthUtilsTestPage() {
       '' // 빈 문자열 테스트
     ]
     
-    const results = {}
+    const results: Record<string, boolean> = {}
     
     testTenantIds.forEach(tenantId => {
       const key = tenantId || 'null/undefined/empty'
@@ -166,7 +166,7 @@ export default function AuthUtilsTestPage() {
   const testEdgeCases = () => {
     addLog('🚨 경계 조건 및 예외 상황 테스트 중...', 'warning')
     
-    const results = {}
+    const results: Record<string, boolean | { error: string }> = {}
     
     // 프로필이 null인 경우를 시뮬레이션하기 위한 테스트
     const tempProfile = profile

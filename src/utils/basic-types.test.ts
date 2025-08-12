@@ -7,8 +7,8 @@ import { describe, test, expect } from 'vitest'
 import type {
   Student,
   Class,
-  YouTubeVideo,
-  VideoProgress,
+  Video,
+  VideoWatchSession,
   UserStatus,
   StudentStatus,
   VideoStatus,

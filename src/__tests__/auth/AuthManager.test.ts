@@ -79,8 +79,8 @@ describe('AuthManager', () => {
 
       expect(result.error).toBeNull()
       expect(result.user).toBeTruthy()
-      expect(result.user.tenant_id).toBe('tenant-123')
-      expect(result.user.role).toBe('admin')
+      expect(result.user!.tenant_id).toBe('tenant-123')
+      expect(result.user!.role).toBe('admin')
     })
 
     test('should reject invalid credentials', async () => {
@@ -92,7 +92,7 @@ describe('AuthManager', () => {
       const result = await authManager.signIn('invalid@example.com', 'wrong', 'tenant-123')
 
       expect(result.error).toBeTruthy()
-      expect(result.error?.message).toContain('Invalid login credentials')
+      expect(result.error).toContain('Invalid login credentials')
     })
 
     test('should reject invalid tenant membership', async () => {
@@ -114,7 +114,7 @@ describe('AuthManager', () => {
       const result = await authManager.signIn('test@example.com', 'password', 'invalid-tenant')
 
       expect(result.error).toBeTruthy()
-      expect(result.error?.message).toContain('멤버가 아닙니다')
+      expect(result.error).toContain('멤버가 아닙니다')
     })
 
     test('should handle inactive tenant membership', async () => {
