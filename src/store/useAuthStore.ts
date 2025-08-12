@@ -6,6 +6,7 @@ import type { Database } from '@/types/database'
 import React from 'react'
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
+  role?: string | null  // 명시적으로 role 필드 추가
   tenants?: {
     id: string
     name: string

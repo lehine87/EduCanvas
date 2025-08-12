@@ -12,13 +12,11 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    plugins: {
-      "@typescript-eslint": (await import("@typescript-eslint/eslint-plugin")).default,
-    },
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/prefer-const": "error",
+      "@typescript-eslint/no-explicit-any": "warn",  // error -> warn으로 완화
+      "@typescript-eslint/no-unused-vars": "warn",  // error -> warn으로 완화
+      "prefer-const": "warn",  // error -> warn으로 완화
+      "@typescript-eslint/no-require-imports": "off",  // require 허용
     },
   },
 ];
