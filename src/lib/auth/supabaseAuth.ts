@@ -1,8 +1,7 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/types/supabase'
+import { createClient } from '@/lib/supabase/client'
 import type { User, Session } from '@supabase/supabase-js'
 
-export const supabase = createClientComponentClient<Database>()
+export const supabase = createClient()
 
 export interface AuthUser extends User {
   tenant_id?: string

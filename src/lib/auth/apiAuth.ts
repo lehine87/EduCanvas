@@ -1,7 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest } from 'next/server'
-import { Database } from '@/types/supabase'
 
 export interface AuthenticatedRequest extends NextRequest {
   user: {
@@ -75,7 +73,7 @@ export function withApiAuth(
 ) {
   return async (req: NextRequest): Promise<Response> => {
     try {
-      const supabase = createRouteHandlerClient<Database>({ cookies })
+      const supabase = createClient()
       
       // 1. Authentication check
       const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -249,7 +247,7 @@ export async function checkUserPermission(
   action: string
 ): Promise<boolean> {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = createClient()
     
     const { data: tenantUser, error } = await supabase
       .from('tenant_users')
@@ -287,7 +285,7 @@ export async function logSecurityEvent(
   metadata: Record<string, unknown> = {}
 ): Promise<void> {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = createClient()
     
     await supabase
       .from('audit_logs')

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { resetPasswordSchema } from '@/lib/auth/authValidation'
 import { rateLimiter, RATE_LIMIT_CONFIG, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
-import type { Database } from '@/types/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +51,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createClient()
     
     // 먼저 해당 이메일이 실제로 등록된 사용자인지 확인 (선택적 - 보안을 위해)
     const { data: userProfile } = await supabase

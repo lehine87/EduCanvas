@@ -45,6 +45,7 @@ export default function SeedDataPage() {
             const { error } = await supabase.from('students').insert({
               tenant_id: tenantData.id,
               name: `테스트학생${i}_${tenantData.name}`,
+              student_number: `${tenantData.slug.toUpperCase()}${String(Date.now()).slice(-6)}${i}`,
               phone: `010-1234-${String(i).padStart(4, '0')}`,
               birth_date: `200${i}-01-15`,
               gender: i % 2 === 0 ? 'female' : 'male',
@@ -56,7 +57,7 @@ export default function SeedDataPage() {
             if (error) throw error
             tenantResults.students.success++
           } catch (error) {
-            tenantResults.students.errors.push(`학생${i}: ${error.message}`)
+            tenantResults.students.errors.push(`학생${i}: ${error instanceof Error ? error.message : String(error)}`)
           }
         }
 
@@ -77,7 +78,7 @@ export default function SeedDataPage() {
             if (error) throw error
             tenantResults.classes.success++
           } catch (error) {
-            tenantResults.classes.errors.push(`클래스${i}: ${error.message}`)
+            tenantResults.classes.errors.push(`클래스${i}: ${error instanceof Error ? error.message : String(error)}`)
           }
         }
 
@@ -98,7 +99,7 @@ export default function SeedDataPage() {
             if (error) throw error
             tenantResults.instructors.success++
           } catch (error) {
-            tenantResults.instructors.errors.push(`강사${i}: ${error.message}`)
+            tenantResults.instructors.errors.push(`강사${i}: ${error instanceof Error ? error.message : String(error)}`)
           }
         }
 
@@ -162,7 +163,7 @@ export default function SeedDataPage() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4">📊 생성 결과</h2>
             <div className="space-y-4">
-              {results.map((result, index) => (
+              {results.map((result: any, index) => (
                 <div key={index} className="border rounded-lg p-4">
                   <h3 className="font-bold text-lg mb-3">{result.tenantName}</h3>
                   
@@ -174,7 +175,7 @@ export default function SeedDataPage() {
                       {result.students.errors.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs text-red-600">오류:</p>
-                          {result.students.errors.map((error, i) => (
+                          {result.students.errors.map((error: string, i: number) => (
                             <p key={i} className="text-xs text-red-500">{error}</p>
                           ))}
                         </div>
@@ -188,7 +189,7 @@ export default function SeedDataPage() {
                       {result.classes.errors.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs text-red-600">오류:</p>
-                          {result.classes.errors.map((error, i) => (
+                          {result.classes.errors.map((error: string, i: number) => (
                             <p key={i} className="text-xs text-red-500">{error}</p>
                           ))}
                         </div>
@@ -202,7 +203,7 @@ export default function SeedDataPage() {
                       {result.instructors.errors.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs text-red-600">오류:</p>
-                          {result.instructors.errors.map((error, i) => (
+                          {result.instructors.errors.map((error: string, i: number) => (
                             <p key={i} className="text-xs text-red-500">{error}</p>
                           ))}
                         </div>
@@ -218,13 +219,13 @@ export default function SeedDataPage() {
               <h3 className="font-bold text-blue-800 mb-2">🎯 생성 완료 요약</h3>
               <div className="text-sm text-blue-700 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <span className="font-medium">총 학생:</span> {results.reduce((sum, r) => sum + r.students.success, 0)}명
+                  <span className="font-medium">총 학생:</span> {results.reduce((sum, r: any) => sum + r.students.success, 0)}명
                 </div>
                 <div>
-                  <span className="font-medium">총 클래스:</span> {results.reduce((sum, r) => sum + r.classes.success, 0)}개
+                  <span className="font-medium">총 클래스:</span> {results.reduce((sum, r: any) => sum + r.classes.success, 0)}개
                 </div>
                 <div>
-                  <span className="font-medium">총 강사:</span> {results.reduce((sum, r) => sum + r.instructors.success, 0)}명
+                  <span className="font-medium">총 강사:</span> {results.reduce((sum, r: any) => sum + r.instructors.success, 0)}명
                 </div>
               </div>
             </div>
