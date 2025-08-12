@@ -6,8 +6,8 @@ import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
 import { TenantCreateModal } from '@/components/admin/TenantCreateModal'
 import { TenantListTable } from '@/components/admin/TenantListTable'
-import type { User } from '@/types/auth'
-import type { Tenant } from '@/types/app.types'
+import type { User } from '@supabase/supabase-js'
+import type { Tenant } from '@/types/auth.types'
 
 export default function SystemAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
