@@ -7,12 +7,25 @@ import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/compon
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
 import type { User } from '@supabase/supabase-js'
-import type { UserProfileV41, TenantV41 } from '@/types'
+import type { Database } from '@/types/database'
+
+type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
+  role?: string | null  // 명시적으로 role 필드 추가
+  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
+  status?: string | null  // 명시적으로 status 필드 추가
+  tenants?: {
+    id: string
+    name: string
+    slug: string
+  } | null
+}
+
+type Tenant = Database['public']['Tables']['tenants']['Row']
 
 export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<{ auth: User; profile: UserProfileV41 } | null>(null)
-  const [tenant, setTenant] = useState<TenantV41 | null>(null)
+  const [user, setUser] = useState<{ auth: User; profile: UserProfile } | null>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [stats, setStats] = useState({
     totalMembers: 0,
     activeMembers: 0,
