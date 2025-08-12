@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading, Input } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
+import type { TenantUser } from '@/types/app.types'
 
 interface MemberManagementTableProps {
   tenantId: string
@@ -10,8 +11,8 @@ interface MemberManagementTableProps {
 }
 
 export function MemberManagementTable({ tenantId, onMemberChange }: MemberManagementTableProps) {
-  const [members, setMembers] = useState<any[]>([])
-  const [filteredMembers, setFilteredMembers] = useState<any[]>([])
+  const [members, setMembers] = useState<TenantUser[]>([])
+  const [filteredMembers, setFilteredMembers] = useState<TenantUser[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRole, setFilterRole] = useState<string>('all')
@@ -83,21 +84,30 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     setActionLoading(userId)
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+      
+      console.log('🔄 회원 상태 변경 시작:', { userId, currentStatus, newStatus })
 
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
+      const response = await fetch('/api/tenant-admin/update-member', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          updates: { status: newStatus },
+          tenantId
         })
-        .eq('id', userId)
+      })
 
-      if (error) {
-        console.error('회원 상태 변경 실패:', error)
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('❌ 회원 상태 변경 API 실패:', result.error)
+        alert(result.error || '상태 변경에 실패했습니다.')
         return
       }
 
-      console.log('✅ 회원 상태 변경 성공:', newStatus)
+      console.log('✅ 회원 상태 변경 성공:', result.user)
 
       // 로컬 상태 업데이트
       setMembers(prev =>
@@ -108,10 +118,13 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
         )
       )
 
+      // 성공 메시지
+      alert(result.message)
       onMemberChange()
 
     } catch (error) {
-      console.error('회원 상태 변경 예외:', error)
+      console.error('❌ 회원 상태 변경 예외:', error)
+      alert('상태 변경 중 오류가 발생했습니다.')
     } finally {
       setActionLoading(null)
     }
@@ -120,20 +133,29 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
   const handleChangeRole = async (userId: string, newRole: string) => {
     setActionLoading(userId)
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ 
-          role: newRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
+      console.log('🔄 회원 역할 변경 시작:', { userId, newRole })
 
-      if (error) {
-        console.error('회원 역할 변경 실패:', error)
+      const response = await fetch('/api/tenant-admin/update-member', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          updates: { role: newRole },
+          tenantId
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('❌ 회원 역할 변경 API 실패:', result.error)
+        alert(result.error || '역할 변경에 실패했습니다.')
         return
       }
 
-      console.log('✅ 회원 역할 변경 성공:', newRole)
+      console.log('✅ 회원 역할 변경 성공:', result.user)
 
       // 로컬 상태 업데이트
       setMembers(prev =>
@@ -144,10 +166,13 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
         )
       )
 
+      // 성공 메시지 (조용히 처리 - select 변경은 사용자가 의도적으로 한 것)
+      console.log('📢 역할 변경 완료:', result.message)
       onMemberChange()
 
     } catch (error) {
-      console.error('회원 역할 변경 예외:', error)
+      console.error('❌ 회원 역할 변경 예외:', error)
+      alert('역할 변경 중 오류가 발생했습니다.')
     } finally {
       setActionLoading(null)
     }

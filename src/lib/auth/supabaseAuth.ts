@@ -277,7 +277,7 @@ export class AuthManager {
   /**
    * 개발자 권한 확인
    */
-  private checkDeveloperAccess(email: string, userTenants: any[]): boolean {
+  private checkDeveloperAccess(email: string, userTenants: Array<{ id: string; name: string; slug: string; role?: string }>): boolean {
     // 개발자 이메일 패턴 확인
     if (email.includes('admin@test.com') || 
         email.includes('@dev.') || 

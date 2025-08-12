@@ -13,7 +13,7 @@ import type { SalaryCalculationResult, InstructorPerformanceMetrics } from './sa
 // 1. COMMON API TYPES (공통 API 타입)
 // ================================================================
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -24,7 +24,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -413,7 +413,7 @@ export interface GetDashboardRequest {
 export interface AnalyticsQuery {
   metrics: string[];
   dimensions: string[];
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   date_range: {
     from: string;
     to: string;
@@ -423,7 +423,7 @@ export interface AnalyticsQuery {
 
 export interface AnalyticsResult {
   data: Array<{
-    dimensions: Record<string, any>;
+    dimensions: Record<string, unknown>;
     metrics: Record<string, number>;
     timestamp?: string;
   }>;
@@ -438,7 +438,7 @@ export interface AnalyticsResult {
 
 export interface ReportRequest {
   report_type: 'student_performance' | 'revenue_analysis' | 'instructor_performance' | 'attendance_summary';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   format?: 'json' | 'excel' | 'pdf';
   date_range: {
     from: string;
@@ -452,7 +452,7 @@ export interface ReportRequest {
 
 export interface WebSocketMessage {
   type: 'attendance_update' | 'payment_received' | 'enrollment_created' | 'system_notification';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
   user_id?: string;
   class_id?: string;
@@ -539,7 +539,7 @@ export interface SuggestionResult {
 export interface BulkOperationRequest {
   operation: 'create' | 'update' | 'delete';
   entity_type: 'student' | 'class' | 'attendance' | 'payment';
-  data: any[];
+  data: Record<string, unknown>[];
   options?: {
     skip_validation?: boolean;
     continue_on_error?: boolean;
@@ -553,7 +553,7 @@ export interface BulkOperationResult {
   errors: Array<{
     row_index: number;
     error_message: string;
-    data: any;
+    data: Record<string, unknown>;
   }>;
   processing_time_ms: number;
 }
@@ -578,7 +578,7 @@ export interface PaymentWebhookPayload {
   amount: number;
   status: 'completed' | 'failed' | 'cancelled';
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SMSNotificationRequest {
@@ -598,7 +598,7 @@ export interface EmailNotificationRequest {
   }>;
   subject: string;
   template_id: string;
-  variables: Record<string, any>;
+  variables: Record<string, unknown>;
   attachments?: Array<{
     filename: string;
     content: string; // base64
@@ -614,13 +614,13 @@ export interface ValidationError {
   field: string;
   message: string;
   code: string;
-  value?: any;
+  value?: unknown;
 }
 
 export interface BusinessRuleViolation {
   rule: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface ApiErrorResponse extends ApiResponse {

@@ -2,18 +2,19 @@
 
 import { useState } from 'react'
 import { Modal, Button, Input, Loading } from '@/components/ui'
+import type { Tenant } from '@/types/app.types'
 
 interface TenantSearchModalProps {
   isOpen: boolean
   onClose: () => void
-  onSelect: (tenant: any) => void
+  onSelect: (tenant: Tenant) => void
 }
 
 export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchModalProps) {
   const [searchType, setSearchType] = useState<'code' | 'name'>('code')
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchResults, setSearchResults] = useState<Tenant[]>([])
   const [error, setError] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
 

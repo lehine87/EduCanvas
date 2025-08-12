@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading, Modal } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
+import type { TenantUser } from '@/types/app.types'
 
 interface PendingApprovalsTableProps {
   tenantId: string
@@ -10,9 +11,9 @@ interface PendingApprovalsTableProps {
 }
 
 export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApprovalsTableProps) {
-  const [pendingUsers, setPendingUsers] = useState<any[]>([])
+  const [pendingUsers, setPendingUsers] = useState<TenantUser[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [selectedUser, setSelectedUser] = useState<TenantUser | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 

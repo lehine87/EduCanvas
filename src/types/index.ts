@@ -74,17 +74,17 @@ export type FormMode = 'create' | 'edit' | 'view';
 // 6. UI COMPONENT TYPES (프론트엔드 컴포넌트)
 // ================================================================
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T;
   label: string;
   width?: string;
   sortable?: boolean;
   filterable?: boolean;
   align?: 'left' | 'center' | 'right';
-  render?: (value: any, record: T) => React.ReactNode;
+  render?: (value: T[keyof T], record: T) => React.ReactNode;
 }
 
-export interface TableProps<T = any> {
+export interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
   loading?: boolean;
@@ -262,7 +262,7 @@ export interface FilterConfig {
   type: 'select' | 'multiSelect' | 'dateRange' | 'numberRange' | 'search';
   options?: FilterOption[];
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: unknown;
 }
 
 // ================================================================
@@ -273,7 +273,7 @@ export interface ExportConfig {
   format: 'excel' | 'csv' | 'pdf';
   filename?: string;
   columns?: string[];
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   options?: {
     includeHeader?: boolean;
     dateFormat?: string;
@@ -295,7 +295,7 @@ export interface ExportResult {
 
 export interface PrintConfig {
   template: 'student_list' | 'attendance_report' | 'payment_receipt' | 'enrollment_certificate';
-  data: any;
+  data: Record<string, unknown>;
   options?: {
     orientation?: 'portrait' | 'landscape';
     paperSize?: 'A4' | 'A5' | 'Letter';
@@ -318,7 +318,7 @@ export interface PrintConfig {
 export interface Permission {
   resource: string;
   action: 'create' | 'read' | 'update' | 'delete' | '*';
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>;
 }
 
 export interface Role {
@@ -346,8 +346,8 @@ export interface AuditLog {
   action: string;
   resource_type: string;
   resource_id: string;
-  old_values?: Record<string, any>;
-  new_values?: Record<string, any>;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   timestamp: DateTimeString;

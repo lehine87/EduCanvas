@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useAuth, useAuthStore, useSessionAutoRefresh } from '@/store/useAuthStore'
 import { Loading } from '@/components/ui'
 
 interface AuthGuardProps {
@@ -10,71 +10,155 @@ interface AuthGuardProps {
   requireAuth?: boolean
   redirectTo?: string
   allowedRoles?: string[]
+  requireTenantAccess?: string // 특정 테넌트 접근 권한 필요
+  fallback?: React.ReactNode // 로딩 중 표시할 커스텀 컴포넌트
 }
 
 export function AuthGuard({
   children,
   requireAuth = true,
   redirectTo = '/auth/login',
-  allowedRoles = []
+  allowedRoles = [],
+  requireTenantAccess,
+  fallback
 }: AuthGuardProps) {
-  const { user, profile, loading, initialized } = useAuthStore()
+  const { 
+    user, 
+    profile, 
+    loading, 
+    initialized, 
+    isAuthenticated,
+    isSessionValid,
+    hasRole,
+    canAccessTenant,
+    isActive,
+    clearSensitiveData
+  } = useAuth()
+  
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
-  useEffect(() => {
+  // 세션 자동 갱신 적용
+  useSessionAutoRefresh()
+
+  // 보안 검사 로직
+  const performSecurityChecks = useCallback(() => {
     if (!initialized) return
 
     setIsChecking(false)
+    setAuthError(null)
 
-    // 인증이 필요한 페이지인데 로그인하지 않은 경우
-    if (requireAuth && !user) {
-      router.push(redirectTo)
+    // 1. 기본 인증 검사
+    if (requireAuth && !isAuthenticated) {
+      console.log('🚨 인증 필요한 페이지에 비인증 사용자 접근')
+      const currentUrl = window.location.pathname + window.location.search
+      router.push(`${redirectTo}?next=${encodeURIComponent(currentUrl)}`)
       return
     }
 
-    // 인증이 필요하지 않은 페이지인데 로그인한 경우 (로그인 페이지 등)
-    if (!requireAuth && user) {
+    // 2. 인증된 사용자가 인증 불필요 페이지 접근 (로그인 페이지 등)
+    if (!requireAuth && isAuthenticated) {
       router.push('/admin')
       return
     }
 
-    // 역할 기반 접근 제어 (현재 is_admin만 지원)
-    if (requireAuth && user && profile && allowedRoles.length > 0) {
-      const userRole = profile.is_admin ? 'admin' : 'viewer'
-      if (!allowedRoles.includes(userRole)) {
+    if (requireAuth && isAuthenticated) {
+      // 3. 세션 유효성 검사
+      if (!isSessionValid()) {
+        console.warn('🚨 만료된 세션으로 접근')
+        clearSensitiveData()
+        router.push(`${redirectTo}?reason=session-expired`)
+        return
+      }
+
+      // 4. 계정 활성 상태 검사
+      if (!isActive) {
+        console.warn('🚨 비활성 계정 접근:', profile?.status)
+        setAuthError('계정이 비활성화되었습니다. 관리자에게 문의하세요.')
+        router.push('/auth/login?error=account-inactive')
+        return
+      }
+
+      // 5. 역할 기반 접근 제어
+      if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
+        console.warn('🚨 권한 없는 역할로 접근:', { 
+          userRole: profile?.role, 
+          allowedRoles 
+        })
+        setAuthError('이 페이지에 접근할 권한이 없습니다.')
+        router.push('/unauthorized')
+        return
+      }
+
+      // 6. 테넌트 접근 권한 검사
+      if (requireTenantAccess && !canAccessTenant(requireTenantAccess)) {
+        console.warn('🚨 테넌트 접근 권한 없음:', { 
+          requiredTenant: requireTenantAccess,
+          userTenant: profile?.tenant_id
+        })
+        setAuthError('해당 학원에 접근할 권한이 없습니다.')
         router.push('/unauthorized')
         return
       }
     }
-  }, [user, profile, initialized, requireAuth, allowedRoles, router, redirectTo])
+  }, [
+    initialized, requireAuth, isAuthenticated, isSessionValid, isActive, 
+    hasRole, canAccessTenant, allowedRoles, requireTenantAccess, 
+    profile, router, redirectTo, clearSensitiveData
+  ])
+
+  useEffect(() => {
+    performSecurityChecks()
+  }, [performSecurityChecks])
 
   // 초기화 중이거나 인증 상태를 확인 중일 때 로딩 표시
   if (!initialized || loading || isChecking) {
+    if (fallback) {
+      return <>{fallback}</>
+    }
+    
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading text="인증 상태를 확인하는 중..." />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center space-y-4">
+          <Loading text="인증 상태를 확인하는 중..." />
+          {process.env.NODE_ENV === 'development' && (
+            <p className="text-xs text-gray-500">
+              개발 모드: 보안 검사 진행 중
+            </p>
+          )}
+        </div>
       </div>
     )
   }
 
-  // 인증이 필요한데 로그인하지 않은 경우
-  if (requireAuth && !user) {
-    return null // 리다이렉트 중
+  // 인증 오류가 있는 경우
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            접근 권한 오류
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {authError}
+          </p>
+          <button
+            onClick={() => router.push('/auth/login')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            로그인 페이지로 이동
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  // 인증이 필요하지 않은데 로그인한 경우
-  if (!requireAuth && user) {
-    return null // 리다이렉트 중
-  }
-
-  // 역할 권한이 없는 경우
-  if (requireAuth && user && profile && allowedRoles.length > 0) {
-    const userRole = profile.is_admin ? 'admin' : 'viewer'
-    if (!allowedRoles.includes(userRole)) {
-      return null // 리다이렉트 중
-    }
-  }
-
+  // 모든 보안 검사 통과 시 컴포넌트 렌더링
   return <>{children}</>
 }

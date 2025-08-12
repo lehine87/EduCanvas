@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
+import type { Tenant } from '@/types/app.types'
 
 interface TenantListTableProps {
-  tenants: any[]
+  tenants: Tenant[]
   isLoading: boolean
   onRefresh: () => void
-  onTenantsUpdate?: (tenants: any[]) => void
+  onTenantsUpdate?: (tenants: Tenant[]) => void
 }
 
 export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh, onTenantsUpdate }: TenantListTableProps) {
-  const [tenants, setTenants] = useState<any[]>(initialTenants)
+  const [tenants, setTenants] = useState<Tenant[]>(initialTenants)
   const [toggleLoadingStates, setToggleLoadingStates] = useState<Set<string>>(new Set())
   
   const supabase = createClient()

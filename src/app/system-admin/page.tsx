@@ -6,12 +6,14 @@ import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
 import { TenantCreateModal } from '@/components/admin/TenantCreateModal'
 import { TenantListTable } from '@/components/admin/TenantListTable'
+import type { User } from '@/types/auth'
+import type { Tenant } from '@/types/app.types'
 
 export default function SystemAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [tenants, setTenants] = useState<any[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
   const [isLoadingTenants, setIsLoadingTenants] = useState(false)
   const router = useRouter()
 

@@ -113,7 +113,7 @@ export class AuthClient {
         } else {
           console.log('✅ 기본 사용자 프로필 생성 성공:', insertData?.[0]?.email)
         }
-      } catch (profileError: any) {
+      } catch (profileError: unknown) {
         console.error('🚨 사용자 프로필 생성 예외 (상세):', {
           name: profileError?.name,
           message: profileError?.message,
@@ -147,11 +147,22 @@ export class AuthClient {
   }
 
   async resetPassword(email: string) {
-    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`
+    // API Route를 통해 Rate Limiting이 적용된 비밀번호 재설정 요청
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
     })
 
-    if (error) throw error
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || '비밀번호 재설정 요청 실패')
+    }
+
+    const result = await response.json()
+    return result
   }
 
   async updatePassword(password: string) {
@@ -259,7 +270,7 @@ export class AuthClient {
     // 프로필 데이터 검증 및 보정
     if (data) {
       let needsUpdate = false
-      const updates: any = {}
+      const updates: Record<string, unknown> = {}
 
       // 시스템 관리자 계정인 경우 데이터 보정
       const isSystemAdmin = ['admin@test.com', 'sjlee87@kakao.com'].includes(data.email)
@@ -319,7 +330,7 @@ export class AuthClient {
     return data
   }
 
-  onAuthStateChange(callback: (event: string, session: any) => void) {
+  onAuthStateChange(callback: (event: string, session: unknown) => void) {
     return this.supabase.auth.onAuthStateChange(callback)
   }
 }

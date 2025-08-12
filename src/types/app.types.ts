@@ -198,7 +198,7 @@ export interface SecurityContext {
 // ================================================================
 // API Response Types
 // ================================================================
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
@@ -207,7 +207,7 @@ export interface ApiResponse<T = any> {
   requestId?: string
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = Record<string, unknown>> {
   data: T[]
   total: number
   page: number
@@ -220,7 +220,7 @@ export interface PaginatedResponse<T = any> {
 export interface ApiError {
   code: string
   message: string
-  details?: any
+  details?: Record<string, unknown>
   timestamp: string
   path: string
   method: string
@@ -361,7 +361,7 @@ export interface ReportConfiguration {
 export interface YouTubeApiResponse {
   kind: string
   etag: string
-  items: any[]
+  items: Record<string, unknown>[]
   nextPageToken?: string
   prevPageToken?: string
   pageInfo: {
