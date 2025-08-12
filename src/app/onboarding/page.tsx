@@ -8,15 +8,20 @@ import { Loading } from '@/components/ui'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
+type Tenant = {
+  id: string
+  name: string
+  slug: string
+  tenant_code?: string
+  created_at?: string
+  updated_at?: string
+}
+
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
   role?: string | null  // 명시적으로 role 필드 추가
   tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
   status?: string | null  // 명시적으로 status 필드 추가
-  tenants?: {
-    id: string
-    name: string
-    slug: string
-  } | null
+  tenants?: Tenant | null
 }
 
 export default function OnboardingPage() {
@@ -107,7 +112,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* 온보딩 폼 */}
-        <OnboardingForm user={user} />
+        {user && <OnboardingForm user={user} />}
 
         {/* 도움말 */}
         <div className="mt-8 text-center text-sm text-gray-500">
