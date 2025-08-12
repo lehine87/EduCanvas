@@ -8,18 +8,18 @@ import type {
   ComponentAlignment
 } from './types'
 
-interface TableColumn<T = any> {
+interface TableColumn<T = Record<string, unknown>> {
   key: keyof T | string
   header: string
   width?: number
   sortable?: boolean
-  render?: (value: any, row: T, index: number) => React.ReactNode
-  cellClassName?: (value: any, row: T) => string
+  render?: (value: unknown, row: T, index: number) => React.ReactNode
+  cellClassName?: (value: unknown, row: T) => string
   headerClassName?: string
   align?: ComponentAlignment
 }
 
-interface TableProps<T = any> extends BaseComponentProps, AccessibilityProps {
+interface TableProps<T = Record<string, unknown>> extends BaseComponentProps, AccessibilityProps {
   data: T[]
   columns: TableColumn<T>[]
   loading?: boolean
@@ -44,7 +44,7 @@ interface SortConfig {
   direction: SortDirection
 }
 
-export function Table<T extends Record<string, any>>({
+export function Table<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
@@ -134,7 +134,7 @@ export function Table<T extends Record<string, any>>({
 
   const getCellValue = (row: T, column: TableColumn<T>) => {
     if (typeof column.key === 'string' && column.key.includes('.')) {
-      return column.key.split('.').reduce((obj: any, key) => obj?.[key], row)
+      return column.key.split('.').reduce((obj: unknown, key) => (obj as Record<string, unknown>)?.[key], row)
     }
     return row[column.key as keyof T]
   }

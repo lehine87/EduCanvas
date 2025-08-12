@@ -7,7 +7,7 @@ interface TestResult {
   test: string
   status: 'success' | 'error' | 'pending'
   message: string
-  data?: any
+  data?: unknown
 }
 
 export default function DatabaseTestPage() {

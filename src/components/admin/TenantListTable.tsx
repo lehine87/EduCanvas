@@ -123,7 +123,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'name',
       header: '학원명',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         console.log('Name column render - value:', value, 'tenant:', tenant);
         if (!tenant) return <div>-</div>;
         return (
@@ -137,7 +137,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'contact',
       header: '연락처',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant) return <div>-</div>;
         return (
           <div>
@@ -150,7 +150,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'subscription',
       header: '구독',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant) return <div>-</div>;
         return (
           <div className="space-y-1">
@@ -167,7 +167,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'users',
       header: '사용자 수',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant) return <div className="text-center">-</div>;
         return (
           <div className="text-center">
@@ -182,7 +182,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'status',
       header: '상태',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant) return <div>-</div>;
         return getStatusBadge(tenant.is_active);
       }
@@ -190,7 +190,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'created_at',
       header: '생성일',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant || !tenant.created_at) return <div className="text-sm text-gray-500">-</div>;
         return (
           <div className="text-sm text-gray-500">
@@ -202,7 +202,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'actions',
       header: '작업',
-      render: (value: any, tenant: any) => {
+      render: (value: unknown, tenant: Tenant) => {
         if (!tenant) return <div>-</div>;
         const isToggling = toggleLoadingStates.has(tenant.id);
         return (

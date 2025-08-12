@@ -13,13 +13,13 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",  // any 사용 금지로 복원
       "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",  // error -> warn
+      "@typescript-eslint/no-empty-object-type": "warn",
       "prefer-const": "warn",
       "@typescript-eslint/no-require-imports": "off",
-      "react-hooks/exhaustive-deps": "warn",  // React hooks 경고 완화
-      "@next/next/no-img-element": "warn",  // img 태그 경고 완화
+      "react-hooks/exhaustive-deps": "warn",
+      "@next/next/no-img-element": "warn",
     },
   },
 ];

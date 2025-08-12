@@ -47,7 +47,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
       console.log('✅ 활성 회원 목록 로드 성공:', result.members?.length || 0, '명')
       setMembers(result.members || [])
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ 회원 목록 조회 실패:', error)
       setMembers([])
     } finally {
@@ -230,7 +230,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'user_info',
       header: '회원 정보',
-      render: (value: any, member: any) => (
+      render: (value: unknown, member: TenantUser) => (
         <div>
           <div className="font-medium text-gray-900">{member.name}</div>
           <div className="text-sm text-gray-500">{member.email}</div>
@@ -243,7 +243,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'role',
       header: '역할',
-      render: (value: any, member: any) => (
+      render: (value: unknown, member: TenantUser) => (
         <div className="space-y-2">
           {getRoleBadge(member.role)}
           {member.status === 'active' && member.role !== 'admin' && (
@@ -266,12 +266,12 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'status',
       header: '상태',
-      render: (value: any, member: any) => getStatusBadge(member.status)
+      render: (value: unknown, member: TenantUser) => getStatusBadge(member.status)
     },
     {
       key: 'last_login',
       header: '최근 로그인',
-      render: (value: any, member: any) => (
+      render: (value: unknown, member: TenantUser) => (
         <div className="text-sm text-gray-500">
           {member.last_login_at ? formatDate(member.last_login_at) : '없음'}
         </div>
@@ -280,7 +280,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'created_at',
       header: '가입일',
-      render: (value: any, member: any) => (
+      render: (value: unknown, member: TenantUser) => (
         <div className="text-sm text-gray-500">
           {formatDate(member.created_at)}
         </div>
@@ -289,7 +289,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'actions',
       header: '작업',
-      render: (value: any, member: any) => {
+      render: (value: unknown, member: TenantUser) => {
         if (!member || !member.id) return <div>-</div>;
         
         console.log('작업 컬럼 렌더링:', { id: member.id, role: member.role, status: member.status });

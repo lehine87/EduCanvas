@@ -14,7 +14,13 @@ vi.mock('@/contexts/AuthContext', () => ({
 }))
 
 describe('usePermissions', () => {
-  let mockAuth: any
+  let mockAuth: {
+    user: { role: string } | null
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
@@ -119,7 +125,13 @@ describe('usePermissions', () => {
 })
 
 describe('useStudentPermissions', () => {
-  let mockAuth: any
+  let mockAuth: {
+    user: { role: string } | null
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
@@ -144,7 +156,13 @@ describe('useStudentPermissions', () => {
 })
 
 describe('useNavigationPermissions', () => {
-  let mockAuth: any
+  let mockAuth: {
+    user: { role: string } | null
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
@@ -201,7 +219,13 @@ describe('useNavigationPermissions', () => {
 })
 
 describe('useFormPermissions', () => {
-  let mockAuth: any
+  let mockAuth: {
+    user: { role: string } | null
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
@@ -269,7 +293,13 @@ describe('useFormPermissions', () => {
 })
 
 describe('useBulkOperationPermissions', () => {
-  let mockAuth: any
+  let mockAuth: {
+    user: { role: string } | null
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')

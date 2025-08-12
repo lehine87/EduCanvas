@@ -25,7 +25,12 @@ vi.mock('@/contexts/AuthContext', async () => {
 })
 
 describe('PermissionGuard', () => {
-  let mockAuth: any
+  let mockAuth: {
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
@@ -161,7 +166,12 @@ describe('PermissionGuard', () => {
 })
 
 describe('Specialized Permission Guards', () => {
-  let mockAuth: any
+  let mockAuth: {
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')

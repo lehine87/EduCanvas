@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('💥 테넌트 생성 API 오류:', error)
     
     if (error instanceof z.ZodError) {
@@ -159,8 +159,15 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // 타입 가드를 사용한 안전한 에러 처리
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+      ? error 
+      : '내부 서버 오류가 발생했습니다.';
+    
     return NextResponse.json(
-      { error: error.message || '내부 서버 오류가 발생했습니다.' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

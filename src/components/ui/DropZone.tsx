@@ -12,7 +12,7 @@ export interface DropZoneProps extends BaseComponentProps, AccessibilityProps {
   /** Whether the dragged item can be dropped here */
   canDrop?: boolean
   /** Drop event handler */
-  onDrop?: (event: React.DragEvent, data?: any) => void
+  onDrop?: (event: React.DragEvent, data?: unknown) => void
   /** Drag enter event handler */
   onDragEnter?: (event: React.DragEvent) => void
   /** Drag leave event handler */
@@ -36,7 +36,7 @@ export interface DropZoneProps extends BaseComponentProps, AccessibilityProps {
   /** Whether the zone is disabled */
   disabled?: boolean
   /** Custom validation function */
-  validator?: (data: any) => boolean | string
+  validator?: (data: unknown) => boolean | string
   /** Drop zone title */
   title?: string
   /** Drop zone description */
@@ -390,7 +390,7 @@ export const ClassFlowDropZone = memo<ClassFlowDropZoneProps>(({
   description,
   ...props
 }) => {
-  const handleDrop = useCallback((event: React.DragEvent, data?: any) => {
+  const handleDrop = useCallback((event: React.DragEvent, data?: unknown) => {
     if (data?.type === 'student') {
       const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [data.studentId].filter(Boolean)
       onStudentsMove?.(studentIds, classId)
@@ -398,7 +398,7 @@ export const ClassFlowDropZone = memo<ClassFlowDropZoneProps>(({
     onDrop?.(event, data)
   }, [classId, onStudentsMove, onDrop])
 
-  const validator = useCallback((data: any) => {
+  const validator = useCallback((data: unknown) => {
     if (data?.type !== 'student') {
       return '학생만 이 영역으로 이동할 수 있습니다'
     }

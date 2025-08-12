@@ -356,7 +356,7 @@ export interface SalaryStatistics {
 // 9. API REQUEST/RESPONSE TYPES
 // ================================================================
 
-export interface SalaryApiResponse<T = any> {
+export interface SalaryApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

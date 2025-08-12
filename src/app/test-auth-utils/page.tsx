@@ -5,7 +5,7 @@ import { useAuth, useAuthStore } from '@/store/useAuthStore'
 import { Button, Card, CardHeader, CardTitle, CardBody, Badge } from '@/components/ui'
 
 export default function AuthUtilsTestPage() {
-  const [testResults, setTestResults] = useState<{ [key: string]: any }>({})
+  const [testResults, setTestResults] = useState<Record<string, unknown>>({})
   const [testLogs, setTestLogs] = useState<string[]>([])
   const [isRunning, setIsRunning] = useState(false)
   
@@ -29,7 +29,7 @@ export default function AuthUtilsTestPage() {
     setTestLogs(prev => [...prev, `[${timestamp}] ${emoji} ${message}`])
   }
 
-  const runTest = async (testName: string, testFn: () => any) => {
+  const runTest = async (testName: string, testFn: () => unknown) => {
     addLog(`🧪 테스트 시작: ${testName}`)
     try {
       const result = await Promise.resolve(testFn())
@@ -37,7 +37,7 @@ export default function AuthUtilsTestPage() {
       addLog(`결과: ${JSON.stringify(result, null, 2)}`, 'success')
       return result
     } catch (error) {
-      setTestResults(prev => ({ ...prev, [testName]: { error: error.toString() } }))
+      setTestResults(prev => ({ ...prev, [testName]: { error: String(error) } }))
       addLog(`예외 발생: ${error}`, 'error')
       return false
     }
@@ -173,20 +173,20 @@ export default function AuthUtilsTestPage() {
     
     // hasRole with invalid inputs
     try {
-      const invalidRoleTest = auth.hasRole(null as any)
+      const invalidRoleTest = auth.hasRole(null as unknown as string)
       results.hasRoleNull = invalidRoleTest
       addLog(`hasRole(null): ${invalidRoleTest}`)
     } catch (error) {
-      results.hasRoleNull = { error: error.toString() }
+      results.hasRoleNull = { error: String(error) }
       addLog(`hasRole(null) 예외: ${error}`, 'error')
     }
     
     try {
-      const undefinedRoleTest = auth.hasRole(undefined as any)
+      const undefinedRoleTest = auth.hasRole(undefined as unknown as string)
       results.hasRoleUndefined = undefinedRoleTest
       addLog(`hasRole(undefined): ${undefinedRoleTest}`)
     } catch (error) {
-      results.hasRoleUndefined = { error: error.toString() }
+      results.hasRoleUndefined = { error: String(error) }
       addLog(`hasRole(undefined) 예외: ${error}`, 'error')
     }
     
@@ -197,7 +197,7 @@ export default function AuthUtilsTestPage() {
       results.canAccessLongTenant = longTenantTest
       addLog(`canAccessTenant(긴 문자열): ${longTenantTest}`)
     } catch (error) {
-      results.canAccessLongTenant = { error: error.toString() }
+      results.canAccessLongTenant = { error: String(error) }
       addLog(`canAccessTenant(긴 문자열) 예외: ${error}`, 'error')
     }
     

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Modal, Button, Input } from '@/components/ui'
+import type { Tenant } from '@/types/app.types'
 
 const tenantSchema = z.object({
   name: z.string().min(2, '학원명은 2자 이상이어야 합니다'),
@@ -21,14 +22,14 @@ type TenantFormData = z.infer<typeof tenantSchema>
 interface TenantCreateModalProps {
   isOpen: boolean
   onClose: () => void
-  onTenantCreated: (tenant: any) => void
+  onTenantCreated: (tenant: Tenant) => void
 }
 
 export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCreateModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<'tenant' | 'success'>('tenant')
-  const [createdData, setCreatedData] = useState<any>(null)
+  const [createdData, setCreatedData] = useState<{tenant: Tenant, admin: {email: string, name: string, tempPassword: string}} | null>(null)
 
   const {
     register,
@@ -72,7 +73,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
 
       setStep('success')
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('테넌트 생성 과정 오류:', error)
       setError(error.message || '테넌트 생성 중 오류가 발생했습니다.')
     } finally {

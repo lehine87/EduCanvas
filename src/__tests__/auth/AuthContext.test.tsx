@@ -48,7 +48,17 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 describe('AuthContext', () => {
-  let mockAuthManager: any
+  let mockAuthManager: {
+    signIn: ReturnType<typeof vi.fn>
+    signOut: ReturnType<typeof vi.fn>
+    getCurrentUser: ReturnType<typeof vi.fn>
+    getCurrentTenant: ReturnType<typeof vi.fn>
+    hasPermission: ReturnType<typeof vi.fn>
+    isOwner: ReturnType<typeof vi.fn>
+    isAdmin: ReturnType<typeof vi.fn>
+    isInstructor: ReturnType<typeof vi.fn>
+    refreshUserData: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     mockAuthManager = AuthManager.getInstance()

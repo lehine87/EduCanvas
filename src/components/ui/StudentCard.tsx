@@ -30,8 +30,8 @@ interface StudentCardProps extends BaseComponentProps, AccessibilityProps {
   variant?: 'default' | 'compact' | 'detailed'
   showDragHandle?: boolean
   showSelection?: boolean
-  draggableProps?: any
-  dragHandleProps?: any
+  draggableProps?: React.HTMLAttributes<HTMLElement>
+  dragHandleProps?: React.HTMLAttributes<HTMLElement>
 }
 
 export const StudentCard = memo<StudentCardProps>(({ 

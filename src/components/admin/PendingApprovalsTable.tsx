@@ -146,7 +146,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'user_info',
       header: '신청자 정보',
-      render: (value: any, user: any) => {
+      render: (value: unknown, user: TenantUser) => {
         if (!user) return <div>-</div>;
         return (
           <div>
@@ -162,7 +162,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'role',
       header: '희망 역할',
-      render: (value: any, user: any) => {
+      render: (value: unknown, user: TenantUser) => {
         if (!user) return <div>-</div>;
         return getRoleBadge(user.role);
       }
@@ -170,7 +170,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'created_at',
       header: '신청 일시',
-      render: (value: any, user: any) => {
+      render: (value: unknown, user: TenantUser) => {
         if (!user) return <div>-</div>;
         return (
           <div className="text-sm text-gray-500">
@@ -182,7 +182,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'details',
       header: '상세 정보',
-      render: (value: any, user: any) => {
+      render: (value: unknown, user: TenantUser) => {
         if (!user || !user.id) return <div>-</div>;
         return (
           <Button
@@ -201,7 +201,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'actions',
       header: '승인 처리',
-      render: (value: any, user: any) => {
+      render: (value: unknown, user: TenantUser) => {
         if (!user || !user.id) return <div>-</div>;
         return (
           <div className="flex space-x-2">

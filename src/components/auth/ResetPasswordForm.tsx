@@ -28,10 +28,13 @@ export function ResetPasswordForm() {
     try {
       await authClient.resetPassword(data.email)
       setSuccess(true)
-    } catch (error: any) {
+    } catch (error) {
       console.error('비밀번호 재설정 에러:', error)
       
-      if (error.message?.includes('Unable to validate email address')) {
+      // 타입 가드를 사용한 안전한 에러 처리
+      const errorMessage = error instanceof Error ? error.message : '';
+      
+      if (errorMessage.includes('Unable to validate email address')) {
         setError('등록되지 않은 이메일 주소입니다')
       } else {
         setError('비밀번호 재설정 요청 중 오류가 발생했습니다. 다시 시도해주세요.')

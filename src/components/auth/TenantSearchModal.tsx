@@ -69,7 +69,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
         }
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('검색 예외:', error)
       setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
@@ -77,7 +77,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
     }
   }
 
-  const handleSelect = (tenant: any) => {
+  const handleSelect = (tenant: Tenant) => {
     console.log('✅ 학원 선택:', tenant.name)
     onSelect(tenant)
     handleClose()

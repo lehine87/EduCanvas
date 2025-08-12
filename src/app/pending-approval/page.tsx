@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardBody, Loading } from '@/components/ui'
+import type { User } from '@supabase/supabase-js'
+import type { UserProfileV41, TenantV41 } from '@/types'
 
 export default function PendingApprovalPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const [tenant, setTenant] = useState<any>(null)
+  const [user, setUser] = useState<{ auth: User; profile: UserProfileV41 } | null>(null)
+  const [tenant, setTenant] = useState<TenantV41 | null>(null)
   const router = useRouter()
 
   useEffect(() => {

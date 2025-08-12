@@ -57,12 +57,15 @@ export function LoginForm() {
         router.push('/admin')
         router.refresh()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error)
       
-      if (error.message?.includes('Invalid login credentials')) {
+      // 타입 가드를 사용한 안전한 에러 처리
+      const errorMessage = error instanceof Error ? error.message : '';
+      
+      if (errorMessage.includes('Invalid login credentials')) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다')
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (errorMessage.includes('Email not confirmed')) {
         setError('이메일 인증을 완료해주세요')
       } else {
         setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')

@@ -58,9 +58,9 @@ export const TenantSchema = z.object({
   contact_phone: PhoneSchema,
   address: z.string().nullable(),
   business_registration: z.string().max(50).nullable(),
-  settings: z.record(z.string(), z.any()).default({}),
-  features: z.record(z.string(), z.any()).default({}),
-  limits: z.record(z.string(), z.any()).default({}),
+  settings: z.record(z.string(), z.unknown()).default({}),
+  features: z.record(z.string(), z.unknown()).default({}),
+  limits: z.record(z.string(), z.unknown()).default({}),
   subscription_tier: z.string().max(20).default('basic'),
   subscription_status: z.string().max(20).default('active'),
   trial_ends_at: z.string().datetime().nullable(),
@@ -207,7 +207,7 @@ export const YouTubeVideoSchema = z.object({
   is_age_restricted: z.boolean().default(false),
   upload_date: z.string().datetime().nullable(),
   last_updated: z.string().datetime().nullable(),
-  metadata: z.record(z.string(), z.any()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime()
 })
@@ -241,7 +241,7 @@ export const VideoProgressSchema = z.object({
   completion_percentage: z.number().min(0).max(100).default(0),
   last_watched_at: z.string().datetime(),
   completed_at: z.string().datetime().nullable(),
-  watch_sessions: z.array(z.record(z.string(), z.any())).default([]),
+  watch_sessions: z.array(z.record(z.string(), z.unknown())).default([]),
   notes: z.string().nullable(),
   quality_watched: VideoQualitySchema.nullable(),
   watch_speed: z.number().min(0.25).max(3).default(1),
@@ -252,7 +252,7 @@ export const VideoProgressSchema = z.object({
   device_type: z.string().max(50).nullable(),
   browser_type: z.string().max(50).nullable(),
   ip_address: z.string().nullable(),
-  location_info: z.record(z.string(), z.any()).nullable(),
+  location_info: z.record(z.string(), z.unknown()).nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime()
 })
@@ -374,64 +374,64 @@ export const VideoProgressFormDataSchema = z.object({
 // Type Guards (Runtime Type Checking)
 // ================================================================
 
-export function isUUID(value: any): value is string {
+export function isUUID(value: unknown): value is string {
   return typeof value === 'string' && UUIDSchema.safeParse(value).success
 }
 
-export function isStudent(obj: any): obj is Student {
+export function isStudent(obj: unknown): obj is Student {
   return StudentSchema.safeParse(obj).success
 }
 
-export function isClass(obj: any): obj is Class {
+export function isClass(obj: unknown): obj is Class {
   return ClassSchema.safeParse(obj).success
 }
 
-export function isTenant(obj: any): obj is Tenant {
+export function isTenant(obj: unknown): obj is Tenant {
   return TenantSchema.safeParse(obj).success
 }
 
-export function isInstructor(obj: any): obj is Instructor {
+export function isInstructor(obj: unknown): obj is Instructor {
   return InstructorSchema.safeParse(obj).success
 }
 
-export function isYouTubeVideo(obj: any): obj is YouTubeVideo {
+export function isYouTubeVideo(obj: unknown): obj is YouTubeVideo {
   return YouTubeVideoSchema.safeParse(obj).success
 }
 
-export function isVideoProgress(obj: any): obj is VideoProgress {
+export function isVideoProgress(obj: unknown): obj is VideoProgress {
   return VideoProgressSchema.safeParse(obj).success
 }
 
-export function isCoursePackage(obj: any): obj is CoursePackage {
+export function isCoursePackage(obj: unknown): obj is CoursePackage {
   return CoursePackageSchema.safeParse(obj).success
 }
 
-export function isClassFlowStudent(obj: any): obj is ClassFlowStudent {
+export function isClassFlowStudent(obj: unknown): obj is ClassFlowStudent {
   return ClassFlowStudentSchema.safeParse(obj).success
 }
 
-export function isVideoWatchSession(obj: any): obj is VideoWatchSession {
+export function isVideoWatchSession(obj: unknown): obj is VideoWatchSession {
   return VideoWatchSessionSchema.safeParse(obj).success
 }
 
 // Enum Type Guards
-export function isUserStatus(value: any): value is UserStatus {
+export function isUserStatus(value: unknown): value is UserStatus {
   return UserStatusSchema.safeParse(value).success
 }
 
-export function isStudentStatus(value: any): value is StudentStatus {
+export function isStudentStatus(value: unknown): value is StudentStatus {
   return StudentStatusSchema.safeParse(value).success
 }
 
-export function isBillingType(value: any): value is BillingType {
+export function isBillingType(value: unknown): value is BillingType {
   return BillingTypeSchema.safeParse(value).success
 }
 
-export function isVideoStatus(value: any): value is VideoStatus {
+export function isVideoStatus(value: unknown): value is VideoStatus {
   return VideoStatusSchema.safeParse(value).success
 }
 
-export function isVideoQuality(value: any): value is VideoQuality {
+export function isVideoQuality(value: unknown): value is VideoQuality {
   return VideoQualitySchema.safeParse(value).success
 }
 
@@ -439,62 +439,62 @@ export function isVideoQuality(value: any): value is VideoQuality {
 // Validation Functions
 // ================================================================
 
-export function validateStudent(data: any): { success: true; data: Student } | { success: false; errors: string[] } {
+export function validateStudent(data: unknown): { success: true; data: Student } | { success: false; errors: string[] } {
   const result = StudentSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data as Student }
   } else {
     return {
       success: false,
-      errors: result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
     }
   }
 }
 
-export function validateStudentInsert(data: any): { success: true; data: StudentInsert } | { success: false; errors: string[] } {
+export function validateStudentInsert(data: unknown): { success: true; data: StudentInsert } | { success: false; errors: string[] } {
   const result = StudentInsertSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
     return {
       success: false,
-      errors: result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
     }
   }
 }
 
-export function validateClass(data: any): { success: true; data: Class } | { success: false; errors: string[] } {
+export function validateClass(data: unknown): { success: true; data: Class } | { success: false; errors: string[] } {
   const result = ClassSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
     return {
       success: false,
-      errors: result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
     }
   }
 }
 
-export function validateYouTubeVideo(data: any): { success: true; data: YouTubeVideo } | { success: false; errors: string[] } {
+export function validateYouTubeVideo(data: unknown): { success: true; data: YouTubeVideo } | { success: false; errors: string[] } {
   const result = YouTubeVideoSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
     return {
       success: false,
-      errors: result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
     }
   }
 }
 
-export function validateVideoProgress(data: any): { success: true; data: VideoProgress } | { success: false; errors: string[] } {
+export function validateVideoProgress(data: unknown): { success: true; data: VideoProgress } | { success: false; errors: string[] } {
   const result = VideoProgressSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }
   } else {
     return {
       success: false,
-      errors: result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
+      errors: result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
     }
   }
 }
@@ -578,7 +578,7 @@ export function validateUniqueConstraint<T>(
 ): boolean {
   return !items.some(item => 
     item[key] === newValue && 
-    (excludeId === undefined || (item as any).id !== excludeId)
+    (excludeId === undefined || (item as {id: string | number}).id !== excludeId)
   )
 }
 

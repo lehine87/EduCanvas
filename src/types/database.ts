@@ -237,7 +237,7 @@ export interface PaginationResult<T> {
   has_more: boolean;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;

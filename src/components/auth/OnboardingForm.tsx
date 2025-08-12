@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
 import { TenantSearchModal } from './TenantSearchModal'
 import { createClient } from '@/lib/supabase/client'
+import type { Tenant } from '@/types/app.types'
+import type { User } from '@supabase/supabase-js'
 
 const onboardingSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
@@ -22,10 +24,17 @@ const onboardingSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>
 
+interface UserProfile {
+  id?: string
+  name?: string
+  phone?: string
+  email?: string
+}
+
 interface OnboardingFormProps {
   user: {
-    auth: any
-    profile: any
+    auth: User
+    profile: UserProfile
   }
 }
 
@@ -33,7 +42,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedTenant, setSelectedTenant] = useState<any>(null)
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [showTenantSearch, setShowTenantSearch] = useState(false)
   const router = useRouter()
 
@@ -158,7 +167,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
       // 성공 시 승인 대기 페이지로 이동
       router.push('/pending-approval')
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('온보딩 실패:', error)
       setError('온보딩 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {

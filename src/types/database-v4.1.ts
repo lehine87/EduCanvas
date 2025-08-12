@@ -57,7 +57,7 @@ export interface StudentV41 {
   enrollment_date?: string | null
   graduation_date?: string | null
   memo?: string | null
-  custom_fields?: any     // JSON field
+  custom_fields?: Record<string, unknown> | null     // JSON field
   created_at?: string | null
   updated_at?: string | null
   created_by?: string | null  // FK to user_profiles.id
@@ -87,8 +87,8 @@ export interface ClassV41 {
   is_active?: boolean | null
   start_date?: string | null
   end_date?: string | null
-  schedule_config?: any      // JSON field
-  custom_fields?: any        // JSON field
+  schedule_config?: Record<string, unknown> | null      // JSON field
+  custom_fields?: Record<string, unknown> | null        // JSON field
   created_at?: string | null
   updated_at?: string | null
   created_by?: string | null // FK to user_profiles.id
@@ -108,7 +108,7 @@ export interface UserProfileV41 {
   role?: UserRole | null
   last_login?: string | null
   tenant_id?: string | null
-  custom_fields?: any
+  custom_fields?: Record<string, unknown> | null
   created_at?: string | null
   updated_at?: string | null
 }
@@ -142,7 +142,7 @@ export interface TenantV41 {
   name: string
   slug: string  // UNIQUE constraint
   is_active?: boolean | null
-  settings?: any // JSON field
+  settings?: Record<string, unknown> | null // JSON field
   created_at?: string | null
   updated_at?: string | null
 }

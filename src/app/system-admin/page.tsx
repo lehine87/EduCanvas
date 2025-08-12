@@ -84,7 +84,7 @@ export default function SystemAdminPage() {
     }
   }
 
-  const handleTenantCreated = (newTenant: any) => {
+  const handleTenantCreated = (newTenant: { id: string; name: string; slug: string }) => {
     setTenants(prev => [newTenant, ...prev])
     setShowCreateModal(false)
   }

@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
 import { OnboardingForm } from '@/components/auth/OnboardingForm'
 import { Loading } from '@/components/ui'
+import type { User } from '@supabase/supabase-js'
+import type { UserProfileV41 } from '@/types'
 
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ auth: User; profile: UserProfileV41 } | null>(null)
   const router = useRouter()
 
   useEffect(() => {

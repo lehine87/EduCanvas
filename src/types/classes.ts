@@ -20,8 +20,8 @@ export interface Class {
   is_active?: boolean  // ⚠️ v4.1: Status field (boolean type)
   start_date?: string
   end_date?: string
-  schedule_config?: any  // JSON field for schedule configuration
-  custom_fields?: any    // JSON field for custom data
+  schedule_config?: Record<string, unknown> | null  // JSON field for schedule configuration
+  custom_fields?: Record<string, unknown> | null    // JSON field for custom data
   tenant_id?: string     // ⚠️ v4.1: Multitenant architecture
   created_at?: string
   updated_at?: string

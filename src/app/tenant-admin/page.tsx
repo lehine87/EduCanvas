@@ -6,11 +6,13 @@ import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
+import type { User } from '@supabase/supabase-js'
+import type { UserProfileV41, TenantV41 } from '@/types'
 
 export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const [tenant, setTenant] = useState<any>(null)
+  const [user, setUser] = useState<{ auth: User; profile: UserProfileV41 } | null>(null)
+  const [tenant, setTenant] = useState<TenantV41 | null>(null)
   const [stats, setStats] = useState({
     totalMembers: 0,
     activeMembers: 0,

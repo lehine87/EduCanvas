@@ -117,22 +117,28 @@ export function SignUpForm() {
       
       console.log('✅ 회원가입 성공!')
       setSuccess(true)
-    } catch (error: any) {
+    } catch (error) {
+      console.error('🚨 회원가입 에러 상세:', error)
+      
+      // 타입 가드를 사용한 안전한 에러 처리
+      const errorName = error instanceof Error ? error.name : '';
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      const errorStatus = (error as {status?: number}).status;
+      
       console.error('🚨 회원가입 에러 상세:', {
-        name: error.name,
-        message: error.message,
-        status: error.status,
+        name: errorName,
+        message: errorMessage,
+        status: errorStatus,
         details: error
       })
       
       // 네트워크 오류 체크
-      if (error.name === 'AuthRetryableFetchError' || error.message?.includes('Failed to fetch')) {
+      if (errorName === 'AuthRetryableFetchError' || errorMessage.includes('Failed to fetch')) {
         setError('네트워크 연결을 확인해주세요. 잠시 후 다시 시도해보세요.')
         return
       }
       
       // authClient에서 이미 사용자 친화적 메시지로 변환되어 전달됨
-      const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.'
       
       // 추가 에러 타입 처리
       if (errorMessage.includes('이미 등록된 이메일')) {

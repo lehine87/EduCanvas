@@ -46,10 +46,15 @@ export async function POST(request: NextRequest) {
         : '사용 가능한 이메일입니다'
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('💥 이메일 검사 API 오류:', error)
+    
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : '내부 서버 오류가 발생했습니다.'
+      
     return NextResponse.json(
-      { error: error.message || '내부 서버 오류가 발생했습니다.' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

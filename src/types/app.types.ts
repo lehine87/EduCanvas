@@ -266,11 +266,11 @@ export interface TableColumn<T = any> {
   sortable?: boolean
   filterable?: boolean
   width?: number
-  render?: (value: any, row: T) => React.ReactNode
+  render?: (value: unknown, row: T) => React.ReactNode
   className?: string
 }
 
-export interface TableState<T = any> {
+export interface TableState<T = Record<string, unknown>> {
   data: T[]
   loading: boolean
   error: string | null
@@ -288,7 +288,7 @@ export interface TableState<T = any> {
 export interface ModalState {
   isOpen: boolean
   type: string | null
-  data: any
+  data: unknown
   size?: 'sm' | 'md' | 'lg' | 'xl'
   closeable?: boolean
 }
@@ -408,7 +408,7 @@ export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>
 
 // Type Guards
-export type TypeGuard<T> = (value: any) => value is T
+export type TypeGuard<T> = (value: unknown) => value is T
 
 // Event Types
 export interface AppEvent<T = any> {

@@ -14,7 +14,7 @@ if (typeof global.performance === 'undefined') {
     getEntriesByName: vi.fn(() => []),
     getEntriesByType: vi.fn(() => []),
     getEntries: vi.fn(() => [])
-  } as any
+  } as Performance
 }
 
 // Mock console methods to avoid noise in tests
@@ -88,10 +88,10 @@ vi.mock('react', async () => {
   const actual = await vi.importActual('react')
   return {
     ...actual,
-    useEffect: vi.fn((fn: any) => fn()),
-    useLayoutEffect: vi.fn((fn: any) => fn()),
-    useCallback: vi.fn((fn: any) => fn),
-    useMemo: vi.fn((fn: any) => fn())
+    useEffect: vi.fn((fn: () => void) => fn()),
+    useLayoutEffect: vi.fn((fn: () => void) => fn()),
+    useCallback: vi.fn((fn: (...args: unknown[]) => unknown) => fn),
+    useMemo: vi.fn((fn: () => unknown) => fn())
   }
 })
 
@@ -115,14 +115,14 @@ global.IntersectionObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn()
-})) as any
+})) as unknown as IntersectionObserver
 
 // Mock ResizeObserver
 global.ResizeObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn()
-})) as any
+})) as unknown as IntersectionObserver
 
 // Mock localStorage
 const localStorageMock = {
@@ -131,7 +131,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn()
 }
-global.localStorage = localStorageMock as any
+global.localStorage = localStorageMock as Storage
 
 // Mock sessionStorage
 const sessionStorageMock = {
@@ -140,7 +140,7 @@ const sessionStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn()
 }
-global.sessionStorage = sessionStorageMock as any
+global.sessionStorage = sessionStorageMock as Storage
 
 // Test utilities
 export const testUtils = {

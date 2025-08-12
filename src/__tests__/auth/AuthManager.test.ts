@@ -44,7 +44,7 @@ describe('AuthManager', () => {
 
   afterEach(() => {
     // Reset the singleton instance for testing
-    ;(AuthManager as any).instance = undefined
+    ;(AuthManager as unknown as { instance: undefined }).instance = undefined
   })
 
   describe('signIn', () => {

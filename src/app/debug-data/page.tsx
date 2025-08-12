@@ -3,8 +3,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/auth/supabaseAuth'
 
+interface DataInfo {
+  count: number
+  data: unknown[]
+  error?: string
+}
+
+interface DebugData {
+  tenants: DataInfo
+  students: DataInfo
+  classes: DataInfo
+  tenant_users: DataInfo
+}
+
 export default function DebugDataPage() {
-  const [dataInfo, setDataInfo] = useState({
+  const [dataInfo, setDataInfo] = useState<DebugData>({
     tenants: { count: 0, data: [] },
     students: { count: 0, data: [] },
     classes: { count: 0, data: [] },
@@ -31,22 +44,22 @@ export default function DebugDataPage() {
       setDataInfo({
         tenants: {
           count: tenantsResult.data?.length || 0,
-          data: tenantsResult.data || [] as any,
+          data: tenantsResult.data || [],
           error: tenantsResult.error?.message
         },
         students: {
           count: studentsResult.data?.length || 0,
-          data: studentsResult.data || [] as any,
+          data: studentsResult.data || [],
           error: studentsResult.error?.message
         },
         classes: {
           count: classesResult.data?.length || 0,
-          data: classesResult.data || [] as any,
+          data: classesResult.data || [],
           error: classesResult.error?.message
         },
         tenant_users: {
           count: tenantUsersResult.data?.length || 0,
-          data: tenantUsersResult.data || [] as any,
+          data: tenantUsersResult.data || [],
           error: tenantUsersResult.error?.message
         }
       })
