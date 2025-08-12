@@ -6,23 +6,7 @@ import { authClient } from '@/lib/auth/authClient'
 import { OnboardingForm } from '@/components/auth/OnboardingForm'
 import { Loading } from '@/components/ui'
 import type { User } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
-
-type Tenant = {
-  id: string
-  name: string
-  slug: string
-  tenant_code?: string
-  created_at?: string
-  updated_at?: string
-}
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
-  role?: string | null  // 명시적으로 role 필드 추가
-  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
-  status?: string | null  // 명시적으로 status 필드 추가
-  tenants?: Tenant | null
-}
+import type { UserProfile, Tenant, hasTenantId } from '@/types/auth.types'
 
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -50,7 +34,7 @@ export default function OnboardingPage() {
         }
 
         // 이미 온보딩을 완료한 경우 (테넌트가 설정되어 있으면)
-        if ('tenant_id' in profile && profile.tenant_id) {
+        if (hasTenantId(profile)) {
           if (profile.status === 'pending_approval') {
             router.push('/pending-approval')
           } else if (profile.status === 'active') {
@@ -60,7 +44,7 @@ export default function OnboardingPage() {
         }
 
         // 승인 대기 상태이면서 테넌트가 없는 경우 (온보딩 진행)
-        if (profile.status === 'pending_approval' && !('tenant_id' in profile && profile.tenant_id)) {
+        if (profile.status === 'pending_approval' && !hasTenantId(profile)) {
           console.log('🎯 온보딩 진행 필요: 승인 대기 상태이지만 테넌트 미설정')
         }
 

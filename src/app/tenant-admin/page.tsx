@@ -7,23 +7,7 @@ import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/compon
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
 import type { User } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
-
-type Tenant = {
-  id: string
-  name: string
-  slug: string
-  tenant_code?: string
-  created_at?: string
-  updated_at?: string
-}
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
-  role?: string | null  // 명시적으로 role 필드 추가
-  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
-  status?: string | null  // 명시적으로 status 필드 추가
-  tenants?: Tenant | null
-}
+import type { UserProfile, Tenant, hasTenantId } from '@/types/auth.types'
 
 export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -55,8 +39,8 @@ export default function TenantAdminPage() {
           return
         }
 
-        // 테넌트 관리자 권한 확인
-        if (profile.role !== 'admin' || !profile.tenant_id) {
+        // 테넌트 관리자 권한 확인  
+        if (profile.role !== 'admin' || !hasTenantId(profile)) {
           router.push('/admin')
           return
         }
@@ -215,7 +199,12 @@ export default function TenantAdminPage() {
               </CardTitle>
               <Button
                 variant="outline"
-                onClick={() => loadStats(user?.profile?.tenant_id)}
+                onClick={() => {
+                  const tenantId = user?.profile?.tenant_id
+                  if (tenantId) {
+                    loadStats(tenantId)
+                  }
+                }}
               >
                 🔄 새로고침
               </Button>
@@ -223,8 +212,13 @@ export default function TenantAdminPage() {
           </CardHeader>
           <CardBody>
             <PendingApprovalsTable 
-              tenantId={user?.profile?.tenant_id}
-              onApprovalChange={() => loadStats(user?.profile?.tenant_id)}
+              tenantId={user?.profile?.tenant_id || ''}
+              onApprovalChange={() => {
+                const tenantId = user?.profile?.tenant_id
+                if (tenantId) {
+                  loadStats(tenantId)
+                }
+              }}
             />
           </CardBody>
         </Card>
@@ -239,7 +233,12 @@ export default function TenantAdminPage() {
               </CardTitle>
               <Button
                 variant="outline"
-                onClick={() => loadStats(user?.profile?.tenant_id)}
+                onClick={() => {
+                  const tenantId = user?.profile?.tenant_id
+                  if (tenantId) {
+                    loadStats(tenantId)
+                  }
+                }}
               >
                 🔄 새로고침
               </Button>
@@ -247,8 +246,13 @@ export default function TenantAdminPage() {
           </CardHeader>
           <CardBody>
             <MemberManagementTable 
-              tenantId={user?.profile?.tenant_id}
-              onMemberChange={() => loadStats(user?.profile?.tenant_id)}
+              tenantId={user?.profile?.tenant_id || ''}
+              onMemberChange={() => {
+                const tenantId = user?.profile?.tenant_id
+                if (tenantId) {
+                  loadStats(tenantId)
+                }
+              }}
             />
           </CardBody>
         </Card>

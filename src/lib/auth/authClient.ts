@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
-import type { Database, UserRole } from '@/types/database'
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+import type { UserRole } from '@/types/database'
+import type { UserProfile } from '@/types/auth.types'
 
 export interface SignUpData {
   email: string

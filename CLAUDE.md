@@ -122,6 +122,234 @@ const useSecureMemoryMonitor = () => {
 - **테스팅 단계**: 보안 테스트, 메모리 누수 테스트, 권한 테스트
 - **배포 단계**: 보안 헤더 검증, 환경변수 검증, 의존성 취약점 스캔
 
+## 🎯 TypeScript 타입 시스템 철학 및 권장사항
+
+**⚠️ 2025-08-12 Type Refactoring Completion**: 코드베이스 전체 타입 불일치 문제 해결 완료
+
+### 핵심 타입 시스템 원칙
+
+#### 1. "Centralized-First" 타입 관리 (중앙집중형)
+
+```typescript
+// ✅ 권장: 중앙 집중식 타입 정의 (src/types/index.ts)
+import { UserProfile } from '@/types/auth.types'
+
+// ❌ 금지: 파일별 중복 타입 정의
+interface UserProfile { ... } // 파일마다 다른 정의
+```
+
+**필수 규칙**: 
+- 모든 타입은 `src/types/` 디렉터리에서 중앙 관리
+- 동일한 개념의 타입을 여러 파일에서 중복 정의 금지
+- `src/types/index.ts`를 통한 일관된 타입 export
+
+#### 2. "Database-First" 타입 정의
+
+```typescript
+// ✅ 권장: 데이터베이스 스키마 기반 타입
+export type Student = Database['public']['Tables']['students']['Row']
+
+// ❌ 금지: 데이터베이스와 불일치하는 수동 타입
+interface Student { id: string, name: string } // 누락된 필드들...
+```
+
+**필수 체크리스트**:
+1. `npx supabase gen types typescript` → `database.types.ts` 업데이트
+2. 기존 수동 타입 정의를 생성된 타입으로 교체
+3. 추가 필드가 필요한 경우 `extends` 또는 `&` 사용
+
+#### 3. "Type-Guard First" 런타임 안전성
+
+```typescript
+// ✅ 필수: 타입 가드로 안전한 속성 접근
+export function hasTenantId(profile: UserProfile): profile is UserProfile & { tenant_id: string } {
+  return 'tenant_id' in profile && typeof profile.tenant_id === 'string' && profile.tenant_id.length > 0
+}
+
+// 사용 시
+if (hasTenantId(profile)) {
+  // 이제 profile.tenant_id가 타입 안전하게 보장됨
+  console.log(profile.tenant_id) 
+}
+
+// ❌ 금지: 직접 속성 접근
+if (profile.tenant_id) { ... } // 컴파일 에러 위험
+```
+
+#### 4. "Zero `any` Policy" (엄격한 any 금지)
+
+```typescript
+// ✅ 권장: 구체적인 타입 사용
+const response: ApiResponse<Student[]> = await fetchStudents()
+
+// ✅ 허용: unknown 사용 후 타입 가드
+function processUnknownData(data: unknown) {
+  if (isValidStudent(data)) {
+    // 이제 data는 Student 타입으로 추론됨
+  }
+}
+
+// ❌ 절대 금지: any 사용
+const data: any = await fetchData() // 즉시 제거 대상
+```
+
+### 필수 타입 파일 구조
+
+```
+src/types/
+├── index.ts              # 🎯 모든 타입의 중앙 Export
+├── database.ts           # 🎯 메인 데이터베이스 타입 (v4.1)
+├── database.types.ts     # 🔄 Supabase 자동 생성
+├── auth.types.ts         # 👤 인증 관련 통합 타입
+├── student.types.ts      # 🎓 학생 관리 통합 타입
+├── app.types.ts          # 📱 애플리케이션 레벨 타입
+└── api/                  # 🌐 API 관련 타입들
+```
+
+### 타입 마이그레이션 가이드라인
+
+#### 기존 `any` 제거 패턴
+
+```typescript
+// Before: any 사용
+const handleData = (data: any) => {
+  return data.someProperty
+}
+
+// After: 제네릭 또는 unknown 사용
+const handleData = <T>(data: T): T extends { someProperty: infer P } ? P : never => {
+  if (typeof data === 'object' && data && 'someProperty' in data) {
+    return (data as { someProperty: unknown }).someProperty
+  }
+  throw new Error('Invalid data structure')
+}
+
+// 또는 더 간단하게
+const handleData = (data: unknown) => {
+  if (isValidDataStructure(data)) {
+    return data.someProperty // 타입 가드로 안전하게 접근
+  }
+}
+```
+
+#### Dynamic Property Access 패턴
+
+```typescript
+// Before: any로 우회
+const obj: any = someObject
+console.log(obj.dynamicProperty)
+
+// After: 타입 안전한 접근
+const obj = someObject as Record<string, unknown>
+if ('dynamicProperty' in obj && typeof obj.dynamicProperty === 'string') {
+  console.log(obj.dynamicProperty)
+}
+
+// 또는 타입 가드 사용
+if (hasDynamicProperty(obj)) {
+  console.log(obj.dynamicProperty) // 타입 안전
+}
+```
+
+### 레거시 타입 정리 체크리스트
+
+#### 단계 1: 중복 타입 통합
+- [ ] `Student` 타입 정의가 20+개 → `student.types.ts`로 통합 완료
+- [ ] `UserProfile` 타입 불일치 → `auth.types.ts`로 통합 완료
+- [ ] `Database` 타입 v2.0 → v4.1 업데이트 완료
+
+#### 단계 2: Type Guard 도입
+- [ ] `hasTenantId()`, `hasRole()` 타입 가드 적용
+- [ ] `isValidStudent()`, `isActiveStudent()` 검증 함수 적용
+- [ ] 모든 동적 속성 접근을 타입 가드로 보호
+
+#### 단계 3: 컴파일러 설정 강화
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
+```
+
+### 새로운 타입 추가 시 가이드라인
+
+#### 1. 타입 추가 순서
+1. 데이터베이스 스키마 먼저 확정
+2. `npx supabase gen types typescript` 실행
+3. 필요한 확장 타입만 별도 정의
+4. 타입 가드 함수 함께 작성
+5. `src/types/index.ts`에 export 추가
+
+#### 2. 타입명 규칙
+```typescript
+// ✅ 권장 네이밍 패턴
+export type Student = Database['public']['Tables']['students']['Row']         // 기본 타입
+export type StudentInsert = Database['public']['Tables']['students']['Insert'] // Insert 용
+export type StudentUpdate = Database['public']['Tables']['students']['Update'] // Update 용
+export interface StudentWithRelations extends Student { ... }                 // 관계 포함
+export interface StudentFormData extends Omit<Student, 'id'> { ... }         // 폼 데이터
+export interface StudentCardData { ... }                                     // UI 컴포넌트용
+```
+
+#### 3. 타입 문서화 패턴
+```typescript
+/**
+ * 학생 기본 정보 타입
+ * @description 데이터베이스 students 테이블과 1:1 매핑
+ * @version v4.1 스키마 기준
+ * @since 2025-08-12
+ */
+export type Student = Database['public']['Tables']['students']['Row']
+
+/**
+ * 학생 타입 가드
+ * @param student - 검증할 객체
+ * @returns Student 타입 여부
+ */
+export function isValidStudent(student: unknown): student is Student {
+  return (
+    typeof student === 'object' &&
+    student !== null &&
+    'id' in student &&
+    typeof (student as Student).id === 'string'
+  )
+}
+```
+
+### 타입 에러 디버깅 체크리스트
+
+#### 자주 발생하는 타입 에러 패턴
+1. **Property does not exist on type**: 타입 가드 누락
+2. **Type 'any' is not assignable**: any 사용 금지 정책 위반
+3. **Object is possibly null/undefined**: 옵셔널 체이닝 누락
+4. **Argument of type X is not assignable to Y**: 타입 불일치
+
+#### 해결 우선순위
+1. 타입 가드 적용 (`hasTenantId`, `isValidStudent` 등)
+2. 옵셔널 체이닝 (`?.`) 및 null 체크
+3. 타입 단언보다는 타입 가드 우선 사용
+4. 제네릭 타입 매개변수 활용
+
+### 성공 메트릭스
+
+#### 타입 안전성 지표
+- [ ] ESLint `no-explicit-any` 규칙 0개 위반
+- [ ] TypeScript strict mode 모든 규칙 통과
+- [ ] 런타임 타입 에러 0건 (production)
+- [ ] 타입 커버리지 95% 이상
+
+#### 개발 생산성 지표
+- [ ] 타입 관련 빌드 에러 0건
+- [ ] IDE 자동완성 정확도 95% 이상
+- [ ] 타입 정의 파일 개수 10개 이하 (중앙집중)
+- [ ] 중복 타입 정의 0건
+
 ## 🚀 개발 핵심 원칙 (2025-08-12 Beta 완성 교훈)
 
 ### **"Reality-First" Database Development**

@@ -2,21 +2,61 @@
 // Provides runtime type checking and validation using both custom guards and Zod schemas
 
 import { z } from 'zod'
-import {
-  Student, StudentInsert, StudentUpdate,
-  Class, ClassInsert, ClassUpdate,
-  Tenant, TenantInsert, TenantUpdate,
-  Instructor, InstructorInsert, InstructorUpdate,
-  YouTubeVideo, YouTubeVideoInsert, YouTubeVideoUpdate,
-  VideoProgress, VideoProgressInsert, VideoProgressUpdate,
-  VideoAssignment, VideoAssignmentInsert, VideoAssignmentUpdate,
-  TenantUser, TenantUserInsert, TenantUserUpdate,
-  CoursePackage, CoursePackageInsert, CoursePackageUpdate,
-  UserRole, PermissionAction, PermissionResource,
-  VideoWatchSession, ClassFlowStudent,
-  UserStatus, StudentStatus, VideoStatus, VideoType, VideoQuality,
-  BillingType, DiscountType, AttendanceStatus, PaymentStatus
-} from '@/types/app.types'
+import type { Database } from '@/types/database'
+import type { Student } from '@/types/student.types'
+import type { VideoWatchSession, ClassFlowStudent } from '@/types/app.types'
+
+// Database 타입들을 간편하게 사용하기 위한 alias
+type Tables = Database['public']['Tables']
+type Enums = Database['public']['Enums']
+
+// Row types
+type StudentRow = Tables['students']['Row']
+type ClassRow = Tables['classes']['Row']
+type TenantRow = Tables['tenants']['Row']
+type InstructorRow = Tables['instructors']['Row']
+type YouTubeVideoRow = Tables['youtube_videos']['Row']
+type VideoProgressRow = Tables['video_progress']['Row']
+type CoursePackageRow = Tables['course_packages']['Row']
+
+// Insert types
+type StudentInsert = Tables['students']['Insert']
+type ClassInsert = Tables['classes']['Insert']
+type TenantInsert = Tables['tenants']['Insert']
+type InstructorInsert = Tables['instructors']['Insert']
+type YouTubeVideoInsert = Tables['youtube_videos']['Insert']
+type VideoProgressInsert = Tables['video_progress']['Insert']
+type CoursePackageInsert = Tables['course_packages']['Insert']
+
+// Update types
+type StudentUpdate = Tables['students']['Update']
+type ClassUpdate = Tables['classes']['Update']
+type TenantUpdate = Tables['tenants']['Update']
+type InstructorUpdate = Tables['instructors']['Update']
+type YouTubeVideoUpdate = Tables['youtube_videos']['Update']
+type VideoProgressUpdate = Tables['video_progress']['Update']
+type CoursePackageUpdate = Tables['course_packages']['Update']
+
+// Enum types
+type UserStatus = Enums['user_status']
+type StudentStatus = Enums['student_status']
+type VideoStatus = Enums['video_status']
+type VideoQuality = Enums['video_quality']
+type BillingType = Enums['billing_type']
+type AttendanceStatus = Enums['attendance_status']
+type PaymentStatus = Enums['payment_status']
+
+// Compatibility aliases for existing code
+type Class = ClassRow
+type Tenant = TenantRow
+type Instructor = InstructorRow
+type YouTubeVideo = YouTubeVideoRow
+type VideoProgress = VideoProgressRow
+type CoursePackage = CoursePackageRow
+
+// Define missing permission types (these should be properly defined elsewhere)
+type PermissionResource = 'students' | 'classes' | 'instructors' | 'videos' | 'reports' | 'settings'
+type PermissionAction = 'read' | 'write' | 'delete' | 'admin'
 
 // ================================================================
 // Enum Validators

@@ -2,19 +2,8 @@ import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 import type { User, Session } from '@supabase/supabase-js'
 import { authClient } from '@/lib/auth/authClient'
-import type { Database } from '@/types/database'
+import type { UserProfile } from '@/types/auth.types'
 import React from 'react'
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
-  role?: string | null  // 명시적으로 role 필드 추가
-  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
-  status?: string | null  // 명시적으로 status 필드 추가
-  tenants?: {
-    id: string
-    name: string
-    slug: string
-  } | null
-}
 
 interface AuthState {
   user: User | null

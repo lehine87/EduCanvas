@@ -5,23 +5,7 @@ import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardBody, Loading } from '@/components/ui'
 import type { User } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
-
-type Tenant = {
-  id: string
-  name: string
-  slug: string
-  tenant_code?: string
-  created_at?: string
-  updated_at?: string
-}
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'] & {
-  role?: string | null  // 명시적으로 role 필드 추가
-  tenant_id?: string | null  // 명시적으로 tenant_id 필드 추가
-  status?: string | null  // 명시적으로 status 필드 추가
-  tenants?: Tenant | null
-}
+import type { UserProfile, Tenant, hasTenantId } from '@/types/auth.types'
 
 export default function PendingApprovalPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -53,7 +37,7 @@ export default function PendingApprovalPage() {
         }
 
         // 테넌트가 설정되지 않은 사용자는 온보딩 페이지로
-        if (!profile.tenant_id) {
+        if (!hasTenantId(profile)) {
           router.push('/onboarding')
           return
         }
