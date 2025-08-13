@@ -94,9 +94,14 @@ export function LoginForm() {
         if (isVercel) {
           console.log(`🔄 [VERCEL-LOGIN-${requestId}] REDIRECTING TO ADMIN:`, {
             from: window.location.pathname,
-            to: '/admin'
+            to: '/admin',
+            cookiesAfterLogin: document.cookie,
+            cookieNames: document.cookie.split(';').map(c => c.split('=')[0]?.trim() || '')
           })
         }
+        
+        // 쿠키 설정 완료 후 잠시 대기
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         router.push('/admin')
         router.refresh()

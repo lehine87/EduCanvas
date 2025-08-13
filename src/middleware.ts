@@ -96,7 +96,9 @@ export async function middleware(request: NextRequest) {
           hasCookies: !!cookies,
           cookieNames: cookies.split(';').map(c => c.split('=')[0]?.trim() || ''),
           hasValidSupabaseCookie,
-          isAuthenticated
+          isAuthenticated,
+          fullCookieString: cookies.substring(0, 200) + '...', // 쿠키 내용 일부 확인
+          supabaseCookiePatterns: supabaseCookiePatterns.map(p => p.source) // 패턴 확인
         })
       }
     }
