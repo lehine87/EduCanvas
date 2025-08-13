@@ -64,6 +64,12 @@ export function LoginForm() {
     }
 
     try {
+      if (isVercel) {
+        console.log(`🔐 [VERCEL-LOGIN-${requestId}] BEFORE AUTH:`, {
+          cookiesBefore: document.cookie
+        })
+      }
+      
       const authData = await authClient.signIn(data)
       const { user, session } = authData
       
@@ -72,7 +78,9 @@ export function LoginForm() {
           hasUser: !!user,
           hasSession: !!session,
           userId: user?.id,
-          userEmail: user?.email
+          userEmail: user?.email,
+          cookiesAfterAuth: document.cookie,
+          sessionExpiresAt: session?.expires_at
         })
       }
       

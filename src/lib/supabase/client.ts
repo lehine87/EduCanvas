@@ -22,7 +22,7 @@ export const createClient = () => {
             .split('; ')
             .find((row) => row.startsWith(`${name}=`))
             ?.split('=')[1]
-          return value
+          return decodeURIComponent(value || '')
         }
         return undefined
       },
@@ -34,9 +34,10 @@ export const createClient = () => {
             secure: process.env.NODE_ENV === 'production', // HTTPS에서만
             sameSite: 'lax' as const, // CSRF 보호하면서 로그인 허용
             path: '/', // 모든 경로에서 접근 가능
+            httpOnly: false, // 클라이언트에서 접근 가능
           }
           
-          let cookieString = `${name}=${value}`
+          let cookieString = `${name}=${encodeURIComponent(value)}`
           
           if (cookieOptions.maxAge) {
             cookieString += `; Max-Age=${cookieOptions.maxAge}`
@@ -52,13 +53,28 @@ export const createClient = () => {
           }
           
           document.cookie = cookieString
+          
+          // Vercel 환경에서 디버깅
+          if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+            console.log(`🍪 [VERCEL-COOKIE] SET:`, { name, valueLength: value.length, cookieString: cookieString.substring(0, 100) + '...' })
+          }
         }
       },
       remove(name: string, _options: CookieOptions) {
         if (typeof document !== 'undefined') {
           document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+          
+          // Vercel 환경에서 디버깅
+          if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+            console.log(`🍪 [VERCEL-COOKIE] REMOVE:`, { name })
+          }
         }
       },
     },
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
   })
 }

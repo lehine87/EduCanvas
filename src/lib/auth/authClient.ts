@@ -2,6 +2,27 @@ import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/types/database'
 import type { UserProfile } from '@/types/auth.types'
 
+// 환경에 따른 앱 URL 동적 생성
+function getAppUrl(): string {
+  // Vercel 환경
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return `https://${window.location.hostname}`
+  }
+  
+  // 서버 사이드에서 Vercel 환경 감지
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // 환경변수에서 설정된 URL 사용
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  
+  // 기본값 (개발 환경)
+  return 'http://localhost:3000'
+}
+
 export interface SignUpData {
   email: string
   password: string
@@ -38,7 +59,7 @@ export class AuthClient {
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${getAppUrl()}/auth/callback?next=/onboarding`,
         data: {
           full_name
         }
