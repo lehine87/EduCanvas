@@ -92,21 +92,33 @@ export default function AdminPage() {
       }
       
       console.log('🚀 [REDIRECT-LOGIC] SYSTEM ADMIN → /system-admin (FORWARD ONLY)')
-      router.push('/system-admin')
+      console.log('⏰ [REDIRECT-DEBUG] 5초 후 system-admin으로 리다이렉트...')
+      setTimeout(() => {
+        console.log('🔄 [REDIRECT-DEBUG] system-admin 리다이렉트 실행')
+        router.push('/system-admin')
+      }, 5000)
       return
     }
 
     // 2. 테넌트 관리자 → tenant-admin (단방향)
     if (profile.role === 'admin' && profile.tenant_id) {
       console.log('🚀 [REDIRECT-LOGIC] TENANT ADMIN → /tenant-admin (FORWARD ONLY)')
-      router.push('/tenant-admin')
+      console.log('⏰ [REDIRECT-DEBUG] 5초 후 tenant-admin으로 리다이렉트...')
+      setTimeout(() => {
+        console.log('🔄 [REDIRECT-DEBUG] tenant-admin 리다이렉트 실행')
+        router.push('/tenant-admin')
+      }, 5000)
       return
     }
 
     // 3. 일반 사용자(강사, 직원) → tenant-admin (단방향)
     if (profile.role && ['instructor', 'staff'].includes(profile.role) && profile.tenant_id) {
       console.log('🚀 [REDIRECT-LOGIC] STAFF/INSTRUCTOR → /tenant-admin (FORWARD ONLY)')
-      router.push('/tenant-admin')
+      console.log('⏰ [REDIRECT-DEBUG] 5초 후 tenant-admin으로 리다이렉트...')
+      setTimeout(() => {
+        console.log('🔄 [REDIRECT-DEBUG] tenant-admin 리다이렉트 실행')
+        router.push('/tenant-admin')
+      }, 5000)
       return
     }
 
@@ -117,14 +129,22 @@ export default function AdminPage() {
       // 승인 대기 상태 → pending-approval (단방향)
       if (profile.status === 'pending_approval') {
         console.log('🚀 [REDIRECT-LOGIC] PENDING APPROVAL → /pending-approval (FORWARD ONLY)')
-        router.push('/pending-approval')
+        console.log('⏰ [REDIRECT-DEBUG] 5초 후 pending-approval로 리다이렉트...')
+        setTimeout(() => {
+          console.log('🔄 [REDIRECT-DEBUG] pending-approval 리다이렉트 실행')
+          router.push('/pending-approval')
+        }, 5000)
         return
       }
 
       // 테넌트 없음 → onboarding (단방향)
       if (!profile.tenant_id) {
         console.log('🚀 [REDIRECT-LOGIC] NO TENANT → /onboarding (FORWARD ONLY)')
-        router.push('/onboarding')
+        console.log('⏰ [REDIRECT-DEBUG] 5초 후 onboarding으로 리다이렉트...')
+        setTimeout(() => {
+          console.log('🔄 [REDIRECT-DEBUG] onboarding 리다이렉트 실행')
+          router.push('/onboarding')
+        }, 5000)
         return
       }
     }

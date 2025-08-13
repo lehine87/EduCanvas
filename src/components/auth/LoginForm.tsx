@@ -138,9 +138,11 @@ export function LoginForm() {
           })
         }
         
-        // 쿠키 설정 완료 후 잠시 대기
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // 디버깅을 위해 5초 대기 (브라우저 로그 확인 시간 제공)
+        console.log(`⏰ [LOGIN-DEBUG] 5초 후 리다이렉트 시작...`)
+        await new Promise(resolve => setTimeout(resolve, 5000))
         
+        console.log(`🔄 [LOGIN-DEBUG] 리다이렉트 실행 중...`)
         router.push('/admin')
         router.refresh()
       } else {
