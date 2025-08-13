@@ -190,7 +190,7 @@ export class AuthClient {
 
     console.log('🔍 사용자 프로필 조회 중...', user.email)
 
-    let { data, error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('user_profiles')
       .select(`
         *,
@@ -219,7 +219,7 @@ export class AuthClient {
           name: 'System Administrator',
           tenant_id: null, // 시스템 관리자는 tenant_id가 null
           role: 'system_admin' as UserRole,
-          status: 'active' as 'active'
+          status: 'active' as const
         }
       } else {
         // 일반 사용자 프로필 생성
@@ -235,7 +235,7 @@ export class AuthClient {
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
           tenant_id: defaultTenant?.id,
           role: 'viewer' as UserRole,
-          status: 'pending_approval' as 'pending_approval'
+          status: 'pending_approval' as const
         }
       }
 

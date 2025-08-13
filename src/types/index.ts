@@ -113,3 +113,69 @@ export type PaginationParams = {
   limit: number
   offset: number
 }
+
+// ================================================================
+// 6. 비즈니스 도메인 타입들 (추가)
+// ================================================================
+export type Class = Database['public']['Tables']['classes']['Row']
+export type ClassInsert = Database['public']['Tables']['classes']['Insert']
+export type ClassUpdate = Database['public']['Tables']['classes']['Update']
+
+export type Payment = Database['public']['Tables']['payments']['Row']
+export type PaymentInsert = Database['public']['Tables']['payments']['Insert']
+export type PaymentUpdate = Database['public']['Tables']['payments']['Update']
+
+export type Attendance = Database['public']['Tables']['attendances']['Row']
+export type AttendanceInsert = Database['public']['Tables']['attendances']['Insert']
+export type AttendanceUpdate = Database['public']['Tables']['attendances']['Update']
+
+export type Classroom = Database['public']['Tables']['classrooms']['Row']
+export type Schedule = Database['public']['Tables']['schedules']['Row']
+export type Video = Database['public']['Tables']['videos']['Row']
+export type VideoWatchSession = Database['public']['Tables']['video_watch_sessions']['Row']
+export type Exam = Database['public']['Tables']['exams']['Row']
+export type ExamResult = Database['public']['Tables']['exam_results']['Row']
+export type Document = Database['public']['Tables']['documents']['Row']
+export type Consultation = Database['public']['Tables']['consultations']['Row']
+export type StudentHistory = Database['public']['Tables']['student_histories']['Row']
+
+// ================================================================
+// 7. 타입 가드 함수들 Export
+// ================================================================
+
+// Auth 관련 타입 가드
+export {
+  isValidUserProfile,
+  hasTenantId,
+  hasRole,
+  isActiveUser,
+  isEmailVerified,
+  isSystemAdmin,
+  isTenantAdmin,
+  isInstructor as isInstructorRole,
+  isStaff,
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+  isValidTenant,
+  isActiveTenant,
+  isValidJWTPayload,
+  isJWTExpired,
+  canAccessTenant,
+  isSameTenant,
+  maskUserProfile,
+  getUserDisplayInfo,
+  createPermissionResult,
+  createSecurityContext,
+  DEFAULT_PERMISSIONS,
+  ROLE_HIERARCHY,
+  SESSION_EXPIRY
+} from './auth.types'
+
+// Student 관련 타입 가드
+export {
+  isValidStudent,
+  isClassFlowStudent,
+  isActiveStudent,
+  isSearchableStudent
+} from './student.types'
