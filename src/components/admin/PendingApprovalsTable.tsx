@@ -297,11 +297,11 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
             </div>
 
             {/* 추가 정보가 있다면 표시 */}
-            {(selectedUser as any)?.bio && (
+            {(selectedUser as UserProfile & { bio?: string })?.bio && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">자기소개</label>
                 <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {(selectedUser as any)?.bio}
+                  {(selectedUser as UserProfile & { bio?: string })?.bio}
                 </p>
               </div>
             )}
