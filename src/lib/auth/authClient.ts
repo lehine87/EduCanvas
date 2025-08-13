@@ -131,24 +131,12 @@ export class AuthClient {
   }
 
   async signIn({ email, password }: SignInData) {
-    console.log('🔐 SignIn 시도:', { email })
-    
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password
     })
 
-    if (error) {
-      console.error('🚨 SignIn 오류:', error)
-      throw error
-    }
-    
-    console.log('✅ SignIn 성공:', { 
-      hasUser: !!data.user,
-      hasSession: !!data.session,
-      userEmail: data.user?.email 
-    })
-    
+    if (error) throw error
     return data
   }
 

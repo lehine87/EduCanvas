@@ -33,6 +33,20 @@ const SECURITY_HEADERS = {
 export async function middleware(request: NextRequest) {
   const clientIP = getClientIP(request)
   const { supabase, response } = createClient(request)
+  
+  // Vercel 환경에서만 상세 디버깅 (NODE_ENV production 체크)
+  const isVercel = process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
+  const requestId = Math.random().toString(36).substring(7)
+  
+  if (isVercel) {
+    console.log(`🚀 [VERCEL-${requestId}] REQUEST:`, {
+      method: request.method,
+      path: request.nextUrl.pathname,
+      query: Object.fromEntries(request.nextUrl.searchParams.entries()),
+      referer: request.headers.get('referer'),
+      userAgent: request.headers.get('user-agent')?.substring(0, 50)
+    })
+  }
 
   // 전역 Rate Limiting (DDoS 방지)
   if (process.env.NODE_ENV === 'production') {
@@ -64,9 +78,6 @@ export async function middleware(request: NextRequest) {
     
     if (cookies) {
       // Supabase의 실제 쿠키 패턴들 확인
-      // sb-{project-ref}-auth-token (access token)
-      // sb-{project-ref}-auth-token-code-verifier 
-      // sb-{project-ref}-auth-refresh-token (refresh token)
       const supabaseCookiePatterns = [
         /sb-[a-zA-Z0-9]+-auth-token(?:-code-verifier)?=/,
         /sb-[a-zA-Z0-9]+-auth-refresh-token=/
@@ -78,22 +89,21 @@ export async function middleware(request: NextRequest) {
       
       if (hasValidSupabaseCookie) {
         isAuthenticated = true
-        console.log('✅ 유효한 Supabase 인증 쿠키 발견')
-      } else {
-        console.log('❌ 유효한 Supabase 인증 쿠키 없음')
       }
       
-      console.log('🔍 쿠키 상세 분석:', {
-        hasCookies: true,
-        cookieNames: cookies.split(';').map(c => c.split('=')[0]?.trim() || ''),
-        hasValidSupabaseCookie,
-        isAuthenticated
-      })
-    } else {
-      console.log('❌ 쿠키 없음')
+      if (isVercel) {
+        console.log(`🔍 [VERCEL-${requestId}] AUTH CHECK:`, {
+          hasCookies: !!cookies,
+          cookieNames: cookies.split(';').map(c => c.split('=')[0]?.trim() || ''),
+          hasValidSupabaseCookie,
+          isAuthenticated
+        })
+      }
     }
   } catch (error) {
-    console.error('❌ 인증 확인 예외:', error)
+    if (isVercel) {
+      console.error(`❌ [VERCEL-${requestId}] AUTH ERROR:`, error)
+    }
     isAuthenticated = false
   }
 
@@ -128,6 +138,15 @@ export async function middleware(request: NextRequest) {
   if (isProtectedPath && !isAuthenticated) {
     const redirectUrl = new URL('/auth/login', request.url)
     redirectUrl.searchParams.set('next', url.pathname)
+    
+    if (isVercel) {
+      console.log(`🔄 [VERCEL-${requestId}] REDIRECT TO LOGIN:`, {
+        reason: '인증되지 않은 보호된 경로 접근',
+        from: url.pathname,
+        to: redirectUrl.toString()
+      })
+    }
+    
     return Response.redirect(redirectUrl.toString())
   }
 
@@ -136,8 +155,21 @@ export async function middleware(request: NextRequest) {
     const next = url.searchParams.get('next')
     const error = url.searchParams.get('error')
     
+    if (isVercel) {
+      console.log(`🔄 [VERCEL-${requestId}] AUTH PAGE ACCESS:`, {
+        path: url.pathname,
+        next,
+        error,
+        isAuthenticated
+      })
+    }
+    
     // 에러 상태인 경우 리다이렉트하지 않고 로그인 페이지 유지
     if (error === 'profile-error' || error === 'account-suspended') {
+      if (isVercel) {
+        console.log(`⚠️ [VERCEL-${requestId}] KEEP AUTH PAGE:`, { error })
+      }
+      
       const securedResponse = NextResponse.next()
       Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
         securedResponse.headers.set(key, value)
@@ -151,13 +183,28 @@ export async function middleware(request: NextRequest) {
     
     if (next && (!next.startsWith('/') || dangerousPaths.includes(next))) {
       redirectPath = '/admin'
+      if (isVercel) {
+        console.log(`🚨 [VERCEL-${requestId}] DANGEROUS PATH BLOCKED:`, { originalNext: next })
+      }
     }
     
     if (redirectPath === url.pathname) {
       redirectPath = '/admin'
+      if (isVercel) {
+        console.log(`🚨 [VERCEL-${requestId}] SELF REDIRECT BLOCKED:`, { path: url.pathname })
+      }
     }
     
     const redirectUrl = new URL(redirectPath, request.url)
+    
+    if (isVercel) {
+      console.log(`🔄 [VERCEL-${requestId}] REDIRECT FROM AUTH:`, {
+        from: url.pathname,
+        to: redirectUrl.toString(),
+        reason: '인증된 사용자가 auth 페이지 접근'
+      })
+    }
+    
     return Response.redirect(redirectUrl.toString())
   }
 
@@ -187,6 +234,17 @@ export async function middleware(request: NextRequest) {
       'Content-Security-Policy',
       "default-src 'self' 'unsafe-eval' 'unsafe-inline'; connect-src 'self' https://hodkqpmukwfrreozwmcy.supabase.co wss://hodkqpmukwfrreozwmcy.supabase.co http://localhost:* ws://localhost:*"
     )
+  }
+
+  // Vercel에서 패스스루 되는 경우 로깅
+  if (isVercel) {
+    console.log(`✅ [VERCEL-${requestId}] PASS THROUGH:`, {
+      path: url.pathname,
+      isAuthenticated,
+      isProtectedPath,
+      isAuthPath,
+      reason: 'no redirect needed - normal page access'
+    })
   }
 
   return securedResponse

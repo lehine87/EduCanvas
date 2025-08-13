@@ -44,42 +44,81 @@ export function LoginForm() {
   }, [searchParams])
 
   const onSubmit = async (data: SignInFormData) => {
-    console.log('🚀 로그인 폼 제출 시작:', { email: data.email })
     setIsLoading(true)
     setError(null)
 
+    // Vercel 환경에서만 상세 디버깅
+    const isVercel = typeof window !== 'undefined' && 
+      process.env.NODE_ENV === 'production' && 
+      window.location.hostname.includes('vercel.app')
+    const requestId = Math.random().toString(36).substring(7)
+
+    if (isVercel) {
+      console.log(`🔐 [VERCEL-LOGIN-${requestId}] LOGIN ATTEMPT:`, {
+        email: data.email,
+        hasPassword: !!data.password,
+        currentPath: window.location.pathname,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString()
+      })
+    }
+
     try {
       const authData = await authClient.signIn(data)
-      console.log('📦 authClient.signIn 응답:', {
-        hasUser: !!authData.user,
-        hasSession: !!authData.session,
-        userEmail: authData.user?.email
-      })
-      
       const { user, session } = authData
       
+      if (isVercel) {
+        console.log(`✅ [VERCEL-LOGIN-${requestId}] AUTH SUCCESS:`, {
+          hasUser: !!user,
+          hasSession: !!session,
+          userId: user?.id,
+          userEmail: user?.email
+        })
+      }
+      
       if (user && session) {
-        console.log('✅ 로그인 성공, 프로필 가져오는 중...')
         const profile = await authClient.getUserProfile()
         
-        console.log('👤 프로필 정보:', {
-          hasProfile: !!profile,
-          profileEmail: profile?.email,
-          profileRole: profile?.role
-        })
+        if (isVercel) {
+          console.log(`👤 [VERCEL-LOGIN-${requestId}] PROFILE LOADED:`, {
+            hasProfile: !!profile,
+            profileRole: profile?.role,
+            profileStatus: profile?.status,
+            tenantId: profile?.tenant_id
+          })
+        }
         
         setUser(user)
         setProfile(profile)
         
-        console.log('🔄 /admin으로 리다이렉트 중...')
+        if (isVercel) {
+          console.log(`🔄 [VERCEL-LOGIN-${requestId}] REDIRECTING TO ADMIN:`, {
+            from: window.location.pathname,
+            to: '/admin'
+          })
+        }
+        
         router.push('/admin')
         router.refresh()
       } else {
-        console.warn('⚠️ 로그인 응답에 user 또는 session이 없음:', { hasUser: !!user, hasSession: !!session })
+        if (isVercel) {
+          console.error(`❌ [VERCEL-LOGIN-${requestId}] AUTH INCOMPLETE:`, {
+            hasUser: !!user,
+            hasSession: !!session
+          })
+        }
         setError('로그인 처리 중 문제가 발생했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
-      console.error('❌ 로그인 에러:', error)
+      console.error('로그인 에러:', error)
+      
+      if (isVercel) {
+        console.error(`❌ [VERCEL-LOGIN-${requestId}] LOGIN ERROR:`, {
+          error: error instanceof Error ? error.message : String(error),
+          errorName: error instanceof Error ? error.name : 'Unknown',
+          stack: error instanceof Error ? error.stack?.substring(0, 200) : undefined
+        })
+      }
       
       // 타입 가드를 사용한 안전한 에러 처리
       const errorMessage = error instanceof Error ? error.message : '';
@@ -92,7 +131,6 @@ export function LoginForm() {
         setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
       }
     } finally {
-      console.log('🏁 로그인 프로세스 완료, loading 해제')
       setIsLoading(false)
     }
   }

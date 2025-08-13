@@ -10,6 +10,28 @@ export default function AdminPage() {
   const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
 
+  // Vercel 환경에서만 상세 디버깅
+  const isVercel = typeof window !== 'undefined' && 
+    process.env.NODE_ENV === 'production' && 
+    window.location.hostname.includes('vercel.app')
+  const requestId = Math.random().toString(36).substring(7)
+
+  // 페이지 진입 시 상태 로깅
+  useEffect(() => {
+    if (isVercel) {
+      console.log(`🎯 [VERCEL-ADMIN-${requestId}] PAGE ENTRY:`, {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        userEmail: user?.email,
+        profileRole: profile?.role,
+        profileStatus: profile?.status,
+        profileTenantId: profile?.tenant_id,
+        currentPath: window.location.pathname,
+        timestamp: new Date().toISOString()
+      })
+    }
+  }, [user, profile, isVercel, requestId])
+
   // 역할별 자동 리다이렉트
   useEffect(() => {
     if (!profile) return
@@ -20,6 +42,16 @@ export default function AdminPage() {
     if (profile.role === 'system_admin' || 
         ['admin@test.com', 'sjlee87@kakao.com'].includes(profile.email)) {
       console.log('🔧 시스템 관리자로 인식, system-admin 페이지로 리다이렉트')
+      
+      if (isVercel) {
+        console.log(`🔄 [VERCEL-ADMIN-${requestId}] SYSTEM ADMIN REDIRECT:`, {
+          from: '/admin',
+          to: '/system-admin',
+          profileRole: profile.role,
+          userEmail: profile.email
+        })
+      }
+      
       router.push('/system-admin')
       return
     }
@@ -27,6 +59,16 @@ export default function AdminPage() {
     // 테넌트 관리자인 경우
     if (profile.role === 'admin' && profile.tenant_id) {
       console.log('🏢 테넌트 관리자로 인식, tenant-admin 페이지로 리다이렉트')
+      
+      if (isVercel) {
+        console.log(`🔄 [VERCEL-ADMIN-${requestId}] TENANT ADMIN REDIRECT:`, {
+          from: '/admin',
+          to: '/tenant-admin',
+          profileRole: profile.role,
+          tenantId: profile.tenant_id
+        })
+      }
+      
       router.push('/tenant-admin')
       return
     }
@@ -34,6 +76,16 @@ export default function AdminPage() {
     // 일반 사용자(강사, 직원)인 경우
     if (profile.role && ['instructor', 'staff'].includes(profile.role) && profile.tenant_id) {
       console.log('👨‍🏫 일반 사용자로 인식, tenant-admin 페이지로 리다이렉트')
+      
+      if (isVercel) {
+        console.log(`🔄 [VERCEL-ADMIN-${requestId}] USER REDIRECT:`, {
+          from: '/admin',
+          to: '/tenant-admin',
+          profileRole: profile.role,
+          tenantId: profile.tenant_id
+        })
+      }
+      
       router.push('/tenant-admin')
       return
     }
@@ -49,6 +101,15 @@ export default function AdminPage() {
       // 승인 대기 상태인 경우
       if (profile.status === 'pending_approval') {
         console.log('⏳ 승인 대기 중인 사용자, pending-approval 페이지로 리다이렉트')
+        
+        if (isVercel) {
+          console.log(`🔄 [VERCEL-ADMIN-${requestId}] PENDING APPROVAL REDIRECT:`, {
+            from: '/admin',
+            to: '/pending-approval',
+            profileStatus: profile.status
+          })
+        }
+        
         router.push('/pending-approval')
         return
       }
@@ -56,6 +117,15 @@ export default function AdminPage() {
       // 테넌트가 없는 경우 온보딩 페이지로
       if (!profile.tenant_id) {
         console.log('🆕 테넌트 미설정 사용자, onboarding 페이지로 리다이렉트')
+        
+        if (isVercel) {
+          console.log(`🔄 [VERCEL-ADMIN-${requestId}] ONBOARDING REDIRECT:`, {
+            from: '/admin',
+            to: '/onboarding',
+            tenantId: profile.tenant_id
+          })
+        }
+        
         router.push('/onboarding')
         return
       }
@@ -67,6 +137,16 @@ export default function AdminPage() {
       tenant_id: profile.tenant_id,
       status: profile.status
     })
+    
+    if (isVercel) {
+      console.log(`✅ [VERCEL-ADMIN-${requestId}] STAY ON ADMIN:`, {
+        reason: 'unclear permissions - staying on admin page',
+        profileRole: profile.role,
+        profileStatus: profile.status,
+        tenantId: profile.tenant_id
+      })
+    }
+    
     setIsRedirecting(false)
   }, [profile, router])
 
