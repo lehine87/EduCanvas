@@ -22,26 +22,65 @@ export default function SystemAdminPage() {
   const [isLoadingTenants, setIsLoadingTenants] = useState(false)
   const router = useRouter()
 
+  // 강제 로그 출력
+  if (typeof window !== 'undefined') {
+    console.log(`🏛️ [SYSTEM-ADMIN-ALWAYS] SYSTEM ADMIN PAGE CREATED:`, {
+      timestamp: new Date().toISOString(),
+      currentPath: window.location.pathname,
+      isLoading,
+      userAgent: navigator.userAgent.substring(0, 50)
+    })
+    
+    console.error(`🚨 [FORCE-LOG] SYSTEM ADMIN COMPONENT LOADED`)
+  }
+
   useEffect(() => {
     async function checkSystemAdmin() {
       try {
+        console.log(`🔍 [SYSTEM-ADMIN-CHECK] CHECKING SYSTEM ADMIN PERMISSIONS`)
+        
         const currentUser = await authClient.getCurrentUser()
         
+        console.log(`👤 [SYSTEM-ADMIN-CHECK] CURRENT USER:`, {
+          hasUser: !!currentUser,
+          userEmail: currentUser?.email
+        })
+        
         if (!currentUser) {
+          console.log(`❌ [SYSTEM-ADMIN-CHECK] NO USER - REDIRECT TO LOGIN`)
           router.push('/auth/login')
           return
         }
 
         const profile = await authClient.getUserProfile()
         
+        console.log(`👤 [SYSTEM-ADMIN-CHECK] USER PROFILE:`, {
+          hasProfile: !!profile,
+          profileRole: profile?.role,
+          profileEmail: profile?.email,
+          profileStatus: profile?.status
+        })
+        
         if (!profile) {
+          console.log(`❌ [SYSTEM-ADMIN-CHECK] NO PROFILE - REDIRECT TO LOGIN`)
           router.push('/auth/login')
           return
         }
 
         // 시스템 관리자 권한 확인
-        if (profile.role !== 'system_admin' && 
-            !['admin@test.com', 'sjlee87@kakao.com'].includes(profile.email)) {
+        const isSystemAdmin = profile.role === 'system_admin' || 
+            ['admin@test.com', 'sjlee87@kakao.com'].includes(profile.email)
+        
+        console.log(`🔐 [SYSTEM-ADMIN-CHECK] PERMISSION CHECK:`, {
+          profileRole: profile.role,
+          profileEmail: profile.email,
+          isSystemAdmin,
+          willRedirect: !isSystemAdmin
+        })
+        
+        if (!isSystemAdmin) {
+          console.error(`🚨 [SYSTEM-ADMIN-REDIRECT] NOT SYSTEM ADMIN - REDIRECTING TO /admin`)
+          console.warn(`⚠️ [SYSTEM-ADMIN-REDIRECT] THIS WILL CAUSE INFINITE LOOP!`)
           router.push('/admin')
           return
         }

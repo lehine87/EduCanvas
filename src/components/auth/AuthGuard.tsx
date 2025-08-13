@@ -39,6 +39,30 @@ export function AuthGuard({
   const [isChecking, setIsChecking] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
 
+  // Vercel 환경에서 AuthGuard 강제 로그
+  const isVercel = typeof window !== 'undefined' && 
+    process.env.NODE_ENV === 'production' && 
+    window.location.hostname.includes('vercel.app')
+
+  // 강제 로그 출력
+  if (typeof window !== 'undefined') {
+    console.log(`🛡️ [AUTHGUARD-ALWAYS] AUTH GUARD EXECUTED:`, {
+      timestamp: new Date().toISOString(),
+      currentPath: window.location.pathname,
+      isVercel,
+      initialized,
+      loading,
+      isChecking,
+      isAuthenticated,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileRole: profile?.role,
+      profileEmail: profile?.email,
+      requireAuth,
+      allowedRoles
+    })
+  }
+
   // 세션 자동 갱신 적용
   useSessionAutoRefresh()
 
@@ -83,6 +107,11 @@ export function AuthGuard({
       // 5. 역할 기반 리다이렉트 (system_admin 특별 처리)
       if (profile?.role === 'system_admin' && window.location.pathname === '/admin') {
         console.log('🔧 시스템 관리자 자동 리다이렉트: /admin → /system-admin')
+        
+        // 강제 로그 출력
+        console.error(`🚨 [AUTHGUARD-REDIRECT] SYSTEM ADMIN REDIRECT TRIGGERED`)
+        console.warn(`⚠️ [AUTHGUARD-REDIRECT] FROM: /admin TO: /system-admin`)
+        
         router.push('/system-admin')
         return
       }
