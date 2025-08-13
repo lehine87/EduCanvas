@@ -64,6 +64,12 @@ export function LoginForm() {
   }, [searchParams])
 
   const onSubmit = async (data: SignInFormData) => {
+    console.log(`🔐 [LOGIN-ATTEMPT] Starting login process:`, {
+      email: data.email,
+      hasPassword: !!data.password,
+      timestamp: new Date().toISOString()
+    })
+
     setIsLoading(true)
     setError(null)
 
@@ -189,7 +195,13 @@ export function LoginForm() {
             <CardTitle>로그인</CardTitle>
           </CardHeader>
           <CardBody>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              onSubmit={(e) => {
+                console.log(`📝 [FORM-SUBMIT] Form submission triggered`)
+                handleSubmit(onSubmit)(e)
+              }} 
+              className="space-y-4"
+            >
               {error && (
                 <div 
                   className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm"
@@ -245,18 +257,15 @@ export function LoginForm() {
                 loading={isLoading}
                 disabled={isLoading}
                 onClick={() => {
-                  // 로그인 버튼 클릭 즉시 로그
-                  const isVercel = typeof window !== 'undefined' && 
-                    process.env.NODE_ENV === 'production' && 
-                    window.location.hostname.includes('vercel.app')
-                  
-                  if (isVercel) {
-                    console.log(`🖱️ [VERCEL-CLICK] LOGIN BUTTON CLICKED:`, {
-                      timestamp: new Date().toISOString(),
-                      formValid: !errors.email && !errors.password,
-                      cookiesBeforeSubmit: document.cookie
-                    })
-                  }
+                  // 로그인 버튼 클릭 즉시 로그 (로컬 환경에서도 출력)
+                  console.log(`🖱️ [LOGIN-CLICK] LOGIN BUTTON CLICKED:`, {
+                    timestamp: new Date().toISOString(),
+                    isLoading,
+                    hasErrors: !!(errors.email || errors.password),
+                    emailError: errors.email?.message,
+                    passwordError: errors.password?.message,
+                    cookiesCount: document.cookie.split(';').length
+                  })
                 }}
               >
                 로그인

@@ -16,22 +16,14 @@ export default function AdminPage() {
     window.location.hostname.includes('vercel.app')
   const requestId = Math.random().toString(36).substring(7)
 
-  // 즉시 로그 출력 (컴포넌트 생성 시점) - 조건 없이 항상 출력
-  if (typeof window !== 'undefined') {
-    console.log(`🏠 [ADMIN-ALWAYS] ADMIN PAGE CREATED:`, {
+  // 컴포넌트 로드 확인 (개발/디버깅용)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log(`🏠 [ADMIN-PAGE] ADMIN PAGE LOADED:`, {
       timestamp: new Date().toISOString(),
-      isVercel,
       hasUser: !!user,
       hasProfile: !!profile,
-      currentPath: window.location.pathname,
-      userAgent: navigator.userAgent.substring(0, 50),
-      nodeEnv: process.env.NODE_ENV,
-      hostname: window.location.hostname
+      currentPath: window.location.pathname
     })
-    
-    // 강제로 브라우저 콘솔에 출력
-    console.error(`🚨 [FORCE-LOG] ADMIN COMPONENT DEFINITELY LOADED`)
-    console.warn(`⚠️ [FORCE-LOG] USER STATE:`, { user: !!user, profile: !!profile })
   }
 
   // 페이지 진입 시 상태 로깅
