@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// 시스템 관리자용 API - Service Role 사용
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +7,8 @@ export async function GET(request: NextRequest) {
     
     // 권한 확인은 나중에 추가 (현재는 개발용)
     // TODO: JWT 토큰 검증 및 system_admin 권한 확인
+    
+    const supabase = createServiceRoleClient()
     
     const { data, error } = await supabase
       .from('tenants')

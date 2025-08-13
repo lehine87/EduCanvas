@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-
-// Service Role 클라이언트 (Admin API 사용 가능)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const tenantSchema = z.object({
   name: z.string().min(2),
@@ -62,6 +56,8 @@ export async function POST(request: NextRequest) {
       trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       is_active: true
     }
+
+    const supabase = createServiceRoleClient()
 
     const { data: tenant, error: tenantError } = await supabase
       .from('tenants')

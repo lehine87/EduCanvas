@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Service Role 클라이언트 (RLS 우회 가능)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +13,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🔍 학원 검색 API 호출:', { searchType, searchQuery })
+
+    // Service Role 클라이언트 생성 (환경변수 체크 포함)
+    const supabase = createServiceRoleClient()
 
     // 검색 쿼리 빌드
     let query = supabase

@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Service Role 클라이언트
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,6 +20,8 @@ export async function GET(request: NextRequest) {
     console.log(`📋 테넌트 ${tenantId}의 회원 목록 조회 중... (status: ${status || 'all'})`)
     
     // 기본 쿼리
+    const supabase = createServiceRoleClient()
+    
     let query = supabase
       .from('user_profiles')
       .select(`

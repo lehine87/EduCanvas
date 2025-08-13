@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createClient as createMiddlewareClient } from '@/lib/supabase/middleware'
-import type { Database } from '@/types/database'
-
-// Service Role 클라이언트 
-const supabaseServiceRole = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 현재 사용자의 프로필 확인 (권한 검사)
+    const supabaseServiceRole = createServiceRoleClient()
+    
     const { data: currentUserProfile, error: profileError } = await supabaseServiceRole
       .from('user_profiles')
       .select('tenant_id, role, status')
