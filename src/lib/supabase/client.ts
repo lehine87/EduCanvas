@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient, type CookieOptions } from '@supabase/ssr'
 import { Database } from '@/types/database'
 
 export const createClient = () => {
@@ -26,13 +26,13 @@ export const createClient = () => {
         }
         return undefined
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         // Vercel 환경에서 쿠키 설정 강화
         if (typeof document !== 'undefined') {
           const cookieOptions = {
             ...options,
             secure: process.env.NODE_ENV === 'production', // HTTPS에서만
-            sameSite: 'lax', // CSRF 보호하면서 로그인 허용
+            sameSite: 'lax' as const, // CSRF 보호하면서 로그인 허용
             path: '/', // 모든 경로에서 접근 가능
           }
           
@@ -54,7 +54,7 @@ export const createClient = () => {
           document.cookie = cookieString
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, _options: CookieOptions) {
         if (typeof document !== 'undefined') {
           document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
         }
