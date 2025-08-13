@@ -3,8 +3,20 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+interface TokenInfo {
+  hasSession: boolean
+  accessToken?: string
+  refreshToken?: string
+  tokenType?: string
+  expiresAt?: number
+  user?: {
+    id?: string
+    email?: string
+  }
+}
+
 export default function TestSupabaseTokensPage() {
-  const [tokenInfo, setTokenInfo] = useState<any>(null)
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)
   const [cookieInfo, setCookieInfo] = useState<string>('')
 
   useEffect(() => {
