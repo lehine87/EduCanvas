@@ -27,7 +27,7 @@ class MemoryRateLimiter {
     for (const key in this.store) {
       const record = this.store[key]
       // 1시간 지난 기록 삭제
-      if (now - record.lastAttempt > 60 * 60 * 1000) {
+      if (record && now - record.lastAttempt > 60 * 60 * 1000) {
         delete this.store[key]
       }
     }
@@ -162,7 +162,7 @@ export function getClientIP(request: Request): string {
   
   const forwarded = headers.get('x-forwarded-for')
   if (forwarded) {
-    return forwarded.split(',')[0].trim()
+    return forwarded.split(',')[0]?.trim() || '127.0.0.1'
   }
   
   const realIp = headers.get('x-real-ip')

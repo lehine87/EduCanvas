@@ -73,7 +73,7 @@ export function withApiAuth(
 ) {
   return async (req: NextRequest): Promise<Response> => {
     try {
-      const supabase = createClient()
+      const supabase = await createClient()
       
       // 1. Authentication check
       const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -260,7 +260,7 @@ export async function checkUserPermission(
   action: string
 ): Promise<boolean> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: tenantUser, error } = await supabase
       .from('tenant_users')

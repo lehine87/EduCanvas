@@ -2,7 +2,10 @@
 // 복잡한 요금제 및 할인 정책 관리
 
 import type { Json } from './database.types';
-import type { BillingType, DiscountType, StudentStatus } from './index';
+import type { BillingType, StudentStatus } from './index';
+
+// 할인 유형 정의
+export type DiscountType = 'percentage' | 'fixed_amount' | 'free_sessions' | 'referral' | 'early_bird';
 
 // BaseEntity 타입 정의 (공통 엔티티 필드)
 interface BaseEntity {

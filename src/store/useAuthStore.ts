@@ -61,14 +61,15 @@ export const useAuthStore = create<AuthState>()(
               })
               
               const { data: { subscription } } = authClient.onAuthStateChange(
-                async (event, session) => {
-                  console.log('Auth state changed:', event, session?.user?.email)
+                async (event, sessionData) => {
+                  console.log('Auth state changed:', event, sessionData && typeof sessionData === 'object' && 'user' in sessionData ? 'user present' : 'no user')
                   
-                  if (event === 'SIGNED_IN' && session?.user) {
+                  if (event === 'SIGNED_IN' && sessionData && typeof sessionData === 'object' && 'user' in sessionData && sessionData.user) {
                     const profile = await authClient.getUserProfile()
+                    const typedSession = sessionData as Session
                     set({ 
-                      user: session.user,
-                      session,
+                      user: typedSession.user,
+                      session: typedSession,
                       profile 
                     })
                   } else if (event === 'SIGNED_OUT') {
@@ -77,13 +78,14 @@ export const useAuthStore = create<AuthState>()(
                       session: null,
                       profile: null 
                     })
-                  } else if (event === 'TOKEN_REFRESHED' && session) {
-                    set({ session })
+                  } else if (event === 'TOKEN_REFRESHED' && sessionData && typeof sessionData === 'object' && 'user' in sessionData) {
+                    set({ session: sessionData as Session })
                   }
                 }
               )
               
-              return () => subscription.unsubscribe()
+              // 정리 함수를 따로 저장하지 않고 바로 처리
+              subscription.unsubscribe()
             } else {
               set({ initialized: true })
             }
@@ -151,19 +153,19 @@ export const useAuthStore = create<AuthState>()(
           // 사용자 데이터를 null로 덮어쓰기
           if (state.user) {
             Object.keys(state.user).forEach(key => {
-              delete (state.user as Record<string, unknown>)[key]
+              delete (state.user as unknown as Record<string, unknown>)[key]
             })
           }
           
           if (state.profile) {
             Object.keys(state.profile).forEach(key => {
-              delete (state.profile as Record<string, unknown>)[key]
+              delete (state.profile as unknown as Record<string, unknown>)[key]
             })
           }
           
           if (state.session) {
             Object.keys(state.session).forEach(key => {
-              delete (state.session as Record<string, unknown>)[key]
+              delete (state.session as unknown as Record<string, unknown>)[key]
             })
           }
           

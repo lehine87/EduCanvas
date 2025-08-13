@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // 로그인 시도
     const { data, error } = await supabase.auth.signInWithPassword({

@@ -190,7 +190,7 @@ export class AuthClient {
 
     console.log('🔍 사용자 프로필 조회 중...', user.email)
 
-    const { data, error } = await this.supabase
+    let { data, error } = await this.supabase
       .from('user_profiles')
       .select(`
         *,
@@ -319,11 +319,11 @@ export class AuthClient {
     }
 
     console.log('✅ 사용자 프로필 조회 성공:', {
-      email: data.email,
-      name: data.name,
-      tenant: data.tenants?.name || '시스템 관리자',
-      role: data.role || '없음',
-      status: data.status
+      email: data?.email,
+      name: data?.name,
+      tenant: data?.tenants?.name || '시스템 관리자',
+      role: data?.role || '없음',
+      status: data?.status
     })
 
     return data

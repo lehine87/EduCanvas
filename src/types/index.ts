@@ -26,7 +26,7 @@ export type TenantInsert = Database['public']['Tables']['tenants']['Insert']
 export type TenantUpdate = Database['public']['Tables']['tenants']['Update']
 
 export type Instructor = Database['public']['Tables']['instructors']['Row']
-export type Course = Database['public']['Tables']['courses']['Row']
+// export type Course = Database['public']['Tables']['courses']['Row'] // 테이블 없음
 export type CoursePackage = Database['public']['Tables']['course_packages']['Row']
 export type StudentEnrollment = Database['public']['Tables']['student_enrollments']['Row']
 
@@ -129,13 +129,13 @@ export type Attendance = Database['public']['Tables']['attendances']['Row']
 export type AttendanceInsert = Database['public']['Tables']['attendances']['Insert']
 export type AttendanceUpdate = Database['public']['Tables']['attendances']['Update']
 
-export type Classroom = Database['public']['Tables']['classrooms']['Row']
-export type Schedule = Database['public']['Tables']['schedules']['Row']
+// export type Classroom = Database['public']['Tables']['classrooms']['Row'] // 테이블 없음
+// export type Schedule = Database['public']['Tables']['schedules']['Row'] // 테이블 없음
 export type Video = Database['public']['Tables']['videos']['Row']
 export type VideoWatchSession = Database['public']['Tables']['video_watch_sessions']['Row']
-export type Exam = Database['public']['Tables']['exams']['Row']
-export type ExamResult = Database['public']['Tables']['exam_results']['Row']
-export type Document = Database['public']['Tables']['documents']['Row']
+// export type Exam = Database['public']['Tables']['exams']['Row'] // 테이블 없음
+// export type ExamResult = Database['public']['Tables']['exam_results']['Row'] // 테이블 없음
+// export type Document = Database['public']['Tables']['documents']['Row'] // 테이블 없음
 export type Consultation = Database['public']['Tables']['consultations']['Row']
 export type StudentHistory = Database['public']['Tables']['student_histories']['Row']
 

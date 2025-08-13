@@ -130,7 +130,7 @@ export async function middleware(request: NextRequest) {
         .single()
 
       // 비활성 사용자 차단
-      if (profile?.status === 'suspended' || profile?.status === 'deleted') {
+      if (profile?.status === 'inactive') {
         console.warn('🚨 비활성 사용자 접근:', { userId: session.user.id, status: profile.status })
         const redirectUrl = new URL('/auth/login?error=account-suspended', request.url)
         return Response.redirect(redirectUrl.toString())

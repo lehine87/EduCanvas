@@ -3,6 +3,15 @@ import type { User, Session } from '@supabase/supabase-js'
 
 export const supabase = createClient()
 
+export interface TenantWithRole {
+  id: string
+  name: string
+  slug: string
+  role: string
+  hierarchy_level: number
+  permission_overrides?: Record<string, string[]> | null
+}
+
 export interface AuthUser extends User {
   tenant_id?: string
   role?: string
@@ -21,7 +30,7 @@ export interface AuthSession extends Session {
 }
 
 // Developer/superuser permissions (all access)
-const DEVELOPER_PERMISSIONS = {
+const DEVELOPER_PERMISSIONS: Record<string, string[]> = {
   students: ['read', 'write', 'delete', 'admin'],
   classes: ['read', 'write', 'delete', 'admin'],
   payments: ['read', 'write', 'delete', 'admin'],
@@ -75,7 +84,7 @@ const ROLE_PERMISSIONS = {
     videos: ['read']
   },
   developer: DEVELOPER_PERMISSIONS
-} as const
+} as Record<string, Record<string, string[]>>
 
 export class AuthManager {
   private static instance: AuthManager
@@ -118,7 +127,7 @@ export class AuthManager {
       }
 
       // 3. 개발자/관리자 특별 권한 확인
-      const isDeveloper = this.checkDeveloperAccess(email, userTenants)
+      const isDeveloper = this.checkDeveloperAccess(email, userTenants || [])
 
       // 4. 개발자인 경우 모든 테넌트에 접근 가능
       let availableTenants = userTenants
@@ -131,24 +140,32 @@ export class AuthManager {
       let selectedTenant = null
       if (selectedTenantId) {
         // 특정 테넌트 지정된 경우
-        selectedTenant = availableTenants.find(t => t.id === selectedTenantId)
+        selectedTenant = availableTenants.find(t => t?.id === selectedTenantId) || null
         if (!selectedTenant) {
           return { user: null, error: '해당 테넌트에 대한 접근 권한이 없습니다.' }
         }
       } else {
         // 자동 선택: 가장 높은 권한의 테넌트
-        selectedTenant = availableTenants.sort((a, b) => 
+        const validTenants = availableTenants.filter(t => t != null)
+        selectedTenant = validTenants.sort((a, b) => 
           (a.hierarchy_level || 999) - (b.hierarchy_level || 999)
-        )[0]
+        )[0] || null
+      }
+
+      // null 체크 추가
+      if (!selectedTenant) {
+        return { user: null, error: '사용 가능한 테넌트가 없습니다.' }
       }
 
       // 6. 사용자 정보 구성
+      const permissions = this.getPermissions(isDeveloper ? 'developer' : selectedTenant.role, selectedTenant.permission_overrides || null)
+      
       const authUser: AuthUser = {
         ...user,
         tenant_id: selectedTenant.id,
         role: isDeveloper ? 'developer' : selectedTenant.role,
-        permissions: this.getPermissions(isDeveloper ? 'developer' : selectedTenant.role, selectedTenant.permission_overrides),
-        available_tenants: availableTenants.map(t => ({
+        permissions: permissions || {},
+        available_tenants: availableTenants.filter(t => t != null).map(t => ({
           id: t.id,
           name: t.name,
           slug: t.slug,
@@ -174,7 +191,7 @@ export class AuthManager {
   /**
    * 사용자가 속한 모든 테넌트 조회 (재시도 로직 포함)
    */
-  private async getUserTenants(userId: string) {
+  private async getUserTenants(userId: string): Promise<TenantWithRole[] | null> {
     console.log('🔍 Fetching tenants for user:', userId)
     
     // RLS 정책 인증 상태 안정화를 위한 재시도 로직
@@ -268,15 +285,21 @@ export class AuthManager {
     const validTenants = results.filter(Boolean)
     
     console.log('✅ Successfully mapped tenant data:', validTenants.length)
-    console.log('📋 User tenants:', validTenants.map(t => `${t.name} (${t.role})`))
+    console.log('📋 User tenants:', validTenants.map(t => t ? `${t.name} (${t.role})` : 'null'))
     
-    return validTenants
+    const filteredTenants: TenantWithRole[] = []
+    for (const tenant of validTenants) {
+      if (tenant !== null) {
+        filteredTenants.push(tenant as TenantWithRole)
+      }
+    }
+    return filteredTenants
   }
 
   /**
    * 개발자 권한 확인
    */
-  private checkDeveloperAccess(email: string, userTenants: Array<{ id: string; name: string; slug: string; role?: string }>): boolean {
+  private checkDeveloperAccess(email: string, userTenants: TenantWithRole[]): boolean {
     // 개발자 이메일 패턴 확인
     if (email.includes('admin@test.com') || 
         email.includes('@dev.') || 
@@ -285,7 +308,7 @@ export class AuthManager {
     }
 
     // Owner 권한 확인 (hierarchy_level = 1)
-    return userTenants.some(t => t.hierarchy_level === 1)
+    return userTenants.some(t => t?.hierarchy_level === 1)
   }
 
   /**
@@ -314,15 +337,15 @@ export class AuthManager {
   /**
    * 권한 매트릭스 조회
    */
-  private getPermissions(role: string, overrides?: Record<string, string[]>): Record<string, string[]> {
-    const basePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.viewer
+  private getPermissions(role: string, overrides?: Record<string, string[]> | null): Record<string, string[]> {
+    const basePermissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.viewer
     
     // 권한 오버라이드 적용
-    if (overrides) {
+    if (overrides && typeof overrides === 'object') {
       return { ...basePermissions, ...overrides }
     }
 
-    return basePermissions
+    return basePermissions || {}
   }
 
   /**
@@ -412,13 +435,17 @@ export class AuthManager {
       }
 
       const selectedTenant = availableTenants[0] // 첫 번째 테넌트 선택
+      
+      if (!selectedTenant) {
+        return { user: null, error: '사용 가능한 테넌트가 없습니다.' }
+      }
 
       const authUser: AuthUser = {
         ...session.user,
         tenant_id: selectedTenant.id,
         role: isDeveloper ? 'developer' : selectedTenant.role,
-        permissions: this.getPermissions(isDeveloper ? 'developer' : selectedTenant.role, selectedTenant.permission_overrides),
-        available_tenants: availableTenants.map(t => ({
+        permissions: this.getPermissions(isDeveloper ? 'developer' : selectedTenant.role, selectedTenant.permission_overrides || null),
+        available_tenants: availableTenants.filter(t => t != null).map(t => ({
           id: t.id,
           name: t.name,
           slug: t.slug,
@@ -498,14 +525,23 @@ export class AuthManager {
       }
 
       // 현재 테넌트 정보 유지하면서 업데이트
-      const currentTenant = availableTenants.find(t => t.id === this.currentTenant) || availableTenants[0]
+      const currentTenant = availableTenants.find(t => t?.id === this.currentTenant) || availableTenants[0]
+      
+      if (!currentTenant) {
+        return { user: null, error: '사용 가능한 테넌트가 없습니다.' }
+      }
 
       const authUser: AuthUser = {
         ...session.user,
         tenant_id: currentTenant.id,
         role: currentTenant.role,
-        permissions: isDeveloper ? DEVELOPER_PERMISSIONS : this.getRolePermissions(currentTenant.role),
-        available_tenants: availableTenants,
+        permissions: isDeveloper ? DEVELOPER_PERMISSIONS : (this.getPermissions(currentTenant.role, currentTenant.permission_overrides) || {}),
+        available_tenants: availableTenants.filter(t => t != null).map(t => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          role: t.role
+        })),
         is_developer: isDeveloper
       }
 

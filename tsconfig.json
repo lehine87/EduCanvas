@@ -44,6 +44,6 @@
       "@/utils/*": ["./src/utils/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/jest-dom.d.ts"],
   "exclude": ["node_modules", "UI_TEMPLATE", "vitest.config.ts"]
 }

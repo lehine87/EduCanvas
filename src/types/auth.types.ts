@@ -491,7 +491,7 @@ export function getUserDisplayInfo(profile: UserProfile): {
 } {
   const nameParts = profile.name.split(' ')
   const initials = nameParts.length >= 2 
-    ? `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+    ? `${nameParts[0]?.[0] || ''}${nameParts[1]?.[0] || ''}`.toUpperCase()
     : nameParts[0]?.slice(0, 2)?.toUpperCase() || 'U'
 
   return {

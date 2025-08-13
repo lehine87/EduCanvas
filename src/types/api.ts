@@ -155,7 +155,8 @@ export interface BusinessRuleViolation {
 /**
  * 완전한 에러 응답
  */
-export interface ApiErrorResponse extends ApiResponse<never> {
+export interface ApiErrorResponse {
+  success: false
   error: ApiError
   validation_errors?: ValidationError[]
   business_violations?: BusinessRuleViolation[]
