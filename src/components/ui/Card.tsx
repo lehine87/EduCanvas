@@ -4,7 +4,7 @@ import React from 'react'
 import { cn } from '@/utils/cn'
 import type { BaseComponentProps } from './types'
 
-interface CardProps extends BaseComponentProps {
+export interface CardProps extends BaseComponentProps {
   padding?: 'none' | 'sm' | 'md' | 'lg'
   shadow?: 'none' | 'sm' | 'md' | 'lg'
   border?: boolean
@@ -62,12 +62,14 @@ export function Card({
   )
 }
 
+export interface CardHeaderProps extends BaseComponentProps {}
+
 export function CardHeader({ 
   className, 
   children, 
   'data-testid': testId,
   ...props 
-}: BaseComponentProps) {
+}: CardHeaderProps) {
   return (
     <div 
       className={cn('flex flex-col space-y-1.5 pb-4', className)} 
@@ -113,12 +115,14 @@ export function CardDescription({
   )
 }
 
+export interface CardBodyProps extends BaseComponentProps {}
+
 export function CardBody({ 
   className, 
   children, 
   'data-testid': testId,
   ...props 
-}: BaseComponentProps) {
+}: CardBodyProps) {
   return (
     <div 
       className={cn('pt-0', className)} 
@@ -130,12 +134,14 @@ export function CardBody({
   )
 }
 
+export interface CardFooterProps extends BaseComponentProps {}
+
 export function CardFooter({ 
   className, 
   children, 
   'data-testid': testId,
   ...props 
-}: BaseComponentProps) {
+}: CardFooterProps) {
   return (
     <div 
       className={cn('flex items-center pt-4', className)} 

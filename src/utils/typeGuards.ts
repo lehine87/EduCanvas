@@ -2,9 +2,9 @@
 // Provides runtime type checking and validation using both custom guards and Zod schemas
 
 import { z } from 'zod'
-import type { Database } from '@/types/database'
+import type { Database, Json } from '@/types/database.types'
 import type { Student } from '@/types/student.types'
-import type { VideoWatchSession, ClassFlowStudent } from '@/types/app.types'
+import type { ClassFlowStudent } from '@/types/app.types'
 
 // Database 타입들을 간편하게 사용하기 위한 alias
 type Tables = Database['public']['Tables']
@@ -128,21 +128,29 @@ export const TenantUpdateSchema = TenantInsertSchema.partial()
 // Student Schemas
 export const StudentSchema = z.object({
   id: UUIDSchema,
-  tenant_id: UUIDSchema,
+  tenant_id: UUIDSchema.nullable(),
+  student_number: z.string().min(1, 'Student number is required'),
   name: NameSchema,
+  name_english: z.string().max(100).nullable(),
   phone: PhoneSchema,
+  email: EmailSchema,
   parent_name: z.string().max(100).nullable(),
-  parent_phone: z.string().min(1, 'Parent phone is required').max(20),
-  grade: z.string().max(20).nullable(),
-  class_id: UUIDSchema.nullable(),
-  status: StudentStatusSchema.default('active'),
-  enrollment_date: z.string().date(),
-  graduation_date: z.string().date().nullable(),
-  position_in_class: z.number().int().min(0).default(0),
-  display_color: ColorSchema,
-  memo: z.string().nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime()
+  parent_phone_1: PhoneSchema,
+  parent_phone_2: PhoneSchema,
+  address: z.string().nullable(),
+  birth_date: z.string().nullable(),
+  gender: z.string().max(10).nullable(),
+  grade_level: z.string().max(20).nullable(),
+  school_name: z.string().max(100).nullable(),
+  status: StudentStatusSchema.nullable(),
+  enrollment_date: z.string().nullable(),
+  emergency_contact: z.custom<Json>().nullable(),
+  custom_fields: z.custom<Json>().nullable(),
+  tags: z.array(z.string()).nullable(),
+  notes: z.string().nullable(),
+  created_at: z.string().nullable(),
+  updated_at: z.string().nullable(),
+  created_by: UUIDSchema.nullable()
 })
 
 export const StudentInsertSchema = StudentSchema.omit({
@@ -150,9 +158,25 @@ export const StudentInsertSchema = StudentSchema.omit({
   created_at: true,
   updated_at: true
 }).partial({
+  tenant_id: true,
+  name_english: true,
+  phone: true,
+  email: true,
+  parent_name: true,
+  parent_phone_1: true,
+  parent_phone_2: true,
+  address: true,
+  birth_date: true,
+  gender: true,
+  grade_level: true,
+  school_name: true,
+  status: true,
   enrollment_date: true,
-  position_in_class: true,
-  status: true
+  emergency_contact: true,
+  custom_fields: true,
+  tags: true,
+  notes: true,
+  created_by: true
 })
 
 export const StudentUpdateSchema = StudentInsertSchema.omit({ tenant_id: true }).partial()
@@ -160,22 +184,26 @@ export const StudentUpdateSchema = StudentInsertSchema.omit({ tenant_id: true })
 // Class Schemas
 export const ClassSchema = z.object({
   id: UUIDSchema,
-  tenant_id: UUIDSchema,
+  tenant_id: UUIDSchema.nullable(),
   name: NameSchema,
   subject: z.string().max(50).nullable(),
-  grade_level: z.string().max(20).nullable(),
-  max_students: z.number().int().min(1).max(100).default(20),
-  current_students: z.number().int().min(0).default(0),
+  course: z.string().max(50).nullable(),
+  grade: z.string().max(20).nullable(),
+  level: z.string().max(20).nullable(),
+  description: z.string().nullable(),
+  max_students: z.number().int().nullable(),
+  min_students: z.number().int().nullable(),
   instructor_id: UUIDSchema.nullable(),
-  classroom: z.string().max(50).nullable(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#3B82F6'),
-  status: StudentStatusSchema.default('active'),
-  order_index: z.number().int().min(0).default(0),
-  start_date: z.string().date().nullable(),
-  end_date: z.string().date().nullable(),
-  memo: z.string().nullable(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime()
+  classroom_id: UUIDSchema.nullable(),
+  color: z.string().nullable(),
+  is_active: z.boolean().nullable(),
+  start_date: z.string().nullable(),
+  end_date: z.string().nullable(),
+  schedule_config: z.custom<Json>().nullable(),
+  custom_fields: z.custom<Json>().nullable(),
+  created_at: z.string().nullable(),
+  updated_at: z.string().nullable(),
+  created_by: UUIDSchema.nullable()
 })
 
 export const ClassInsertSchema = ClassSchema.omit({
@@ -183,11 +211,23 @@ export const ClassInsertSchema = ClassSchema.omit({
   created_at: true,
   updated_at: true
 }).partial({
+  tenant_id: true,
+  subject: true,
+  course: true,
+  grade: true,
+  level: true,
+  description: true,
   max_students: true,
-  current_students: true,
+  min_students: true,
+  instructor_id: true,
+  classroom_id: true,
   color: true,
-  status: true,
-  order_index: true
+  is_active: true,
+  start_date: true,
+  end_date: true,
+  schedule_config: true,
+  custom_fields: true,
+  created_by: true
 })
 
 export const ClassUpdateSchema = ClassInsertSchema.omit({ tenant_id: true }).partial()
@@ -225,18 +265,18 @@ export const InstructorUpdateSchema = InstructorInsertSchema.omit({ tenant_id: t
 export const VideoSchema = z.object({
   id: UUIDSchema,
   tenant_id: UUIDSchema.nullable(),
-  youtube_video_id: z.string().min(1, 'YouTube video ID is required'),
   youtube_url: z.string().url(),
+  youtube_video_id: z.string().nullable(),
   title: z.string().min(1, 'Title is required'),
   description: z.string().nullable(),
   duration_seconds: z.number().int().min(0).nullable(),
-  thumbnail_url: z.string().url().nullable(),
+  thumbnail_url: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   learning_objectives: z.array(z.string()).nullable(),
   prerequisites: z.array(z.string()).nullable(),
   instructor_id: UUIDSchema.nullable(),
   class_id: UUIDSchema.nullable(),
-  video_type: VideoTypeSchema.optional(),
+  video_type: VideoTypeSchema,
   status: VideoStatusSchema.nullable(),
   quality: VideoQualitySchema.nullable(),
   view_count: z.number().int().min(0).nullable(),
@@ -246,13 +286,13 @@ export const VideoSchema = z.object({
   is_public: z.boolean().nullable(),
   password_protected: z.boolean().nullable(),
   password_hash: z.string().nullable(),
-  available_from: z.string().datetime().nullable(),
-  available_until: z.string().datetime().nullable(),
+  available_from: z.string().nullable(),
+  available_until: z.string().nullable(),
   total_watch_time: z.number().int().min(0).nullable(),
   average_rating: z.number().min(0).max(5).nullable(),
   created_by: UUIDSchema.nullable(),
-  created_at: z.string().datetime().nullable(),
-  updated_at: z.string().datetime().nullable()
+  created_at: z.string().nullable(),
+  updated_at: z.string().nullable()
 })
 
 export const VideoInsertSchema = VideoSchema.omit({
@@ -260,10 +300,15 @@ export const VideoInsertSchema = VideoSchema.omit({
   created_at: true,
   updated_at: true
 }).partial({
+  tenant_id: true,
+  description: true,
+  duration_seconds: true,
+  thumbnail_url: true,
   tags: true,
   learning_objectives: true,
   prerequisites: true,
-  video_type: true,
+  instructor_id: true,
+  class_id: true,
   status: true,
   quality: true,
   view_count: true,
@@ -276,24 +321,27 @@ export const VideoInsertSchema = VideoSchema.omit({
   available_from: true,
   available_until: true,
   total_watch_time: true,
-  average_rating: true
+  average_rating: true,
+  created_by: true
 })
 
-export const VideoUpdateSchema = VideoInsertSchema.omit({ tenant_id: true, youtube_video_id: true }).partial()
+export const VideoUpdateSchema = VideoInsertSchema.omit({ tenant_id: true, youtube_url: true }).partial()
 
 // Video Watch Session Schemas
+export const WatchStatusSchema = z.enum(['not_started', 'in_progress', 'completed', 'skipped'] as const)
+
 export const VideoWatchSessionSchema = z.object({
   id: UUIDSchema,
   tenant_id: UUIDSchema.nullable(),
   student_id: UUIDSchema.nullable(),
   video_id: UUIDSchema.nullable(),
   enrollment_id: UUIDSchema.nullable(),
-  session_start_time: z.string().datetime().nullable(),
-  last_position_time: z.string().datetime().nullable(),
+  session_start_time: z.string().nullable(),
+  last_position_time: z.string().nullable(),
   progress_seconds: z.number().int().min(0).nullable(),
   total_watch_time: z.number().int().min(0).nullable(),
   completion_percentage: z.number().min(0).max(100).nullable(),
-  watch_status: z.enum(['not_started', 'in_progress', 'completed', 'skipped']).nullable(),
+  watch_status: WatchStatusSchema.nullable(),
   playback_quality: VideoQualitySchema.nullable(),
   device_type: z.string().nullable(),
   user_agent: z.string().nullable(),
@@ -302,9 +350,9 @@ export const VideoWatchSessionSchema = z.object({
   is_liked: z.boolean().nullable(),
   rating: z.number().int().min(1).max(5).nullable(),
   notes: z.string().nullable(),
-  bookmarks: z.unknown().nullable(),
-  created_at: z.string().datetime().nullable(),
-  updated_at: z.string().datetime().nullable()
+  bookmarks: z.custom<Json>().nullable(),
+  created_at: z.string().nullable(),
+  updated_at: z.string().nullable()
 })
 
 export const VideoWatchSessionInsertSchema = VideoWatchSessionSchema.omit({
@@ -390,7 +438,7 @@ export const StudentFormDataSchema = StudentInsertSchema.extend({
     phone: z.string().min(1)
   }).optional()
 }).refine(
-  (data) => data.parent_phone === data.confirmParentPhone,
+  (data) => data.parent_phone_1 === data.confirmParentPhone,
   {
     message: 'Parent phone confirmation does not match',
     path: ['confirmParentPhone']
@@ -404,7 +452,7 @@ export const VideoWatchSessionFormDataSchema = z.object({
   progressSeconds: z.number().int().min(0),
   totalWatchTime: z.number().int().min(0),
   completionPercentage: z.number().min(0).max(100),
-  watchStatus: z.enum(['not_started', 'in_progress', 'completed', 'skipped']),
+  watchStatus: WatchStatusSchema,
   notes: z.string().optional(),
   sessionData: VideoWatchSessionSchema
 })
@@ -510,7 +558,7 @@ export function validateClass(data: unknown): { success: true; data: Class } | {
   }
 }
 
-export function validateVideo(data: unknown): { success: true; data: Video } | { success: false; errors: string[] } {
+export function validateVideo(data: unknown): { success: true; data: z.infer<typeof VideoSchema> } | { success: false; errors: string[] } {
   const result = VideoSchema.safeParse(data)
   if (result.success) {
     return { success: true, data: result.data }

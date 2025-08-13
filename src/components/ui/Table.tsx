@@ -8,7 +8,7 @@ import type {
   ComponentAlignment
 } from './types'
 
-interface TableColumn<T = Record<string, unknown>> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T | string
   header: string
   width?: number
@@ -19,7 +19,7 @@ interface TableColumn<T = Record<string, unknown>> {
   align?: ComponentAlignment
 }
 
-interface TableProps<T = Record<string, unknown>> extends BaseComponentProps, AccessibilityProps {
+export interface TableProps<T = Record<string, unknown>> extends BaseComponentProps, AccessibilityProps {
   data: T[]
   columns: TableColumn<T>[]
   loading?: boolean
@@ -119,7 +119,7 @@ export function Table<T extends Record<string, unknown>>({
     }
   }
 
-  const handleSelectRow = (index: number, event: React.MouseEvent) => {
+  const handleSelectRow = (index: number, event: React.MouseEvent | React.ChangeEvent) => {
     event.stopPropagation()
     if (!onSelectionChange) return
     

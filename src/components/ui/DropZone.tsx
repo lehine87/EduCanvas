@@ -4,6 +4,23 @@ import React, { memo, useCallback, useState, useRef, useEffect } from 'react'
 import { cn } from '@/utils/cn'
 import type { BaseComponentProps, AccessibilityProps } from './types'
 
+// 드래그 데이터 타입 정의
+interface DragData {
+  type: string
+  studentId?: string
+  studentIds?: string[]
+}
+
+// 타입 가드 함수
+function isDragData(data: unknown): data is DragData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    typeof (data as DragData).type === 'string'
+  )
+}
+
 export interface DropZoneProps extends BaseComponentProps, AccessibilityProps {
   /** Whether the drop zone is currently accepting drops */
   isActive?: boolean
@@ -137,7 +154,7 @@ export const DropZone = memo<DropZoneProps>(({
       const data = dragData ? JSON.parse(dragData) : null
 
       // Validate drop type
-      if (data?.type && !accepts.includes(data.type)) {
+      if (isDragData(data) && data.type && !accepts.includes(data.type)) {
         setValidationError(`이 영역은 ${accepts.join(', ')} 타입만 허용합니다`)
         return
       }
@@ -172,6 +189,7 @@ export const DropZone = memo<DropZoneProps>(({
       const timer = setTimeout(() => setValidationError(null), 3000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [validationError])
 
   // Determine current state
@@ -362,6 +380,9 @@ export const DropZone = memo<DropZoneProps>(({
 
 DropZone.displayName = 'DropZone'
 
+// Export all Props interfaces for external use
+export type { DragData }
+
 // ClassFlowDropZone - Specialized drop zone for student management
 export interface ClassFlowDropZoneProps extends Omit<DropZoneProps, 'accepts' | 'variant'> {
   /** Class or group ID this drop zone represents */
@@ -391,19 +412,23 @@ export const ClassFlowDropZone = memo<ClassFlowDropZoneProps>(({
   ...props
 }) => {
   const handleDrop = useCallback((event: React.DragEvent, data?: unknown) => {
-    if (data?.type === 'student') {
-      const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [data.studentId].filter(Boolean)
+    if (isDragData(data) && data.type === 'student') {
+      const studentIds = Array.isArray(data.studentIds) 
+        ? data.studentIds.filter((id): id is string => typeof id === 'string')
+        : data.studentId ? [data.studentId] : []
       onStudentsMove?.(studentIds, classId)
     }
     onDrop?.(event, data)
   }, [classId, onStudentsMove, onDrop])
 
   const validator = useCallback((data: unknown) => {
-    if (data?.type !== 'student') {
+    if (!isDragData(data) || data.type !== 'student') {
       return '학생만 이 영역으로 이동할 수 있습니다'
     }
 
-    const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [data.studentId].filter(Boolean)
+    const studentIds = Array.isArray(data.studentIds) 
+      ? data.studentIds.filter((id): id is string => typeof id === 'string')
+      : data.studentId ? [data.studentId] : []
     
     if (maxCapacity && students.length + studentIds.length > maxCapacity) {
       return `최대 ${maxCapacity}명까지만 배정할 수 있습니다`

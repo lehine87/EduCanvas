@@ -73,7 +73,7 @@ describe('usePermissions', () => {
     ]
 
     roles.forEach(({ role, expectedLevel }) => {
-      mockAuth.user = { role }
+      mockAuth.user = role ? { role } : null
       const { result } = renderHook(() => usePermissions())
       expect(result.current.roleLevel).toBe(expectedLevel)
     })
@@ -136,7 +136,11 @@ describe('useStudentPermissions', () => {
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
     mockAuth = {
-      hasPermission: vi.fn()
+      user: null,
+      hasPermission: vi.fn(),
+      isOwner: vi.fn(),
+      isAdmin: vi.fn(),
+      isInstructor: vi.fn()
     }
     useAuth.mockReturnValue(mockAuth)
   })
@@ -167,6 +171,7 @@ describe('useNavigationPermissions', () => {
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
     mockAuth = {
+      user: null,
       hasPermission: vi.fn(),
       isOwner: vi.fn(),
       isAdmin: vi.fn(),
@@ -230,7 +235,9 @@ describe('useFormPermissions', () => {
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
     mockAuth = {
+      user: null,
       hasPermission: vi.fn(),
+      isOwner: vi.fn(),
       isAdmin: vi.fn(),
       isInstructor: vi.fn()
     }
@@ -304,9 +311,11 @@ describe('useBulkOperationPermissions', () => {
   beforeEach(() => {
     const { useAuth } = require('@/contexts/AuthContext')
     mockAuth = {
+      user: null,
+      hasPermission: vi.fn(),
+      isOwner: vi.fn(),
       isAdmin: vi.fn(),
-      isInstructor: vi.fn(),
-      hasPermission: vi.fn()
+      isInstructor: vi.fn()
     }
     useAuth.mockReturnValue(mockAuth)
   })

@@ -10,17 +10,22 @@ import type {
   ComponentSize 
 } from './types'
 
-interface ButtonProps extends 
+export interface ButtonProps extends 
   BaseComponentProps, 
-  InteractiveProps, 
-  AccessibilityProps,
-  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseComponentProps | keyof InteractiveProps> {
+  InteractiveProps,
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseComponentProps | keyof InteractiveProps | 'aria-expanded'> {
   variant?: ComponentVariant
   size?: ComponentSize
   fullWidth?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   permission?: { resource: string; action: string }
+  // Accessibility props
+  'aria-label'?: string
+  'aria-describedby'?: string
+  'aria-expanded'?: boolean
+  role?: string
+  tabIndex?: number
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({

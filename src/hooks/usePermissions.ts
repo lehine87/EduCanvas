@@ -187,7 +187,7 @@ export function useSettingsPermissions() {
 
 // Navigation permissions hook
 export function useNavigationPermissions() {
-  const { resources, roleCheck } = usePermissions()
+  const { resources, isAdmin, isInstructor, isOwner } = usePermissions()
   
   return useMemo(() => ({
     canAccessDashboard: true, // All authenticated users
@@ -196,23 +196,23 @@ export function useNavigationPermissions() {
     canAccessVideos: resources.videos.canRead,
     canAccessPayments: resources.payments.canRead,
     canAccessReports: resources.reports.canRead,
-    canAccessSettings: resources.settings.canRead || roleCheck.isAdmin,
-    canAccessUserManagement: resources.users.canRead || roleCheck.isAdmin,
-    canAccessAnalytics: resources.reports.canRead || roleCheck.isInstructor,
-    canAccessSystemSettings: roleCheck.isOwner
-  }), [resources, roleCheck])
+    canAccessSettings: resources.settings.canRead || isAdmin,
+    canAccessUserManagement: resources.users.canRead || isAdmin,
+    canAccessAnalytics: resources.reports.canRead || isInstructor,
+    canAccessSystemSettings: isOwner
+  }), [resources, isAdmin, isInstructor, isOwner])
 }
 
 // Form action permissions hook
 export function useFormPermissions() {
-  const { resources, roleCheck } = usePermissions()
+  const { resources, isAdmin, isInstructor, isOwner } = usePermissions()
   
   return useMemo(() => ({
     students: {
       canCreate: resources.students.canWrite,
       canEdit: resources.students.canWrite,
       canDelete: resources.students.canDelete,
-      canBulkImport: resources.students.canWrite && roleCheck.isAdmin,
+      canBulkImport: resources.students.canWrite && isAdmin,
       canExport: resources.students.canRead
     },
     classes: {
@@ -226,30 +226,30 @@ export function useFormPermissions() {
       canUpload: resources.videos.canWrite,
       canEdit: resources.videos.canWrite,
       canDelete: resources.videos.canDelete,
-      canAssign: resources.videos.canWrite && roleCheck.isInstructor,
-      canViewAnalytics: resources.videos.canRead && roleCheck.isInstructor
+      canAssign: resources.videos.canWrite && isInstructor,
+      canViewAnalytics: resources.videos.canRead && isInstructor
     },
     payments: {
       canCreate: resources.payments.canWrite,
       canEdit: resources.payments.canWrite,
       canDelete: resources.payments.canDelete,
-      canRefund: resources.payments.canWrite && roleCheck.isAdmin,
+      canRefund: resources.payments.canWrite && isAdmin,
       canViewReports: resources.payments.canRead
     }
-  }), [resources, roleCheck])
+  }), [resources, isAdmin, isInstructor])
 }
 
 // Bulk operation permissions
 export function useBulkOperationPermissions() {
-  const { roleCheck, resources } = usePermissions()
+  const { isAdmin, isInstructor, resources } = usePermissions()
   
   return useMemo(() => ({
-    canBulkDeleteStudents: resources.students.canDelete && roleCheck.isAdmin,
+    canBulkDeleteStudents: resources.students.canDelete && isAdmin,
     canBulkUpdateStudents: resources.students.canWrite,
     canBulkEnrollStudents: resources.classes.canWrite,
-    canBulkAssignVideos: resources.videos.canWrite && roleCheck.isInstructor,
-    canBulkProcessPayments: resources.payments.canWrite && roleCheck.isAdmin,
-    canExportData: roleCheck.isAdmin,
-    canImportData: roleCheck.isAdmin
-  }), [roleCheck, resources])
+    canBulkAssignVideos: resources.videos.canWrite && isInstructor,
+    canBulkProcessPayments: resources.payments.canWrite && isAdmin,
+    canExportData: isAdmin,
+    canImportData: isAdmin
+  }), [isAdmin, isInstructor, resources])
 }

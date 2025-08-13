@@ -1,7 +1,15 @@
 // EduCanvas v2.0 Billing System Types
 // 복잡한 요금제 및 할인 정책 관리
 
-import type { BaseEntity, Json, BillingType, DiscountType, StudentStatus } from './database';
+import type { Json } from './database.types';
+import type { BillingType, DiscountType, StudentStatus } from './index';
+
+// BaseEntity 타입 정의 (공통 엔티티 필드)
+interface BaseEntity {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 // ================================================================
 // 1. COURSE PACKAGE TYPES (수강권 시스템)

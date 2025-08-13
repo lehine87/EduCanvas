@@ -25,8 +25,8 @@ export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } fr
 export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps } from './Card';
 
 // Modal Components
-export { Modal, ModalHeader, ModalBody, ModalFooter, useModal } from './Modal';
-export type { ModalProps, ModalHeaderProps, ModalBodyProps, ModalFooterProps } from './Modal';
+export { Modal, ConfirmModal, AlertModal } from './Modal';
+export type { ModalProps } from './Modal';
 
 // Table Components
 export { Table } from './Table';

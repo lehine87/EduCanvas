@@ -9,11 +9,16 @@ import { TenantListTable } from '@/components/admin/TenantListTable'
 import type { User } from '@supabase/supabase-js'
 import type { Tenant } from '@/types/auth.types'
 
+// 시스템 관리자 API에서 반환되는 확장된 테넌트 타입
+interface TenantWithUserCount extends Tenant {
+  user_count?: Array<{ count: number }>
+}
+
 export default function SystemAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [tenants, setTenants] = useState<TenantWithUserCount[]>([])
   const [isLoadingTenants, setIsLoadingTenants] = useState(false)
   const router = useRouter()
 
@@ -67,16 +72,13 @@ export default function SystemAdminPage() {
         return
       }
       
-      const data = await response.json()
+      const data: TenantWithUserCount[] = await response.json()
 
       console.log('✅ 시스템 관리자 - 테넌트 목록 로드 성공:', data?.length || 0, '개')
       console.log('📊 로드된 테넌트 데이터:', data)
-      data?.forEach((tenant: unknown) => {
-        if (tenant && typeof tenant === 'object' && 'name' in tenant && 'user_count' in tenant) {
-          const tenantObj = tenant as { name: string; user_count?: Array<{ count: number }> }
-          const count = tenantObj.user_count?.[0]?.count || 0
-          console.log(`   ${tenantObj.name}: ${count}명`)
-        }
+      data?.forEach((tenant: TenantWithUserCount) => {
+        const count = tenant.user_count?.[0]?.count || 0
+        console.log(`   ${tenant.name}: ${count}명`)
       })
       setTenants(data || [])
       
@@ -88,7 +90,12 @@ export default function SystemAdminPage() {
   }
 
   const handleTenantCreated = (newTenant: Tenant) => {
-    setTenants(prev => [newTenant, ...prev])
+    // 새로 생성된 테넌트는 user_count가 없으므로 기본값 설정
+    const tenantWithUserCount: TenantWithUserCount = {
+      ...newTenant,
+      user_count: [{ count: 0 }]
+    }
+    setTenants(prev => [tenantWithUserCount, ...prev])
     setShowCreateModal(false)
   }
 

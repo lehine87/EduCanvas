@@ -8,10 +8,9 @@ import type {
   ComponentSize 
 } from './types'
 
-interface InputProps extends 
-  BaseComponentProps, 
-  AccessibilityProps,
-  Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseComponentProps | 'size'> {
+export interface InputProps extends 
+  BaseComponentProps,
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof BaseComponentProps | 'size' | 'aria-expanded'> {
   size?: ComponentSize
   error?: string
   hint?: string
@@ -20,6 +19,12 @@ interface InputProps extends
   label?: string
   required?: boolean
   loading?: boolean
+  // Accessibility props
+  'aria-label'?: string
+  'aria-describedby'?: string
+  'aria-expanded'?: boolean
+  role?: string
+  tabIndex?: number
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -180,14 +185,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
 Input.displayName = 'Input'
 
 // Textarea component with same styling as Input
-interface TextareaProps extends 
+export interface TextareaProps extends 
   BaseComponentProps,
-  AccessibilityProps,
-  Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, keyof BaseComponentProps> {
+  Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, keyof BaseComponentProps | 'aria-expanded'> {
   label?: string
   error?: string
   hint?: string
   required?: boolean
+  // Accessibility props
+  'aria-label'?: string
+  'aria-describedby'?: string
+  'aria-expanded'?: boolean
+  role?: string
+  tabIndex?: number
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({

@@ -21,7 +21,7 @@ export interface ClassFlowStudent {
   position_in_class?: number
 }
 
-interface StudentCardProps extends BaseComponentProps, AccessibilityProps {
+export interface StudentCardProps extends BaseComponentProps, AccessibilityProps {
   student: ClassFlowStudent
   isDragging?: boolean
   isSelected?: boolean
@@ -156,7 +156,11 @@ export const StudentCard = memo<StudentCardProps>(({
             </span>
           )}
         </div>
-        <StatusBadge status={student.status} size="xs" />
+        <StatusBadge status={
+          student.status === 'graduated' ? 'success' :
+          student.status === 'transferred' ? 'inactive' :
+          student.status
+        } size="xs" />
       </div>
 
       {showDragHandle && <DragHandle />}
@@ -249,7 +253,11 @@ export const StudentCard = memo<StudentCardProps>(({
 
       {/* Status */}
       <div className="flex items-center justify-between mt-4">
-        <StatusBadge status={student.status} />
+        <StatusBadge status={
+          student.status === 'graduated' ? 'success' :
+          student.status === 'transferred' ? 'inactive' :
+          student.status
+        } />
         {student.enrollmentDate && (
           <span className="text-xs text-gray-400">
             {new Date(student.enrollmentDate).toLocaleDateString('ko-KR')}

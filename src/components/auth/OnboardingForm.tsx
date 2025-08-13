@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
 import { TenantSearchModal } from './TenantSearchModal'
 import { createClient } from '@/lib/supabase/client'
-import type { Tenant } from '@/types/app.types'
+import type { Tenant } from '@/types'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile } from '@/types/auth.types'
 
@@ -16,7 +16,7 @@ const onboardingSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
   phone: z.string().min(10, '올바른 전화번호를 입력해주세요'),
   position: z.enum(['instructor', 'staff', 'admin'], {
-    required_error: '직책을 선택해주세요',
+    message: '직책을 선택해주세요',
   }),
   specialization: z.string().optional(),
   bio: z.string().optional(),

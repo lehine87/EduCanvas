@@ -137,8 +137,8 @@ export function withApiAuth(
         )
       }
 
-      const role = tenantUser.tenant_roles?.name || 'viewer'
-      const roleLevel = tenantUser.tenant_roles?.hierarchy_level || 5
+      const role = (tenantUser as any).tenant_roles?.name || 'viewer'
+      const roleLevel = (tenantUser as any).tenant_roles?.hierarchy_level || 5
       const customPermissions = tenantUser.custom_permissions || {}
 
       // 4. Role-based access checks

@@ -1,7 +1,17 @@
 // EduCanvas v2.0 Salary System Types  
 // 복잡한 급여 정책 및 계산 시스템
 
-import type { BaseEntity, Json, SalaryPolicyType } from './database';
+import type { Json } from './database.types';
+
+// BaseEntity 타입 정의 (공통 엔티티 필드)
+interface BaseEntity {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// SalaryPolicyType 타입 정의
+type SalaryPolicyType = 'fixed' | 'hourly' | 'performance' | 'commission' | 'combination';
 
 // ================================================================
 // 1. SALARY POLICY TYPES (급여 정책 시스템)

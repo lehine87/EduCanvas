@@ -771,59 +771,33 @@ export type PerformanceMetrics = {
 }
 
 // ================================================================
-// 15. 내보내기 유틸리티
+// 15. 타입 유틸리티 요약 (문서화 목적)
 // ================================================================
 
 /**
- * 유틸리티 타입 컬렉션 (ES2015 모듈 스타일)
+ * 사용 가능한 유틸리티 타입들의 목록 (문서화 목적)
+ * 
+ * 기본 유틸리티:
+ * - DeepPartial<T>: 모든 중첩 속성을 선택적으로 만듦
+ * - DeepReadonly<T>: 모든 중첩 속성을 읽기 전용으로 만듦
+ * - DeepRequired<T>: 모든 중첩 속성을 필수로 만듦
+ * - DeepNullable<T>: 모든 속성을 null 허용으로 만듦
+ * - DeepNonNullable<T>: 모든 속성에서 null/undefined 제거
+ * 
+ * 키 기반 유틸리티:
+ * - PartialBy<T, K>: 특정 키만 선택적으로 만듦
+ * - RequiredBy<T, K>: 특정 키만 필수로 만듦
+ * - ReadonlyBy<T, K>: 특정 키만 읽기 전용으로 만듦
+ * 
+ * 값 기반 유틸리티:
+ * - PickByType<T, U>: 특정 타입의 속성만 선택
+ * - OmitByType<T, U>: 특정 타입의 속성 제외
+ * 
+ * 데이터베이스 유틸리티:
+ * - WithTenant<T>: tenant_id 추가
+ * - WithTimestamps<T>: created_at, updated_at 추가
+ * 
+ * API 유틸리티:
+ * - ApiResponse<T>: 표준 API 응답 형식
+ * - PaginatedResponse<T>: 페이지네이션 응답 형식
  */
-export type UtilityTypeCollection = {
-  // 기본 유틸리티
-  DeepPartial: typeof DeepPartial,
-  DeepReadonly: typeof DeepReadonly,
-  DeepRequired: typeof DeepRequired,
-  DeepNullable: typeof DeepNullable,
-  DeepNonNullable: typeof DeepNonNullable,
-  
-  // 키 기반
-  PartialBy: typeof PartialBy,
-  RequiredBy: typeof RequiredBy,
-  ReadonlyBy: typeof ReadonlyBy,
-  WritableBy: typeof WritableBy,
-  NullableBy: typeof NullableBy,
-  NonNullableBy: typeof NonNullableBy,
-  
-  // 값 기반
-  KeysOfType: typeof KeysOfType,
-  PickByType: typeof PickByType,
-  OmitByType: typeof OmitByType,
-  PickFunctions: typeof PickFunctions,
-  OmitFunctions: typeof OmitFunctions,
-  
-  // 배열/튜플
-  Head: typeof Head,
-  Tail: typeof Tail,
-  Length: typeof Length,
-  
-  // 함수
-  Args: typeof Args,
-  Return: typeof Return,
-  
-  // 조건부
-  IsEqual: typeof IsEqual,
-  IsNever: typeof IsNever,
-  IsUnknown: typeof IsUnknown,
-  IsAny: typeof IsAny,
-  
-  // 문자열
-  KebabToCamel: typeof KebabToCamel,
-  CamelToKebab: typeof CamelToKebab,
-  
-  // 데이터베이스
-  WithTenant: typeof WithTenant,
-  WithTimestamps: typeof WithTimestamps,
-  
-  // API
-  ApiResponse: typeof ApiResponse,
-  PaginatedResponse: typeof PaginatedResponse
-}

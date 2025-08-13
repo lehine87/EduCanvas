@@ -3,17 +3,22 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
-import type { Tenant } from '@/types/app.types'
+import type { Tenant } from '@/types'
+
+// 시스템 관리자 API에서 반환되는 확장된 테넌트 타입
+interface TenantWithUserCount extends Tenant {
+  user_count?: Array<{ count: number }>
+}
 
 interface TenantListTableProps {
-  tenants: Tenant[]
+  tenants: TenantWithUserCount[]
   isLoading: boolean
   onRefresh: () => void
-  onTenantsUpdate?: (tenants: Tenant[]) => void
+  onTenantsUpdate?: (tenants: TenantWithUserCount[]) => void
 }
 
 export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh, onTenantsUpdate }: TenantListTableProps) {
-  const [tenants, setTenants] = useState<Tenant[]>(initialTenants)
+  const [tenants, setTenants] = useState<TenantWithUserCount[]>(initialTenants)
   const [toggleLoadingStates, setToggleLoadingStates] = useState<Set<string>>(new Set())
   
   const supabase = createClient()
@@ -85,13 +90,13 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     if (tier === 'premium') {
       return <Badge variant="success">프리미엄</Badge>
     }
-    return <Badge variant="default">{tier}</Badge>
+    return <Badge variant="primary">{tier}</Badge>
   }
 
   const getStatusBadge = (isActive: boolean) => {
     return isActive 
       ? <Badge variant="success">활성</Badge>
-      : <Badge variant="danger">비활성</Badge>
+      : <Badge variant="error">비활성</Badge>
   }
 
   if (isLoading) {
@@ -123,7 +128,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'name',
       header: '학원명',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         console.log('Name column render - value:', value, 'tenant:', tenant);
         if (!tenant) return <div>-</div>;
         return (
@@ -137,7 +142,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'contact',
       header: '연락처',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant) return <div>-</div>;
         return (
           <div>
@@ -150,11 +155,11 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'subscription',
       header: '구독',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant) return <div>-</div>;
         return (
           <div className="space-y-1">
-            {getSubscriptionBadge(tenant.subscription_tier, tenant.subscription_status)}
+            {getSubscriptionBadge(tenant.subscription_tier || '', tenant.subscription_status || '')}
             {tenant.trial_ends_at && tenant.subscription_tier === 'trial' && (
               <div className="text-xs text-gray-500">
                 {formatDate(tenant.trial_ends_at)}까지
@@ -167,12 +172,16 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'users',
       header: '사용자 수',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant) return <div className="text-center">-</div>;
+        
+        // user_count 데이터 추출 (API에서 받은 형태)
+        const userCount = tenant.user_count?.[0]?.count || 0;
+        
         return (
           <div className="text-center">
             <span className="text-lg font-medium text-gray-900">
-              {tenant.user_count?.[0]?.count || 0}
+              {userCount}
             </span>
             <div className="text-xs text-gray-500">명</div>
           </div>
@@ -182,15 +191,15 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'status',
       header: '상태',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant) return <div>-</div>;
-        return getStatusBadge(tenant.is_active);
+        return getStatusBadge(tenant.is_active ?? false);
       }
     },
     {
       key: 'created_at',
       header: '생성일',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant || !tenant.created_at) return <div className="text-sm text-gray-500">-</div>;
         return (
           <div className="text-sm text-gray-500">
@@ -202,7 +211,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     {
       key: 'actions',
       header: '작업',
-      render: (value: unknown, tenant: Tenant) => {
+      render: (value: unknown, tenant: TenantWithUserCount) => {
         if (!tenant) return <div>-</div>;
         const isToggling = toggleLoadingStates.has(tenant.id);
         return (
@@ -210,11 +219,11 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleToggleStatus(tenant.id, tenant.is_active)}
+              onClick={() => handleToggleStatus(tenant.id, tenant.is_active ?? false)}
               disabled={isToggling}
               loading={isToggling}
             >
-              {tenant.is_active ? '🔴 비활성화' : '🟢 활성화'}
+              {(tenant.is_active ?? false) ? '🔴 비활성화' : '🟢 활성화'}
             </Button>
             
             <Button

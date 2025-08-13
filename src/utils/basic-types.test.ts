@@ -6,14 +6,18 @@ import { describe, test, expect } from 'vitest'
 // Test basic type imports
 import type {
   Student,
-  Class,
-  Video,
-  VideoWatchSession,
   UserStatus,
-  StudentStatus,
-  VideoStatus,
-  VideoQuality
-} from '@/types/app.types'
+  StudentStatus
+} from '@/types'
+
+import type { Database } from '@/types/database.types'
+
+// Database type aliases
+type Class = Database['public']['Tables']['classes']['Row']
+type Video = Database['public']['Tables']['videos']['Row'] 
+type VideoWatchSession = Database['public']['Tables']['video_watch_sessions']['Row']
+type VideoStatus = Database['public']['Enums']['video_status']
+type VideoQuality = Database['public']['Enums']['video_quality']
 
 // ================================================================
 // Basic Type Tests
@@ -73,61 +77,68 @@ describe('Basic Type System', () => {
       tenant_id: validUUID,
       name: 'Math Class',
       subject: 'Mathematics',
-      grade_level: 'High School',
+      grade: 'High School',
       max_students: 20,
-      current_students: 15,
+      min_students: 5,
       instructor_id: validUUID,
-      classroom: 'Room 101',
+      classroom_id: validUUID,
       color: '#FF6B6B',
-      status: 'active',
-      order_index: 1,
+      is_active: true,
       start_date: '2024-01-01',
       end_date: '2024-12-31',
-      memo: 'Advanced mathematics class',
+      description: 'Advanced mathematics class',
+      level: 'Advanced',
+      course: 'Mathematics',
+      schedule_config: null,
+      custom_fields: null,
+      created_by: validUUID,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'
     }
 
     expect(classObj.name).toBe('Math Class')
     expect(classObj.max_students).toBe(20)
-    expect(classObj.current_students).toBe(15)
+    expect(classObj.min_students).toBe(5)
   })
 
   test('should create valid YouTube video object structure', () => {
     const validUUID = '12345678-1234-1234-1234-123456789abc'
     
-    const video: YouTubeVideo = {
+    const video: Video = {
       id: validUUID,
       tenant_id: validUUID,
-      youtube_id: 'dQw4w9WgXcQ',
+      youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      youtube_video_id: 'dQw4w9WgXcQ',
       title: 'Test Video',
       description: 'A test video for mathematics',
-      duration: 300,
+      duration_seconds: 300,
       thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      channel_id: 'UC-test-channel',
-      published_at: '2024-01-01T00:00:00Z',
-      category: 'Education',
       tags: ['math', 'education', 'tutorial'],
-      quality_levels: ['720p', '1080p'],
-      captions_available: true,
+      learning_objectives: ['understand basic concepts'],
+      prerequisites: ['basic math knowledge'],
       instructor_id: validUUID,
       class_id: validUUID,
       video_type: 'lecture',
       status: 'published',
+      quality: '1080p',
       view_count: 1000,
       like_count: 50,
-      dislike_count: 2,
-      privacy_level: 'public',
-      is_age_restricted: false,
-      upload_date: '2024-01-01T00:00:00Z',
-      last_updated: '2024-01-01T12:00:00Z',
-      metadata: { quality: 'high', educational: true },
+      comment_count: 10,
+      order_index: 1,
+      is_public: true,
+      password_protected: false,
+      password_hash: null,
+      available_from: '2024-01-01T00:00:00Z',
+      available_until: null,
+      total_watch_time: 25000,
+      average_rating: 4.5,
+      created_by: validUUID,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'
     }
 
     expect(video.title).toBe('Test Video')
-    expect(video.duration).toBe(300)
+    expect(video.duration_seconds).toBe(300)
     expect(video.video_type).toBe('lecture')
     expect(video.status).toBe('published')
   })
@@ -135,35 +146,34 @@ describe('Basic Type System', () => {
   test('should create valid video progress object structure', () => {
     const validUUID = '12345678-1234-1234-1234-123456789abc'
     
-    const progress: VideoProgress = {
+    const progress: VideoWatchSession = {
       id: validUUID,
       tenant_id: validUUID,
       student_id: validUUID,
       video_id: validUUID,
-      watched_duration: 150,
-      total_duration: 300,
+      enrollment_id: validUUID,
+      session_start_time: '2024-01-01T11:00:00Z',
+      last_position_time: '2024-01-01T12:00:00Z',
+      progress_seconds: 150,
+      total_watch_time: 150,
       completion_percentage: 50,
-      last_watched_at: '2024-01-01T12:00:00Z',
-      completed_at: null,
-      watch_sessions: [],
-      notes: 'Watched halfway through',
-      quality_watched: '720p',
-      watch_speed: 1.0,
-      pause_count: 3,
-      rewind_count: 1,
-      forward_count: 0,
-      full_screen_duration: 100,
+      watch_status: 'in_progress',
+      playback_quality: '720p',
       device_type: 'desktop',
-      browser_type: 'Chrome',
+      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       ip_address: '192.168.1.1',
-      location_info: { country: 'KR', city: 'Seoul' },
+      play_count: 1,
+      is_liked: null,
+      rating: 4,
+      notes: 'Watched halfway through',
+      bookmarks: { positions: [45, 90] },
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T12:00:00Z'
     }
 
     expect(progress.completion_percentage).toBe(50)
-    expect(progress.quality_watched).toBe('720p')
-    expect(progress.watch_speed).toBe(1.0)
+    expect(progress.playback_quality).toBe('720p')
+    expect(progress.watch_status).toBe('in_progress')
   })
 })
 
@@ -182,7 +192,7 @@ describe('Type Safety', () => {
       name: 'Test',
       phone: null,
       parent_name: null,
-      parent_phone: '010-1234-5678',
+      parent_phone_1: '010-1234-5678',
       grade: null,
       class_id: null,
       status: 'active',
@@ -205,25 +215,33 @@ describe('Type Safety', () => {
     const studentWithNulls: Student = {
       id: validUUID,
       tenant_id: validUUID,
+      student_number: 'STU001',
       name: 'Test Student',
+      name_english: null,
       phone: null,
+      email: null,
       parent_name: null,
-      parent_phone: '010-1234-5678',
-      grade: null,
-      class_id: null,
+      parent_phone_1: '010-1234-5678',
+      parent_phone_2: null,
+      address: null,
+      birth_date: null,
+      gender: null,
+      grade_level: null,
+      school_name: null,
       status: 'active',
       enrollment_date: '2024-01-01',
-      graduation_date: null,
-      position_in_class: 0,
-      display_color: null,
-      memo: null,
+      emergency_contact: null,
+      custom_fields: null,
+      tags: null,
+      notes: null,
       created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
+      updated_at: '2024-01-01T00:00:00Z',
+      created_by: validUUID
     }
 
     expect(studentWithNulls.phone).toBe(null)
-    expect(studentWithNulls.grade).toBe(null)
-    expect(studentWithNulls.class_id).toBe(null)
+    expect(studentWithNulls.grade_level).toBe(null)
+    expect(studentWithNulls.email).toBe(null)
   })
 
   test('should validate enum constraints', () => {

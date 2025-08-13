@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Modal, Button, Input } from '@/components/ui'
-import type { Tenant } from '@/types/app.types'
+import type { Tenant } from '@/types'
 
 const tenantSchema = z.object({
   name: z.string().min(2, '학원명은 2자 이상이어야 합니다'),
@@ -75,7 +75,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
 
     } catch (error) {
       console.error('테넌트 생성 과정 오류:', error)
-      setError(error.message || '테넌트 생성 중 오류가 발생했습니다.')
+      setError(error instanceof Error ? error.message : '테넌트 생성 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -244,7 +244,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
                 <div className="flex items-center space-x-2">
                   <p className="font-medium font-mono">{createdData?.tenant?.tenant_code}</p>
                   <button
-                    onClick={() => copyToClipboard(createdData?.tenant?.tenant_code)}
+                    onClick={() => createdData?.tenant?.tenant_code && copyToClipboard(createdData.tenant.tenant_code)}
                     className="text-blue-600 hover:text-blue-500"
                     title="복사"
                   >
@@ -261,7 +261,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
                 <div className="flex items-center space-x-2">
                   <p className="font-medium">{createdData?.admin?.email}</p>
                   <button
-                    onClick={() => copyToClipboard(createdData?.admin?.email)}
+                    onClick={() => createdData?.admin?.email && copyToClipboard(createdData.admin.email)}
                     className="text-blue-600 hover:text-blue-500"
                     title="복사"
                   >
@@ -280,7 +280,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
                 {createdData?.admin?.tempPassword}
               </code>
               <button
-                onClick={() => copyToClipboard(createdData?.admin?.tempPassword)}
+                onClick={() => createdData?.admin?.tempPassword && copyToClipboard(createdData.admin.tempPassword)}
                 className="text-yellow-600 hover:text-yellow-500"
                 title="복사"
               >

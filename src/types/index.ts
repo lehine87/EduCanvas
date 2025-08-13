@@ -6,253 +6,110 @@
 // ================================================================
 // 1. 핵심 데이터베이스 타입들 (최우선)
 // ================================================================
-export * from './database'
-export * from './database.types'
+import type { Database, Json } from './database.types'
+export type { Database, Json } from './database.types'
 
 // ================================================================
-// 2. 인증 및 보안 시스템 타입들
+// 2. 도메인별 핵심 타입들
 // ================================================================
-export * from './auth.types'
+// Database table types (from Supabase generated types)
+export type Student = Database['public']['Tables']['students']['Row']
+export type StudentInsert = Database['public']['Tables']['students']['Insert']
+export type StudentUpdate = Database['public']['Tables']['students']['Update']
 
-// 핵심 인증 타입 가드들 재export
-export {
-  // 기본 검증
-  isValidUserProfile,
-  hasTenantId,
-  hasRole,
-  isActiveUser,
-  isEmailVerified,
-  
-  // 역할 검증
-  isSystemAdmin,
-  isTenantAdmin,
-  isInstructor,
-  isStaff,
-  
-  // 권한 검증
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-  canAccessTenant,
-  isSameTenant,
-  
-  // 테넌트 검증
-  isValidTenant,
-  isActiveTenant,
-  
-  // JWT 검증
-  isValidJWTPayload,
-  isJWTExpired,
-  
-  // 유틸리티 함수들
-  maskUserProfile,
-  getUserDisplayInfo,
-  createPermissionResult,
-  createSecurityContext,
-  
-  // 상수들
-  DEFAULT_PERMISSIONS,
-  ROLE_HIERARCHY,
-  SESSION_EXPIRY
-} from './auth.types'
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']
+export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update']
 
-// ================================================================
-// 3. 학생 관리 타입들
-// ================================================================
-export * from './student.types'
+export type Tenant = Database['public']['Tables']['tenants']['Row']
+export type TenantInsert = Database['public']['Tables']['tenants']['Insert']
+export type TenantUpdate = Database['public']['Tables']['tenants']['Update']
 
-// 학생 타입 가드들 재export
-export {
-  isValidStudent,
-  isClassFlowStudent,
-  isActiveStudent,
-  isSearchableStudent
-} from './student.types'
+export type Instructor = Database['public']['Tables']['instructors']['Row']
+export type Course = Database['public']['Tables']['courses']['Row']
+export type CoursePackage = Database['public']['Tables']['course_packages']['Row']
+export type StudentEnrollment = Database['public']['Tables']['student_enrollments']['Row']
 
-// ================================================================
-// 4. API 시스템 타입들 (완전 체계화)
-// ================================================================
-export * from './api'
-
-// API 에러 코드들 재export
-export {
-  API_ERROR_CODES
-} from './api'
-
-// ================================================================
-// 5. UI 컴포넌트 타입들 (완전 체계화)
-// ================================================================
-export * from './ui.types'
-
-// ================================================================
-// 6. 에러 처리 시스템 타입들 (완전 체계화)
-// ================================================================
-export * from './error.types'
-
-// 에러 코드들 재export
-export {
-  ERROR_CODES
-} from './error.types'
-
-// ================================================================
-// 7. 애플리케이션 레벨 특화 타입들
-// ================================================================
-export * from './app.types'
-
-// ClassFlow 및 비디오 상수들 재export
-export {
-  CLASSFLOW_ACTIONS,
-  VIDEO_EVENTS
-} from './app.types'
-
-// ================================================================
-// 8. 유틸리티 타입 시스템 (완전 체계화)
-// ================================================================
-export * from './utility.types'
-
-// 유틸리티 타입 컬렉션 재export
+// Enum types
 export type {
-  UtilityTypeCollection
+  StudentStatus,
+  UserRole,
+  BillingType,
+  PaymentStatus,
+  PaymentMethod,
+  AttendanceStatus
+} from './database'
+
+// Utility types
+export type UserStatus = Database['public']['Enums']['user_status']
+export type CreateEnrollmentRequest = StudentEnrollment // Simplified for now
+export type ClassFlowStudent = Student & { position?: { x: number; y: number } }
+
+// ================================================================
+// 3. UI 및 컴포넌트 타입들
+// ================================================================
+export type {
+  ComponentVariant,
+  ComponentSize,
+  BaseComponentProps,
+  InteractiveProps,
+  AccessibilityProps,
+  FormFieldState,
+  StatusType,
+  TableColumn,
+  TableProps,
+  ButtonProps,
+  InputProps,
+  ModalProps,
+  BadgeProps,
+  CardProps
+} from '../components/ui/types'
+
+// ================================================================
+// 4. 유틸리티 타입들
+// ================================================================
+export type {
+  DeepPartial,
+  DeepReadonly,
+  DeepRequired,
+  DeepNullable,
+  DeepNonNullable,
+  PartialBy,
+  RequiredBy,
+  ReadonlyBy,
+  WritableBy,
+  NullableBy,
+  NonNullableBy,
+  KeysOfType,
+  PickByType,
+  OmitByType,
+  PickFunctions,
+  OmitFunctions,
+  Head,
+  Tail,
+  Length,
+  Args,
+  Return,
+  IsEqual,
+  IsNever,
+  IsUnknown,
+  IsAny,
+  KebabToCamel,
+  CamelToKebab,
+  WithTenant,
+  WithTimestamps,
+  ApiResponse,
+  PaginatedResponse
 } from './utility.types'
 
 // ================================================================
-// 9. 빌링 시스템 타입들
+// 5. 애플리케이션 레벨 타입들
 // ================================================================
-export * from './billing'
-
-// ================================================================
-// 10. 급여 시스템 타입들
-// ================================================================  
-export * from './salary'
-
-// ================================================================
-// 11. 클래스 관리 타입들
-// ================================================================
-export * from './classes'
-
-// ================================================================
-// 12. 환경 변수 타입들
-// ================================================================
-export * from './env.d'
-
-// ================================================================
-// DEPRECATED - 레거시 타입들 (제거됨)
-// ================================================================
-// 다음 파일들은 v4.1 리팩터링에서 제거되었습니다:
-// - './auth.ts' -> './auth.types.ts'로 통합
-// - './students.ts' -> './student.types.ts'로 통합
-// - './supabase.ts' -> './database.types.ts'로 대체
-// - './database-updated.ts' -> 중복 제거
-
-// ================================================================
-// 타입 시스템 메타데이터
-// ================================================================
-
-/**
- * EduCanvas 타입 시스템 버전 정보
- */
-export const TYPE_SYSTEM_INFO = {
-  version: '4.1.0',
-  lastUpdated: '2025-08-12',
-  features: [
-    'Database-First 타입 시스템',
-    'Zero Any Policy 준수', 
-    'Type-Guard First 런타임 안전성',
-    'Centralized-First 타입 관리',
-    '완전 API 타입 체계',
-    '포괄적 UI 컴포넌트 타입',
-    '완전 에러 처리 시스템',
-    '고급 유틸리티 타입들'
-  ],
-  totalTypes: '500+',
-  typeGuards: 30,
-  errorTypes: 50,
-  utilityTypes: 80
-} as const
-
-/**
- * 타입 시스템 건강성 체크
- */
-export type TypeSystemHealthCheck = {
-  databaseTypesSync: boolean
-  authGuardsComplete: boolean
-  apiTypesComplete: boolean
-  errorHandlingComplete: boolean
-  uiTypesComplete: boolean
-  utilityTypesComplete: boolean
-  noAnyTypes: boolean
-  noLegacyTypes: boolean
+export type SearchParams = Record<string, string | string[] | undefined>
+export type SortDirection = 'asc' | 'desc'
+export type FilterValue = string | number | boolean | null
+export type PaginationParams = {
+  page: number
+  limit: number
+  offset: number
 }
-
-/**
- * 개발자용 타입 참조 가이드
- */
-export type TypeReferenceGuide = {
-  // 기본 엔티티 타입들
-  entities: {
-    User: 'auth.types.ts -> UserProfile',
-    Student: 'student.types.ts -> Student', 
-    Class: 'database.types.ts -> Classes Row',
-    Payment: 'database.types.ts -> Payments Row',
-    Enrollment: 'database.types.ts -> StudentEnrollments Row'
-  },
-  
-  // API 타입들
-  api: {
-    requests: 'api.ts -> *Request interfaces',
-    responses: 'api.ts -> *Response interfaces', 
-    errors: 'api.ts -> ApiError, ApiErrorResponse',
-    pagination: 'api.ts -> PaginatedApiResponse'
-  },
-  
-  // UI 컴포넌트 타입들
-  ui: {
-    components: 'ui.types.ts -> *Props interfaces',
-    forms: 'ui.types.ts -> Form* interfaces',
-    tables: 'ui.types.ts -> Table* interfaces',
-    theme: 'ui.types.ts -> Theme interface'
-  },
-  
-  // 에러 처리
-  errors: {
-    base: 'error.types.ts -> BaseError, DetailedError',
-    specific: 'error.types.ts -> ValidationError, AuthenticationError, etc.',
-    handlers: 'error.types.ts -> ErrorHandler, ErrorRecoveryStrategy'
-  },
-  
-  // 유틸리티 타입들
-  utilities: {
-    deep: 'utility.types.ts -> DeepPartial, DeepReadonly, etc.',
-    conditional: 'utility.types.ts -> IsEqual, IsNever, etc.',
-    database: 'utility.types.ts -> WithTenant, WithTimestamps, etc.',
-    strings: 'utility.types.ts -> CamelToKebab, KebabToCamel, etc.'
-  }
-}
-
-// ================================================================
-// 타입 시스템 성공 메트릭스
-// ================================================================
-
-/**
- * 타입 안전성 메트릭스
- */
-export const TYPE_SAFETY_METRICS = {
-  anyUsage: 0, // Zero Any Policy 달성
-  strictModeCompliant: true,
-  typeGuardCoverage: '95%',
-  runtimeSafetyScore: 'A+',
-  databaseSyncScore: '100%',
-  legacyTypeCount: 0
-} as const
-
-/**
- * 개발자 경험 메트릭스  
- */
-export const DEVELOPER_EXPERIENCE_METRICS = {
-  autoCompleteAccuracy: '98%',
-  typeErrorReduction: '87%',
-  refactoringSupport: 'Excellent',
-  documentationCoverage: '100%',
-  learningCurve: 'Gentle',
-  performanceImpact: 'Minimal'
-} as const

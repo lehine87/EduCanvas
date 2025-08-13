@@ -12,7 +12,6 @@ import {
   isVideoWatchSession,
   isCoursePackage,
   isClassFlowStudent,
-  isVideoWatchSession,
   isUUID,
   isUserStatus,
   isStudentStatus,
@@ -52,23 +51,32 @@ import {
 } from './typeGuards'
 
 import type {
+  ClassFlowStudent
+} from '@/types/app.types'
+
+import type {
   Student,
-  StudentInsert,
-  Class,
   Tenant,
-  Instructor,
-  Video,
-  VideoWatchSession,
-  CoursePackage,
-  ClassFlowStudent,
-  VideoWatchSession,
   UserStatus,
   StudentStatus,
-  BillingType,
-  VideoStatus,
-  VideoQuality,
-  PermissionAction
-} from '@/types/app.types'
+  BillingType
+} from '@/types'
+
+import type { Database } from '@/types/database.types'
+
+// Database type aliases for testing
+type Tables = Database['public']['Tables']
+type Enums = Database['public']['Enums']
+
+type StudentInsert = Tables['students']['Insert']
+type Class = Tables['classes']['Row']
+type Instructor = Tables['instructors']['Row']
+type Video = Tables['videos']['Row']
+type VideoWatchSession = Tables['video_watch_sessions']['Row']
+type CoursePackage = Tables['course_packages']['Row']
+type VideoStatus = Enums['video_status']
+type VideoQuality = Enums['video_quality']
+type PermissionAction = 'read' | 'write' | 'delete' | 'admin'
 
 // ================================================================
 // Test Data Fixtures
@@ -80,28 +88,37 @@ const invalidUUID = 'invalid-uuid'
 const validStudent: Student = {
   id: validUUID,
   tenant_id: validUUID,
+  student_number: 'STU001',
   name: 'Test Student',
+  name_english: 'Test Student EN',
   phone: '010-1234-5678',
+  email: 'test@example.com',
   parent_name: 'Test Parent',
-  parent_phone: '010-9876-5432',
-  grade: '고2',
-  class_id: validUUID,
+  parent_phone_1: '010-9876-5432',
+  parent_phone_2: null,
+  address: '서울시 강남구',
+  birth_date: '2005-01-01',
+  gender: 'M',
+  grade_level: '고2',
+  school_name: 'Test High School',
   status: 'active',
   enrollment_date: '2024-01-01',
-  graduation_date: null,
-  position_in_class: 1,
-  display_color: '#3B82F6',
-  memo: 'Test memo',
+  emergency_contact: null,
+  custom_fields: null,
+  tags: null,
+  notes: 'Test memo',
   created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z'
+  updated_at: '2024-01-01T00:00:00Z',
+  created_by: validUUID
 }
 
 const validStudentInsert: StudentInsert = {
   tenant_id: validUUID,
+  student_number: 'STU002',
   name: 'New Student',
-  parent_phone: '010-1111-2222',
+  parent_phone_1: '010-1111-2222',
   phone: '010-3333-4444',
-  grade: '중1',
+  grade_level: '중1',
   status: 'active'
 }
 
@@ -110,26 +127,30 @@ const validClass: Class = {
   tenant_id: validUUID,
   name: 'Math Class',
   subject: 'Mathematics',
-  grade_level: 'High School',
+  course: 'Advanced Mathematics',
+  grade: 'High School',
+  level: 'Advanced',
+  description: 'Advanced mathematics class',
   max_students: 20,
-  current_students: 15,
+  min_students: 5,
   instructor_id: validUUID,
-  classroom: 'Room 101',
+  classroom_id: validUUID,
   color: '#FF6B6B',
-  status: 'active',
-  order_index: 1,
+  is_active: true,
   start_date: '2024-01-01',
   end_date: '2024-12-31',
-  memo: 'Advanced mathematics class',
+  schedule_config: null,
+  custom_fields: null,
   created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z'
+  updated_at: '2024-01-01T00:00:00Z',
+  created_by: validUUID
 }
 
 const validVideo: Video = {
   id: validUUID,
   tenant_id: validUUID,
-  youtube_video_id: 'dQw4w9WgXcQ',
   youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  youtube_video_id: 'dQw4w9WgXcQ',
   title: 'Test Video',
   description: 'A test video for mathematics',
   duration_seconds: 300,
@@ -290,7 +311,7 @@ describe('Entity Type Guards', () => {
   })
 
   test('should validate valid video watch session object', () => {
-    expect(isVideoWatchSession(validVideoWatchSession)).toBe(true)
+    expect(isVideoWatchSession(validVideoWatchSessionData)).toBe(true)
   })
 })
 
@@ -500,7 +521,7 @@ describe('Zod Schema Compilation', () => {
   })
 
   test('should compile VideoWatchSession schema without errors', () => {
-    expect(ValidationSchemas.VideoWatchSession.safeParse(validVideoWatchSession).success).toBe(true)
+    expect(ValidationSchemas.VideoWatchSession.safeParse(validVideoWatchSessionData).success).toBe(true)
   })
 })
 

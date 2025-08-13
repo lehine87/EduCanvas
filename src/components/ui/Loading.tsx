@@ -4,7 +4,7 @@ import React from 'react'
 import { cn } from '@/utils/cn'
 import type { BaseComponentProps, ComponentSize } from './types'
 
-interface LoadingProps extends BaseComponentProps {
+export interface LoadingProps extends BaseComponentProps {
   size?: ComponentSize
   overlay?: boolean
   text?: string
@@ -159,7 +159,7 @@ export function Loading({
 }
 
 // Skeleton Loading Component
-interface SkeletonProps extends BaseComponentProps {
+export interface SkeletonProps extends BaseComponentProps {
   width?: string | number
   height?: string | number
   variant?: 'text' | 'rectangular' | 'circular' | 'rounded'
@@ -247,7 +247,7 @@ export function CardSkeleton({ className, ...props }: BaseComponentProps) {
 }
 
 // Table Skeleton - for loading table layouts  
-interface TableSkeletonProps extends BaseComponentProps {
+export interface TableSkeletonProps extends BaseComponentProps {
   rows?: number
   columns?: number
 }
@@ -286,7 +286,7 @@ export function TableSkeleton({
 }
 
 // List Skeleton - for loading list layouts
-interface ListSkeletonProps extends BaseComponentProps {
+export interface ListSkeletonProps extends BaseComponentProps {
   items?: number
   showAvatar?: boolean
 }

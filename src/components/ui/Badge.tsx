@@ -8,13 +8,14 @@ import type {
   ComponentSize 
 } from './types'
 
-interface BadgeProps extends BaseComponentProps {
+export interface BadgeProps extends BaseComponentProps {
   variant?: ComponentVariant | 'success' | 'warning' | 'error' | 'info'
   size?: ComponentSize
   removable?: boolean
   onRemove?: () => void
   icon?: React.ReactNode
   dot?: boolean
+  style?: React.CSSProperties
 }
 
 export function Badge({ 
@@ -26,6 +27,7 @@ export function Badge({
   onRemove,
   icon,
   dot = false,
+  style,
   'data-testid': testId,
   ...props
 }: BadgeProps) {
@@ -41,6 +43,7 @@ export function Badge({
     warning: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
     error: 'bg-red-100 text-red-800 border border-red-200',
     ghost: 'bg-transparent text-gray-600 border border-gray-300',
+    outline: 'bg-transparent text-gray-700 border border-gray-300',
     info: 'bg-blue-100 text-blue-800 border border-blue-200'
   }
   
@@ -67,6 +70,7 @@ export function Badge({
     warning: 'bg-yellow-600',
     error: 'bg-red-600',
     ghost: 'bg-gray-400',
+    outline: 'bg-gray-600',
     info: 'bg-blue-600'
   }
 
@@ -79,6 +83,7 @@ export function Badge({
         removable && 'pr-1',
         className
       )}
+      style={style}
       data-testid={testId}
       {...props}
     >
@@ -132,7 +137,7 @@ export function Badge({
 }
 
 // Status Badge - specialized badge for status indication
-interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
+export interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   status: 'active' | 'inactive' | 'pending' | 'suspended' | 'success' | 'warning' | 'error'
 }
 
@@ -165,7 +170,7 @@ export function StatusBadge({
 }
 
 // Count Badge - for displaying counts (notifications, etc.)
-interface CountBadgeProps extends Omit<BadgeProps, 'children' | 'size'> {
+export interface CountBadgeProps extends Omit<BadgeProps, 'children' | 'size'> {
   count: number
   max?: number
   showZero?: boolean
@@ -203,7 +208,7 @@ export function CountBadge({
 }
 
 // Tag Badge - for tagging/labeling
-interface TagBadgeProps extends BadgeProps {
+export interface TagBadgeProps extends BadgeProps {
   color?: string
 }
 

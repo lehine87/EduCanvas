@@ -607,8 +607,10 @@ export type Database = {
       instructors: {
         Row: {
           bank_account: string | null
+          bio: string | null
           created_at: string | null
           email: string | null
+          emergency_contact: string | null
           hire_date: string | null
           id: string
           memo: string | null
@@ -623,8 +625,10 @@ export type Database = {
         }
         Insert: {
           bank_account?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
+          emergency_contact?: string | null
           hire_date?: string | null
           id?: string
           memo?: string | null
@@ -639,8 +643,10 @@ export type Database = {
         }
         Update: {
           bank_account?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
+          emergency_contact?: string | null
           hire_date?: string | null
           id?: string
           memo?: string | null

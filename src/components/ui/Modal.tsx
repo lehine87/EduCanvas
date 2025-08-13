@@ -6,7 +6,7 @@ import { cn } from '@/utils/cn'
 import { Button } from './Button'
 import type { BaseComponentProps, AccessibilityProps, ComponentSize } from './types'
 
-interface ModalProps extends BaseComponentProps, AccessibilityProps {
+export interface ModalProps extends BaseComponentProps, AccessibilityProps {
   isOpen: boolean
   onClose: () => void
   title?: string
@@ -62,6 +62,8 @@ export function Modal({
         }
       }
     }
+    
+    return undefined // Explicit return for when isOpen is false
   }, [isOpen])
 
   useEffect(() => {
@@ -104,6 +106,8 @@ export function Modal({
         document.removeEventListener('keydown', handleFocusTrap)
       }
     }
+    
+    return undefined // Explicit return for when isOpen is false
   }, [isOpen, closable, closeOnEscape, onClose])
 
   if (!isOpen) return null
