@@ -225,6 +225,27 @@ export const useAuth = () => {
     isSessionValid 
   } = useAuthStore()
   
+  // Vercel 환경에서 useAuth 호출 상태 로깅
+  React.useEffect(() => {
+    const isVercel = typeof window !== 'undefined' && 
+      process.env.NODE_ENV === 'production' && 
+      window.location.hostname.includes('vercel.app')
+    
+    if (isVercel) {
+      console.log(`🔐 [VERCEL-AUTH] useAuth STATE:`, {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        loading,
+        initialized,
+        userEmail: user?.email,
+        profileRole: profile?.role,
+        profileStatus: profile?.status,
+        isSessionValid: isSessionValid(),
+        timestamp: new Date().toISOString()
+      })
+    }
+  }, [user, profile, loading, initialized])
+  
   return {
     user,
     profile,

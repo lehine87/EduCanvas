@@ -16,8 +16,39 @@ export default function AdminPage() {
     window.location.hostname.includes('vercel.app')
   const requestId = Math.random().toString(36).substring(7)
 
+  // 즉시 로그 출력 (컴포넌트 생성 시점) - 조건 없이 항상 출력
+  if (typeof window !== 'undefined') {
+    console.log(`🏠 [ADMIN-ALWAYS] ADMIN PAGE CREATED:`, {
+      timestamp: new Date().toISOString(),
+      isVercel,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      currentPath: window.location.pathname,
+      userAgent: navigator.userAgent.substring(0, 50),
+      nodeEnv: process.env.NODE_ENV,
+      hostname: window.location.hostname
+    })
+    
+    // 강제로 브라우저 콘솔에 출력
+    console.error(`🚨 [FORCE-LOG] ADMIN COMPONENT DEFINITELY LOADED`)
+    console.warn(`⚠️ [FORCE-LOG] USER STATE:`, { user: !!user, profile: !!profile })
+  }
+
   // 페이지 진입 시 상태 로깅
   useEffect(() => {
+    // 조건 없이 항상 로그 출력
+    console.log(`🎯 [ADMIN-EFFECT] PAGE ENTRY EFFECT:`, {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      profileStatus: profile?.status,
+      profileTenantId: profile?.tenant_id,
+      currentPath: typeof window !== 'undefined' ? window.location.pathname : 'server-side',
+      timestamp: new Date().toISOString(),
+      isVercel
+    })
+    
     if (isVercel) {
       console.log(`🎯 [VERCEL-ADMIN-${requestId}] PAGE ENTRY:`, {
         hasUser: !!user,
@@ -34,8 +65,22 @@ export default function AdminPage() {
 
   // 역할별 자동 리다이렉트
   useEffect(() => {
-    if (!profile) return
+    // 강제 로그 출력
+    console.log(`🔄 [REDIRECT-EFFECT] REDIRECT LOGIC TRIGGERED:`, {
+      hasProfile: !!profile,
+      profileRole: profile?.role,
+      profileEmail: profile?.email,
+      profileStatus: profile?.status,
+      tenantId: profile?.tenant_id,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (!profile) {
+      console.log(`❌ [REDIRECT-EFFECT] NO PROFILE - EARLY RETURN`)
+      return
+    }
 
+    console.log(`✅ [REDIRECT-EFFECT] PROFILE EXISTS - STARTING REDIRECT LOGIC`)
     setIsRedirecting(true)
 
     // 시스템 관리자인 경우
@@ -53,6 +98,14 @@ export default function AdminPage() {
       }
       
       router.push('/system-admin')
+      
+      if (isVercel) {
+        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
+          destination: '/system-admin',
+          reason: 'system admin redirect'
+        })
+      }
+      
       return
     }
 
@@ -70,6 +123,14 @@ export default function AdminPage() {
       }
       
       router.push('/tenant-admin')
+      
+      if (isVercel) {
+        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
+          destination: '/tenant-admin',
+          reason: 'tenant admin redirect'
+        })
+      }
+      
       return
     }
 
@@ -87,6 +148,14 @@ export default function AdminPage() {
       }
       
       router.push('/tenant-admin')
+      
+      if (isVercel) {
+        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
+          destination: '/tenant-admin',
+          reason: 'user redirect'
+        })
+      }
+      
       return
     }
 
@@ -111,6 +180,14 @@ export default function AdminPage() {
         }
         
         router.push('/pending-approval')
+        
+        if (isVercel) {
+          console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
+            destination: '/pending-approval',
+            reason: 'pending approval redirect'
+          })
+        }
+        
         return
       }
 
@@ -127,6 +204,14 @@ export default function AdminPage() {
         }
         
         router.push('/onboarding')
+        
+        if (isVercel) {
+          console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
+            destination: '/onboarding',
+            reason: 'onboarding redirect'
+          })
+        }
+        
         return
       }
     }
