@@ -115,41 +115,161 @@ export async function middleware(request: NextRequest) {
   // 인증된 사용자가 auth 페이지에 접근하는 경우
   if (isAuthPath && session && isSessionValid) {
     const next = url.searchParams.get('next')
-    const redirectUrl = new URL(next || '/admin', request.url)
+    const error = url.searchParams.get('error')
+    const retry = url.searchParams.get('retry')
+    
+    // 에러 상태인 경우 리다이렉트하지 않고 로그인 페이지 유지
+    if (error === 'profile-error' || error === 'account-suspended') {
+      console.log('⚠️ 에러 상태로 로그인 페이지 유지:', { error, retry })
+      const securedResponse = NextResponse.next()
+      Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+        securedResponse.headers.set(key, value)
+      })
+      return securedResponse
+    }
+    
+    // 안전한 리다이렉트 경로 검증 (무한 루프 방지)
+    let redirectPath = next || '/admin'
+    
+    // 위험한 리다이렉트 경로들을 필터링
+    const dangerousPaths = ['/auth/login', '/auth/signup', '/auth/reset-password']
+    if (next && (!next.startsWith('/') || dangerousPaths.includes(next))) {
+      redirectPath = '/admin'
+    }
+    
+    // 현재 경로와 동일한 리다이렉트 방지
+    if (redirectPath === url.pathname) {
+      redirectPath = '/admin'
+    }
+    
+    console.log('✅ 인증된 사용자 안전 리다이렉트:', { 
+      from: url.pathname, 
+      to: redirectPath,
+      originalNext: next
+    })
+    
+    const redirectUrl = new URL(redirectPath, request.url)
     return Response.redirect(redirectUrl.toString())
   }
 
   // 역할 기반 접근 제어 (추가 보안)
   if (isProtectedPath && session && isSessionValid) {
     try {
-      // 사용자 프로필 확인 (선택적 - 성능상 캐시된 정보 사용 권장)
-      const { data: profile } = await supabase
+      // 리다이렉트 루프 방지: 이미 에러가 있는 경우 스킵
+      const hasProfileError = url.searchParams.get('error') === 'profile-error'
+      const hasAccountSuspended = url.searchParams.get('error') === 'account-suspended'
+      
+      if (hasProfileError || hasAccountSuspended) {
+        console.log('⚠️ 프로필 에러 상태로 프로필 검증 스킵:', url.searchParams.get('error'))
+        // 에러 상태에서는 프로필 검증을 스킵하여 무한 루프 방지
+        const securedResponse = NextResponse.next()
+        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+          securedResponse.headers.set(key, value)
+        })
+        return securedResponse
+      }
+
+      // 프로필 확인 타임아웃 설정 (3초)
+      const profilePromise = supabase
         .from('user_profiles')
         .select('role, status, tenant_id')
         .eq('id', session.user.id)
         .single()
 
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+      )
+
+      const { data: profile, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]).catch((error: unknown) => {
+        console.warn('⏰ 프로필 조회 타임아웃 또는 실패:', error)
+        return { data: null, error }
+      })
+
+      // 프로필이 없거나 조회 실패 시 기본 접근 허용 (관리자 계정 보호)
+      if (profileError || !profile) {
+        const isSystemAdmin = ['admin@test.com', 'sjlee87@kakao.com'].includes(session.user.email || '')
+        
+        if (isSystemAdmin) {
+          console.log('🔧 시스템 관리자 프로필 조회 실패, 기본 접근 허용:', session.user.email)
+          // 시스템 관리자는 프로필 없어도 접근 허용
+          const securedResponse = NextResponse.next()
+          Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+            securedResponse.headers.set(key, value)
+          })
+          return securedResponse
+        } else {
+          console.warn('🚨 일반 사용자 프로필 확인 실패:', { 
+            userId: session.user.id, 
+            email: session.user.email,
+            error: profileError 
+          })
+          
+          // 프로필 확인 실패 시 에러 매개변수와 함께 리다이렉트 (한 번만)
+          const redirectUrl = new URL('/auth/login', request.url)
+          redirectUrl.searchParams.set('error', 'profile-error')
+          redirectUrl.searchParams.set('retry', 'true')
+          return Response.redirect(redirectUrl.toString())
+        }
+      }
+
       // 비활성 사용자 차단
-      if (profile?.status === 'inactive') {
+      if (profile.status === 'inactive') {
         console.warn('🚨 비활성 사용자 접근:', { userId: session.user.id, status: profile.status })
-        const redirectUrl = new URL('/auth/login?error=account-suspended', request.url)
+        const redirectUrl = new URL('/auth/login', request.url)
+        redirectUrl.searchParams.set('error', 'account-suspended')
         return Response.redirect(redirectUrl.toString())
       }
 
       // system-admin 경로는 system_admin 역할만 접근 가능
-      if (url.pathname.startsWith('/system-admin') && profile?.role !== 'system_admin') {
+      if (url.pathname.startsWith('/system-admin') && profile.role !== 'system_admin') {
         console.warn('🚨 권한 없는 시스템 관리자 페이지 접근:', { 
           userId: session.user.id, 
-          role: profile?.role 
+          role: profile.role 
         })
         const redirectUrl = new URL('/unauthorized', request.url)
         return Response.redirect(redirectUrl.toString())
       }
-    } catch (error) {
-      console.error('🚨 프로필 확인 실패:', error)
-      // 프로필 확인 실패 시 로그인 페이지로 리다이렉트
-      const redirectUrl = new URL('/auth/login?error=profile-error', request.url)
-      return Response.redirect(redirectUrl.toString())
+
+      console.log('✅ 프로필 검증 성공:', { 
+        userId: session.user.id, 
+        role: profile.role, 
+        status: profile.status 
+      })
+
+    } catch (error: unknown) {
+      console.error('🚨 프로필 확인 예외:', error)
+      
+      // 시스템 관리자는 예외 상황에서도 접근 허용
+      const isSystemAdmin = ['admin@test.com', 'sjlee87@kakao.com'].includes(session.user.email || '')
+      
+      if (isSystemAdmin) {
+        console.log('🔧 시스템 관리자 예외 상황 접근 허용:', session.user.email)
+        const securedResponse = NextResponse.next()
+        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+          securedResponse.headers.set(key, value)
+        })
+        return securedResponse
+      }
+      
+      // 일반 사용자는 에러 리다이렉트 (한 번만)
+      const hasRetry = url.searchParams.get('retry') === 'true'
+      if (!hasRetry) {
+        const redirectUrl = new URL('/auth/login', request.url)
+        redirectUrl.searchParams.set('error', 'profile-error')
+        redirectUrl.searchParams.set('retry', 'true')
+        return Response.redirect(redirectUrl.toString())
+      } else {
+        // 재시도도 실패한 경우 기본 접근 허용 (무한 루프 방지)
+        console.warn('⚠️ 프로필 확인 재시도 실패, 기본 접근 허용')
+        const securedResponse = NextResponse.next()
+        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+          securedResponse.headers.set(key, value)
+        })
+        return securedResponse
+      }
     }
   }
 
