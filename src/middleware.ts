@@ -33,18 +33,33 @@ const SECURITY_HEADERS = {
 export async function middleware(request: NextRequest) {
   const clientIP = getClientIP(request)
   const { supabase, response } = createClient(request)
+  
+  // 🔍 상세 디버깅 로그 (리다이렉트 루프 분석용)
+  console.log('🔍 Middleware 시작:', {
+    method: request.method,
+    path: request.nextUrl.pathname,
+    searchParams: Object.fromEntries(request.nextUrl.searchParams.entries()),
+    userAgent: request.headers.get('user-agent')?.substring(0, 100),
+    referer: request.headers.get('referer'),
+    timestamp: new Date().toISOString()
+  })
 
-  // 전역 Rate Limiting (DDoS 방지 - 개발환경에서는 완화)
+  // 전역 Rate Limiting (DDoS 방지 - 리다이렉트 루프 해결까지 일시 완화)
   if (process.env.NODE_ENV === 'production') {
     const globalRateLimit = rateLimiter.checkAndRecord(
       `global:${clientIP}`,
-      60, // 분당 60회
+      300, // 분당 300회로 일시 완화 (리다이렉트 루프 대응)
       60 * 1000, // 1분 윈도우
       5 * 60 * 1000 // 5분 차단
     )
 
     if (!globalRateLimit.allowed) {
-      console.warn('🚨 전역 Rate limit 초과:', { ip: clientIP, path: request.nextUrl.pathname })
+      console.warn('🚨 전역 Rate limit 초과:', { 
+        ip: clientIP, 
+        path: request.nextUrl.pathname,
+        userAgent: request.headers.get('user-agent'),
+        referer: request.headers.get('referer')
+      })
       return createRateLimitResponse(
         globalRateLimit.retryAfter!,
         '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
@@ -57,6 +72,13 @@ export async function middleware(request: NextRequest) {
   try {
     const sessionResult = await supabase.auth.getSession()
     session = sessionResult.data.session
+    console.log('🔐 세션 확인 결과:', {
+      hasSession: !!session,
+      userId: session?.user?.id?.substring(0, 8) + '...',
+      email: session?.user?.email,
+      expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
+      isExpired: session?.expires_at ? (session.expires_at * 1000) <= Date.now() : null
+    })
   } catch (error) {
     console.error('🚨 세션 확인 실패:', error)
     session = null
@@ -118,6 +140,14 @@ export async function middleware(request: NextRequest) {
     const error = url.searchParams.get('error')
     const retry = url.searchParams.get('retry')
     
+    console.log('🔄 인증된 사용자의 auth 페이지 접근:', {
+      currentPath: url.pathname,
+      next,
+      error,
+      retry,
+      userEmail: session.user?.email
+    })
+    
     // 에러 상태인 경우 리다이렉트하지 않고 로그인 페이지 유지
     if (error === 'profile-error' || error === 'account-suspended') {
       console.log('⚠️ 에러 상태로 로그인 페이지 유지:', { error, retry })
@@ -134,18 +164,21 @@ export async function middleware(request: NextRequest) {
     // 위험한 리다이렉트 경로들을 필터링
     const dangerousPaths = ['/auth/login', '/auth/signup', '/auth/reset-password']
     if (next && (!next.startsWith('/') || dangerousPaths.includes(next))) {
+      console.log('🚨 위험한 리다이렉트 경로 차단:', next)
       redirectPath = '/admin'
     }
     
     // 현재 경로와 동일한 리다이렉트 방지
     if (redirectPath === url.pathname) {
+      console.log('🚨 자기 자신으로의 리다이렉트 방지')
       redirectPath = '/admin'
     }
     
     console.log('✅ 인증된 사용자 안전 리다이렉트:', { 
       from: url.pathname, 
       to: redirectPath,
-      originalNext: next
+      originalNext: next,
+      reason: '인증된 사용자가 auth 페이지 접근'
     })
     
     const redirectUrl = new URL(redirectPath, request.url)
@@ -188,31 +221,23 @@ export async function middleware(request: NextRequest) {
         return { data: null, error }
       })
 
-      // 프로필이 없거나 조회 실패 시 기본 접근 허용 (관리자 계정 보호)
+      // 프로필이 없거나 조회 실패 시 기본 접근 허용 (리다이렉트 루프 방지)
       if (profileError || !profile) {
-        const isSystemAdmin = ['admin@test.com', 'sjlee87@kakao.com'].includes(session.user.email || '')
+        console.warn('⚠️ 프로필 조회 실패 - 기본 접근 허용 (무한 루프 방지):', { 
+          userId: session.user.id, 
+          email: session.user.email,
+          error: profileError,
+          currentPath: url.pathname,
+          decision: '기본 접근 허용'
+        })
         
-        if (isSystemAdmin) {
-          console.log('🔧 시스템 관리자 프로필 조회 실패, 기본 접근 허용:', session.user.email)
-          // 시스템 관리자는 프로필 없어도 접근 허용
-          const securedResponse = NextResponse.next()
-          Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
-            securedResponse.headers.set(key, value)
-          })
-          return securedResponse
-        } else {
-          console.warn('🚨 일반 사용자 프로필 확인 실패:', { 
-            userId: session.user.id, 
-            email: session.user.email,
-            error: profileError 
-          })
-          
-          // 프로필 확인 실패 시 에러 매개변수와 함께 리다이렉트 (한 번만)
-          const redirectUrl = new URL('/auth/login', request.url)
-          redirectUrl.searchParams.set('error', 'profile-error')
-          redirectUrl.searchParams.set('retry', 'true')
-          return Response.redirect(redirectUrl.toString())
-        }
+        // 리다이렉트 루프 방지를 위해 모든 인증된 사용자에게 기본 접근 허용
+        // 실제 권한 체크는 각 페이지 컴포넌트에서 수행
+        const securedResponse = NextResponse.next()
+        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+          securedResponse.headers.set(key, value)
+        })
+        return securedResponse
       }
 
       // 비활성 사용자 차단
@@ -240,36 +265,21 @@ export async function middleware(request: NextRequest) {
       })
 
     } catch (error: unknown) {
-      console.error('🚨 프로필 확인 예외:', error)
+      console.error('🚨 프로필 확인 예외 - 기본 접근 허용 (무한 루프 방지):', {
+        error,
+        userId: session.user.id,
+        email: session.user.email,
+        currentPath: url.pathname,
+        decision: '기본 접근 허용'
+      })
       
-      // 시스템 관리자는 예외 상황에서도 접근 허용
-      const isSystemAdmin = ['admin@test.com', 'sjlee87@kakao.com'].includes(session.user.email || '')
-      
-      if (isSystemAdmin) {
-        console.log('🔧 시스템 관리자 예외 상황 접근 허용:', session.user.email)
-        const securedResponse = NextResponse.next()
-        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
-          securedResponse.headers.set(key, value)
-        })
-        return securedResponse
-      }
-      
-      // 일반 사용자는 에러 리다이렉트 (한 번만)
-      const hasRetry = url.searchParams.get('retry') === 'true'
-      if (!hasRetry) {
-        const redirectUrl = new URL('/auth/login', request.url)
-        redirectUrl.searchParams.set('error', 'profile-error')
-        redirectUrl.searchParams.set('retry', 'true')
-        return Response.redirect(redirectUrl.toString())
-      } else {
-        // 재시도도 실패한 경우 기본 접근 허용 (무한 루프 방지)
-        console.warn('⚠️ 프로필 확인 재시도 실패, 기본 접근 허용')
-        const securedResponse = NextResponse.next()
-        Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
-          securedResponse.headers.set(key, value)
-        })
-        return securedResponse
-      }
+      // 예외 상황에서는 모든 인증된 사용자에게 기본 접근 허용 (리다이렉트 루프 방지)
+      // 실제 권한 체크는 각 페이지 컴포넌트에서 수행
+      const securedResponse = NextResponse.next()
+      Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+        securedResponse.headers.set(key, value)
+      })
+      return securedResponse
     }
   }
 
