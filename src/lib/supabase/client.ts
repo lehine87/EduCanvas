@@ -18,8 +18,12 @@ export const createClient = () => {
     process.env.NODE_ENV === 'production' && 
     window.location.hostname.includes('vercel.app')
   
-  if (isVercel) {
-    console.log(`🔧 [VERCEL-CLIENT] SUPABASE CONFIG:`, {
+  // 항상 로그 출력 (디버깅을 위해)
+  if (typeof window !== 'undefined') {
+    console.log(`🔧 [CLIENT-DEBUG] SUPABASE CONFIG:`, {
+      isVercel: isVercel,
+      nodeEnv: process.env.NODE_ENV,
+      hostname: window.location.hostname,
       supabaseUrlDomain: new URL(supabaseUrl).hostname,
       anonKeyPrefix: supabaseAnonKey.substring(0, 20) + '...',
       currentDomain: window.location.hostname,

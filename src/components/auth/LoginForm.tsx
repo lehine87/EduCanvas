@@ -18,6 +18,26 @@ export function LoginForm() {
   const searchParams = useSearchParams()
   const { setUser, setProfile } = useAuthStore()
 
+  // Vercel 환경에서 컴포넌트 마운트 시 디버깅
+  useEffect(() => {
+    const isVercel = typeof window !== 'undefined' && 
+      process.env.NODE_ENV === 'production' && 
+      window.location.hostname.includes('vercel.app')
+    
+    if (isVercel) {
+      console.log(`🏗️ [VERCEL-MOUNT] LOGIN FORM LOADED:`, {
+        timestamp: new Date().toISOString(),
+        currentUrl: window.location.href,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        nodeEnv: process.env.NODE_ENV,
+        vercelUrl: process.env.VERCEL_URL,
+        publicAppUrl: process.env.NEXT_PUBLIC_APP_URL,
+        cookiesOnMount: document.cookie || 'no cookies'
+      })
+    }
+  }, [])
+
   const {
     register,
     handleSubmit,
@@ -224,6 +244,20 @@ export function LoginForm() {
                 className="w-full"
                 loading={isLoading}
                 disabled={isLoading}
+                onClick={() => {
+                  // 로그인 버튼 클릭 즉시 로그
+                  const isVercel = typeof window !== 'undefined' && 
+                    process.env.NODE_ENV === 'production' && 
+                    window.location.hostname.includes('vercel.app')
+                  
+                  if (isVercel) {
+                    console.log(`🖱️ [VERCEL-CLICK] LOGIN BUTTON CLICKED:`, {
+                      timestamp: new Date().toISOString(),
+                      formValid: !errors.email && !errors.password,
+                      cookiesBeforeSubmit: document.cookie
+                    })
+                  }
+                }}
               >
                 로그인
               </Button>
