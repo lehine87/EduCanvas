@@ -10,7 +10,7 @@ import type { User } from '@supabase/supabase-js'
 import type { Tenant } from '@/types/auth.types'
 
 // 시스템 관리자 API에서 반환되는 확장된 테넌트 타입
-interface TenantWithUserCount extends Tenant {
+interface TenantWithUserCount extends Tenant, Record<string, unknown> {
   user_count?: Array<{ count: number }>
 }
 

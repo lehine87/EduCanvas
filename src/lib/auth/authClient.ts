@@ -75,7 +75,7 @@ export class AuthClient {
         const profileData = {
           id: data.user.id,
           email: email,
-          name: full_name || email.split('@')[0]
+          name: full_name || email.split('@')[0] || 'User'
           // role과 status는 DB 기본값 사용 (안전성 확보)
           // tenant_id도 null로 유지 (온보딩에서 설정)
         }
@@ -114,16 +114,16 @@ export class AuthClient {
         }
       } catch (profileError: unknown) {
         console.error('🚨 사용자 프로필 생성 예외 (상세):', {
-          name: profileError?.name,
-          message: profileError?.message,
-          stack: profileError?.stack,
-          constructor: profileError?.constructor?.name,
-          keys: Object.keys(profileError || {}),
-          stringified: JSON.stringify(profileError, Object.getOwnPropertyNames(profileError), 2)
+          name: profileError instanceof Error ? profileError.name : 'Unknown',
+          message: profileError instanceof Error ? profileError.message : String(profileError),
+          stack: profileError instanceof Error ? profileError.stack : undefined,
+          constructor: profileError instanceof Error ? profileError.constructor.name : 'Unknown',
+          keys: typeof profileError === 'object' && profileError ? Object.keys(profileError) : [],
+          stringified: JSON.stringify(profileError, undefined, 2)
         })
         
         // 사용자에게 던질 에러
-        throw new Error(`프로필 생성 예외: ${profileError?.message || profileError?.toString() || 'Unknown error'}`)
+        throw new Error(`프로필 생성 예외: ${profileError instanceof Error ? profileError.message : String(profileError)}`)
       }
     }
 
@@ -219,7 +219,7 @@ export class AuthClient {
           name: 'System Administrator',
           tenant_id: null, // 시스템 관리자는 tenant_id가 null
           role: 'system_admin' as UserRole,
-          status: 'active'
+          status: 'active' as 'active'
         }
       } else {
         // 일반 사용자 프로필 생성
@@ -235,7 +235,7 @@ export class AuthClient {
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown User',
           tenant_id: defaultTenant?.id,
           role: 'viewer' as UserRole,
-          status: 'pending_approval'
+          status: 'pending_approval' as 'pending_approval'
         }
       }
 

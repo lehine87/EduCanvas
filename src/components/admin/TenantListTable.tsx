@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Tenant } from '@/types'
 
 // 시스템 관리자 API에서 반환되는 확장된 테넌트 타입
-interface TenantWithUserCount extends Tenant {
+interface TenantWithUserCount extends Tenant, Record<string, unknown> {
   user_count?: Array<{ count: number }>
 }
 
@@ -258,7 +258,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
         </Button>
       </div>
 
-      <Table
+      <Table<TenantWithUserCount>
         columns={columns}
         data={tenants.filter(tenant => tenant && tenant.id)}
         keyField="id"
