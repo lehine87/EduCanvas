@@ -44,21 +44,42 @@ export function LoginForm() {
   }, [searchParams])
 
   const onSubmit = async (data: SignInFormData) => {
+    console.log('🚀 로그인 폼 제출 시작:', { email: data.email })
     setIsLoading(true)
     setError(null)
 
     try {
-      const { user, session } = await authClient.signIn(data)
+      const authData = await authClient.signIn(data)
+      console.log('📦 authClient.signIn 응답:', {
+        hasUser: !!authData.user,
+        hasSession: !!authData.session,
+        userEmail: authData.user?.email
+      })
+      
+      const { user, session } = authData
       
       if (user && session) {
+        console.log('✅ 로그인 성공, 프로필 가져오는 중...')
         const profile = await authClient.getUserProfile()
+        
+        console.log('👤 프로필 정보:', {
+          hasProfile: !!profile,
+          profileEmail: profile?.email,
+          profileRole: profile?.role
+        })
+        
         setUser(user)
         setProfile(profile)
+        
+        console.log('🔄 /admin으로 리다이렉트 중...')
         router.push('/admin')
         router.refresh()
+      } else {
+        console.warn('⚠️ 로그인 응답에 user 또는 session이 없음:', { hasUser: !!user, hasSession: !!session })
+        setError('로그인 처리 중 문제가 발생했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('❌ 로그인 에러:', error)
       
       // 타입 가드를 사용한 안전한 에러 처리
       const errorMessage = error instanceof Error ? error.message : '';
@@ -71,6 +92,7 @@ export function LoginForm() {
         setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
       }
     } finally {
+      console.log('🏁 로그인 프로세스 완료, loading 해제')
       setIsLoading(false)
     }
   }

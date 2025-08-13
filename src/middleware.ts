@@ -57,29 +57,43 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // JWT 토큰 기반 인증 확인 (보안 강화)
+  // Supabase 쿠키 기반 인증 확인
   let isAuthenticated = false
   try {
-    // Authorization 헤더에서 토큰 확인
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
-    
-    // 쿠키에서 토큰 확인 (fallback)
     const cookies = request.headers.get('cookie')
-    const cookieToken = cookies?.match(/sb-[^=]+-auth-token=([^;]+)/)?.[1]
     
-    const finalToken = token || cookieToken
-    
-    if (finalToken) {
-      // 간단한 JWT 형식 검증 (보안 목적)
-      const parts = finalToken.split('.')
-      if (parts.length === 3) {
-        // JWT가 올바른 형식이면 인증된 것으로 간주
-        // 실제 검증은 각 페이지/API에서 수행
+    if (cookies) {
+      // Supabase의 실제 쿠키 패턴들 확인
+      // sb-{project-ref}-auth-token (access token)
+      // sb-{project-ref}-auth-token-code-verifier 
+      // sb-{project-ref}-auth-refresh-token (refresh token)
+      const supabaseCookiePatterns = [
+        /sb-[a-zA-Z0-9]+-auth-token(?:-code-verifier)?=/,
+        /sb-[a-zA-Z0-9]+-auth-refresh-token=/
+      ]
+      
+      const hasValidSupabaseCookie = supabaseCookiePatterns.some(pattern => 
+        pattern.test(cookies)
+      )
+      
+      if (hasValidSupabaseCookie) {
         isAuthenticated = true
+        console.log('✅ 유효한 Supabase 인증 쿠키 발견')
+      } else {
+        console.log('❌ 유효한 Supabase 인증 쿠키 없음')
       }
+      
+      console.log('🔍 쿠키 상세 분석:', {
+        hasCookies: true,
+        cookieNames: cookies.split(';').map(c => c.split('=')[0]?.trim() || ''),
+        hasValidSupabaseCookie,
+        isAuthenticated
+      })
+    } else {
+      console.log('❌ 쿠키 없음')
     }
   } catch (error) {
+    console.error('❌ 인증 확인 예외:', error)
     isAuthenticated = false
   }
 
