@@ -92,11 +92,12 @@ export default function AdminPage() {
       }
       
       console.log('🚀 [REDIRECT-LOGIC] SYSTEM ADMIN → /system-admin (FORWARD ONLY)')
-      console.log('⏰ [REDIRECT-DEBUG] 5초 후 system-admin으로 리다이렉트...')
+      const redirectDelay = isVercel ? 1000 : 300 // Vercel: 1초, 로컬: 0.3초
+      console.log(`⏰ [REDIRECT-DEBUG] ${redirectDelay}ms 후 system-admin으로 리다이렉트...`)
       setTimeout(() => {
         console.log('🔄 [REDIRECT-DEBUG] system-admin 리다이렉트 실행')
         router.push('/system-admin')
-      }, 5000)
+      }, redirectDelay)
       return
     }
 

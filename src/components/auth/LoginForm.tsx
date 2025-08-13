@@ -138,9 +138,10 @@ export function LoginForm() {
           })
         }
         
-        // 디버깅을 위해 5초 대기 (브라우저 로그 확인 시간 제공)
-        console.log(`⏰ [LOGIN-DEBUG] 5초 후 리다이렉트 시작...`)
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        // 쿠키 설정 완료를 위한 대기 (Vercel 환경에서는 더 긴 대기)
+        const waitTime = isVercel ? 2000 : 500 // Vercel: 2초, 로컬: 0.5초
+        console.log(`⏰ [LOGIN-DEBUG] ${waitTime}ms 후 리다이렉트 시작...`)
+        await new Promise(resolve => setTimeout(resolve, waitTime))
         
         console.log(`🔄 [LOGIN-DEBUG] 리다이렉트 실행 중...`)
         router.push('/admin')
