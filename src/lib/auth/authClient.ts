@@ -4,23 +4,40 @@ import type { UserProfile } from '@/types/auth.types'
 
 // 환경에 따른 앱 URL 동적 생성
 function getAppUrl(): string {
+  const isVercel = typeof window !== 'undefined' && 
+    process.env.NODE_ENV === 'production' && 
+    window.location.hostname.includes('vercel.app')
+  
+  let detectedUrl = ''
+  
   // Vercel 환경
   if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-    return `https://${window.location.hostname}`
+    detectedUrl = `https://${window.location.hostname}`
   }
-  
   // 서버 사이드에서 Vercel 환경 감지
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
+  else if (process.env.VERCEL_URL) {
+    detectedUrl = `https://${process.env.VERCEL_URL}`
   }
-  
   // 환경변수에서 설정된 URL 사용
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
+  else if (process.env.NEXT_PUBLIC_APP_URL) {
+    detectedUrl = process.env.NEXT_PUBLIC_APP_URL
+  }
+  // 기본값 (개발 환경)
+  else {
+    detectedUrl = 'http://localhost:3000'
   }
   
-  // 기본값 (개발 환경)
-  return 'http://localhost:3000'
+  if (isVercel) {
+    console.log(`🌐 [VERCEL-URL] APP URL DETECTION:`, {
+      detectedUrl,
+      windowHostname: typeof window !== 'undefined' ? window.location.hostname : 'server-side',
+      vercelUrl: process.env.VERCEL_URL,
+      publicAppUrl: process.env.NEXT_PUBLIC_APP_URL,
+      nodeEnv: process.env.NODE_ENV
+    })
+  }
+  
+  return detectedUrl
 }
 
 export interface SignUpData {
@@ -152,12 +169,45 @@ export class AuthClient {
   }
 
   async signIn({ email, password }: SignInData) {
+    // Vercel 환경에서 디버깅
+    const isVercel = typeof window !== 'undefined' && 
+      process.env.NODE_ENV === 'production' && 
+      window.location.hostname.includes('vercel.app')
+    
+    if (isVercel) {
+      console.log(`🔑 [VERCEL-AUTH] SIGNIN CONFIG:`, {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        currentOrigin: typeof window !== 'undefined' ? window.location.origin : 'server-side',
+        detectedAppUrl: getAppUrl(),
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        anonKeyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length
+      })
+    }
+
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password
     })
 
-    if (error) throw error
+    if (error) {
+      if (isVercel) {
+        console.error(`❌ [VERCEL-AUTH] SIGNIN ERROR:`, {
+          errorMessage: error.message,
+          errorCode: error.status,
+          errorName: error.name
+        })
+      }
+      throw error
+    }
+    
+    if (isVercel) {
+      console.log(`✅ [VERCEL-AUTH] SIGNIN SUCCESS:`, {
+        hasUser: !!data.user,
+        hasSession: !!data.session,
+        sessionExpiresAt: data.session?.expires_at
+      })
+    }
+    
     return data
   }
 

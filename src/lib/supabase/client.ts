@@ -13,6 +13,21 @@ export const createClient = () => {
     throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY 환경변수가 설정되지 않았습니다.')
   }
 
+  // Vercel 환경에서 클라이언트 생성 시 디버깅
+  const isVercel = typeof window !== 'undefined' && 
+    process.env.NODE_ENV === 'production' && 
+    window.location.hostname.includes('vercel.app')
+  
+  if (isVercel) {
+    console.log(`🔧 [VERCEL-CLIENT] SUPABASE CONFIG:`, {
+      supabaseUrlDomain: new URL(supabaseUrl).hostname,
+      anonKeyPrefix: supabaseAnonKey.substring(0, 20) + '...',
+      currentDomain: window.location.hostname,
+      isSecure: window.location.protocol === 'https:',
+      cookieSupport: typeof document !== 'undefined' && 'cookie' in document
+    })
+  }
+
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {

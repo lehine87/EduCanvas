@@ -59,7 +59,11 @@ export function LoginForm() {
         hasPassword: !!data.password,
         currentPath: window.location.pathname,
         referrer: document.referrer,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hostname: window.location.hostname,
+        origin: window.location.origin,
+        fullUrl: window.location.href
       })
     }
 
