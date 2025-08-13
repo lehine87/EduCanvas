@@ -7,7 +7,8 @@ import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/compon
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
 import type { User } from '@supabase/supabase-js'
-import type { UserProfile, Tenant, hasTenantId } from '@/types/auth.types'
+import type { UserProfile, Tenant } from '@/types/auth.types'
+import { hasTenantId } from '@/types/auth.types'
 
 export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -46,7 +47,7 @@ export default function TenantAdminPage() {
         }
 
         setUser({ auth: currentUser, profile })
-        setTenant(profile.tenants)
+        setTenant(profile.tenants as Tenant)
         
         await loadStats(profile.tenant_id)
         setIsLoading(false)

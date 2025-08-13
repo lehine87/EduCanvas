@@ -41,7 +41,7 @@ export default function SystemAdminPage() {
           return
         }
 
-        setUser({ auth: currentUser, profile })
+        setUser(currentUser)
         await loadTenants()
         setIsLoading(false)
 
@@ -71,9 +71,12 @@ export default function SystemAdminPage() {
 
       console.log('✅ 시스템 관리자 - 테넌트 목록 로드 성공:', data?.length || 0, '개')
       console.log('📊 로드된 테넌트 데이터:', data)
-      data?.forEach(tenant => {
-        const count = tenant.user_count?.[0]?.count || 0
-        console.log(`   ${tenant.name}: ${count}명`)
+      data?.forEach((tenant: unknown) => {
+        if (tenant && typeof tenant === 'object' && 'name' in tenant && 'user_count' in tenant) {
+          const tenantObj = tenant as { name: string; user_count?: Array<{ count: number }> }
+          const count = tenantObj.user_count?.[0]?.count || 0
+          console.log(`   ${tenantObj.name}: ${count}명`)
+        }
       })
       setTenants(data || [])
       
@@ -84,7 +87,7 @@ export default function SystemAdminPage() {
     }
   }
 
-  const handleTenantCreated = (newTenant: { id: string; name: string; slug: string }) => {
+  const handleTenantCreated = (newTenant: Tenant) => {
     setTenants(prev => [newTenant, ...prev])
     setShowCreateModal(false)
   }
@@ -114,7 +117,7 @@ export default function SystemAdminPage() {
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
-                {user?.profile?.name || 'System Administrator'} ({user?.profile?.email || user?.auth?.email})
+                System Administrator ({user?.email})
               </span>
               <Button
                 variant="outline"

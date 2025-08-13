@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading, Modal } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
-import type { TenantUser } from '@/types/app.types'
+import type { UserProfile } from '@/types/auth.types'
 
 interface PendingApprovalsTableProps {
   tenantId: string
@@ -11,9 +11,9 @@ interface PendingApprovalsTableProps {
 }
 
 export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApprovalsTableProps) {
-  const [pendingUsers, setPendingUsers] = useState<TenantUser[]>([])
+  const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<TenantUser | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -113,7 +113,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
       case 'admin':
         return <Badge variant="warning">관리자</Badge>
       default:
-        return <Badge variant="default">{role}</Badge>
+        return <Badge variant="secondary">{role}</Badge>
     }
   }
 
@@ -146,7 +146,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'user_info',
       header: '신청자 정보',
-      render: (value: unknown, user: TenantUser) => {
+      render: (value: unknown, user: UserProfile) => {
         if (!user) return <div>-</div>;
         return (
           <div>
@@ -162,19 +162,19 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'role',
       header: '희망 역할',
-      render: (value: unknown, user: TenantUser) => {
+      render: (value: unknown, user: UserProfile) => {
         if (!user) return <div>-</div>;
-        return getRoleBadge(user.role);
+        return getRoleBadge(user.role || 'viewer');
       }
     },
     {
       key: 'created_at',
       header: '신청 일시',
-      render: (value: unknown, user: TenantUser) => {
+      render: (value: unknown, user: UserProfile) => {
         if (!user) return <div>-</div>;
         return (
           <div className="text-sm text-gray-500">
-            {formatDate(user.created_at)}
+            {user.created_at ? formatDate(user.created_at) : '없음'}
           </div>
         );
       }
@@ -182,7 +182,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'details',
       header: '상세 정보',
-      render: (value: unknown, user: TenantUser) => {
+      render: (value: unknown, user: UserProfile) => {
         if (!user || !user.id) return <div>-</div>;
         return (
           <Button
@@ -201,7 +201,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     {
       key: 'actions',
       header: '승인 처리',
-      render: (value: unknown, user: TenantUser) => {
+      render: (value: unknown, user: UserProfile) => {
         if (!user || !user.id) return <div>-</div>;
         return (
           <div className="flex space-x-2">
@@ -280,12 +280,12 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">희망 역할</label>
-                <p className="mt-1">{getRoleBadge(selectedUser.role)}</p>
+                <p className="mt-1">{getRoleBadge(selectedUser.role || 'viewer')}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">신청 일시</label>
-                <p className="mt-1 text-sm text-gray-900">{formatDate(selectedUser.created_at)}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedUser.created_at ? formatDate(selectedUser.created_at) : '없음'}</p>
               </div>
               
               <div>
@@ -297,11 +297,11 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
             </div>
 
             {/* 추가 정보가 있다면 표시 */}
-            {selectedUser.bio && (
+            {(selectedUser as any)?.bio && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">자기소개</label>
                 <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                  {selectedUser.bio}
+                  {(selectedUser as any)?.bio}
                 </p>
               </div>
             )}

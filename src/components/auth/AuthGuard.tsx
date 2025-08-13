@@ -80,7 +80,14 @@ export function AuthGuard({
         return
       }
 
-      // 5. 역할 기반 접근 제어
+      // 5. 역할 기반 리다이렉트 (system_admin 특별 처리)
+      if (profile?.role === 'system_admin' && window.location.pathname === '/admin') {
+        console.log('🔧 시스템 관리자 자동 리다이렉트: /admin → /system-admin')
+        router.push('/system-admin')
+        return
+      }
+
+      // 6. 역할 기반 접근 제어
       if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
         console.warn('🚨 권한 없는 역할로 접근:', { 
           userRole: profile?.role, 
@@ -91,7 +98,7 @@ export function AuthGuard({
         return
       }
 
-      // 6. 테넌트 접근 권한 검사
+      // 7. 테넌트 접근 권한 검사
       if (requireTenantAccess && !canAccessTenant(requireTenantAccess)) {
         console.warn('🚨 테넌트 접근 권한 없음:', { 
           requiredTenant: requireTenantAccess,

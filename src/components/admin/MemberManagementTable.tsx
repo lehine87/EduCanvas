@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Badge, Loading, Input } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
-import type { TenantUser } from '@/types/app.types'
+import type { UserProfile } from '@/types/auth.types'
 
 interface MemberManagementTableProps {
   tenantId: string
@@ -11,8 +11,8 @@ interface MemberManagementTableProps {
 }
 
 export function MemberManagementTable({ tenantId, onMemberChange }: MemberManagementTableProps) {
-  const [members, setMembers] = useState<TenantUser[]>([])
-  const [filteredMembers, setFilteredMembers] = useState<TenantUser[]>([])
+  const [members, setMembers] = useState<UserProfile[]>([])
+  const [filteredMembers, setFilteredMembers] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRole, setFilterRole] = useState<string>('all')
@@ -195,11 +195,11 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
       case 'staff':
         return <Badge variant="success">스태프</Badge>
       case 'viewer':
-        return <Badge variant="default">뷰어</Badge>
+        return <Badge variant="secondary">뷰어</Badge>
       case 'pending':
         return <Badge variant="warning">대기</Badge>
       default:
-        return <Badge variant="default">{role}</Badge>
+        return <Badge variant="secondary">{role}</Badge>
     }
   }
 
@@ -208,13 +208,13 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
       case 'active':
         return <Badge variant="success">활성</Badge>
       case 'inactive':
-        return <Badge variant="danger">비활성</Badge>
+        return <Badge variant="error">비활성</Badge>
       case 'pending_approval':
         return <Badge variant="warning">승인 대기</Badge>
       case 'rejected':
-        return <Badge variant="danger">거부됨</Badge>
+        return <Badge variant="error">거부됨</Badge>
       default:
-        return <Badge variant="default">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>
     }
   }
 
@@ -230,7 +230,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'user_info',
       header: '회원 정보',
-      render: (value: unknown, member: TenantUser) => (
+      render: (value: unknown, member: UserProfile) => (
         <div>
           <div className="font-medium text-gray-900">{member.name}</div>
           <div className="text-sm text-gray-500">{member.email}</div>
@@ -243,13 +243,13 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'role',
       header: '역할',
-      render: (value: unknown, member: TenantUser) => (
+      render: (value: unknown, member: UserProfile) => (
         <div className="space-y-2">
-          {getRoleBadge(member.role)}
-          {member.status === 'active' && member.role !== 'admin' && (
+          {getRoleBadge(member.role || 'viewer')}
+          {member.status === 'active' && (member.role || 'viewer') !== 'admin' && (
             <div className="space-x-1">
               <select
-                value={member.role}
+                value={member.role || 'viewer'}
                 onChange={(e) => handleChangeRole(member.id, e.target.value)}
                 disabled={actionLoading === member.id}
                 className="text-xs border border-gray-300 rounded px-2 py-1"
@@ -266,12 +266,12 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'status',
       header: '상태',
-      render: (value: unknown, member: TenantUser) => getStatusBadge(member.status)
+      render: (value: unknown, member: UserProfile) => getStatusBadge(member.status || 'inactive')
     },
     {
       key: 'last_login',
       header: '최근 로그인',
-      render: (value: unknown, member: TenantUser) => (
+      render: (value: unknown, member: UserProfile) => (
         <div className="text-sm text-gray-500">
           {member.last_login_at ? formatDate(member.last_login_at) : '없음'}
         </div>
@@ -280,16 +280,16 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     {
       key: 'created_at',
       header: '가입일',
-      render: (value: unknown, member: TenantUser) => (
+      render: (value: unknown, member: UserProfile) => (
         <div className="text-sm text-gray-500">
-          {formatDate(member.created_at)}
+          {member.created_at ? formatDate(member.created_at) : '없음'}
         </div>
       )
     },
     {
       key: 'actions',
       header: '작업',
-      render: (value: unknown, member: TenantUser) => {
+      render: (value: unknown, member: UserProfile) => {
         if (!member || !member.id) return <div>-</div>;
         
         console.log('작업 컬럼 렌더링:', { id: member.id, role: member.role, status: member.status });
@@ -300,7 +300,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleToggleStatus(member.id, member.status)}
+                onClick={() => handleToggleStatus(member.id, member.status || 'inactive')}
                 disabled={actionLoading === member.id}
                 loading={actionLoading === member.id}
               >

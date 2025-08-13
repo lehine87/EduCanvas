@@ -144,7 +144,7 @@ export default function AuthUtilsTestPage() {
     
     const results = {
       currentRole,
-      expectedHierarchy: roleHierarchy[currentRole] || [],
+      expectedHierarchy: currentRole ? roleHierarchy[currentRole as keyof typeof roleHierarchy] || [] : [],
       actualPermissions: {
         isViewer: auth.isViewer,
         isStaff: auth.isStaff,
@@ -209,7 +209,7 @@ export default function AuthUtilsTestPage() {
     addLog('⚡ 성능 테스트 중...', 'info')
     
     const iterations = 1000
-    const results = {}
+    const results: Record<string, string> = {}
     
     // hasRole 성능 테스트
     const hasRoleStart = performance.now()
@@ -272,7 +272,7 @@ export default function AuthUtilsTestPage() {
   const getTestStatusIcon = (testName: string) => {
     const result = testResults[testName]
     if (result === undefined) return '⏳'
-    if (result && typeof result === 'object' && result.error) return '❌'
+    if (result && typeof result === 'object' && 'error' in result) return '❌'
     return '✅'
   }
 

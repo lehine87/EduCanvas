@@ -8,7 +8,7 @@ export default function AdminLayout({
   return (
     <AuthGuard 
       requireAuth={true}
-      allowedRoles={['admin', 'instructor', 'staff', 'viewer']}
+      allowedRoles={['system_admin', 'admin', 'instructor', 'staff', 'viewer']}
     >
       {children}
     </AuthGuard>
