@@ -14,6 +14,7 @@ export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<{ auth: User; profile: UserProfile } | null>(null)
   const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [authError, setAuthError] = useState<string | null>(null)
   const [stats, setStats] = useState({
     totalMembers: 0,
     activeMembers: 0,
@@ -40,9 +41,13 @@ export default function TenantAdminPage() {
           return
         }
 
-        // 테넌트 관리자 권한 확인  
+        // 테넌트 관리자 권한 확인 (단방향 설계: admin으로 되돌아가지 않음)
         if (profile.role !== 'admin' || !hasTenantId(profile)) {
-          router.push('/admin')
+          console.error('🚨 [TENANT-ADMIN] ACCESS DENIED - NOT TENANT ADMIN')
+          console.log('⚠️ [TENANT-ADMIN] SHOWING ACCESS ERROR INSTEAD OF REDIRECT TO PREVENT LOOP')
+          
+          setAuthError('테넌트 관리자 권한이 필요합니다.')
+          setIsLoading(false)
           return
         }
 
@@ -100,6 +105,41 @@ export default function TenantAdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loading />
+      </div>
+    )
+  }
+
+  // 권한 오류 시 에러 페이지 표시
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            접근 권한 오류
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {authError}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => router.push('/admin?stay=true')}
+              variant="outline"
+            >
+              일반 관리자 페이지로
+            </Button>
+            <Button
+              onClick={() => router.push('/auth/login')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              로그인 페이지로
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }

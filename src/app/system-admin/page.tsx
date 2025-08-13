@@ -20,6 +20,7 @@ export default function SystemAdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [tenants, setTenants] = useState<TenantWithUserCount[]>([])
   const [isLoadingTenants, setIsLoadingTenants] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
   // 강제 로그 출력
@@ -79,9 +80,12 @@ export default function SystemAdminPage() {
         })
         
         if (!isSystemAdmin) {
-          console.error(`🚨 [SYSTEM-ADMIN-REDIRECT] NOT SYSTEM ADMIN - REDIRECTING TO /admin`)
-          console.warn(`⚠️ [SYSTEM-ADMIN-REDIRECT] THIS WILL CAUSE INFINITE LOOP!`)
-          router.push('/admin')
+          console.error(`🚨 [SYSTEM-ADMIN-ACCESS] NOT SYSTEM ADMIN - SHOWING ERROR PAGE`)
+          console.warn(`⚠️ [SYSTEM-ADMIN-ACCESS] NO REDIRECT TO PREVENT LOOP`)
+          
+          // 리다이렉트 대신 에러 상태로 설정하여 권한 없음 UI 표시
+          setIsLoading(false)
+          setAuthError('시스템 관리자 권한이 필요합니다.')
           return
         }
 
@@ -142,6 +146,41 @@ export default function SystemAdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loading />
+      </div>
+    )
+  }
+
+  // 권한 오류 시 에러 페이지 표시
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            접근 권한 오류
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {authError}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => router.push('/admin?stay=true')}
+              variant="outline"
+            >
+              일반 관리자 페이지로
+            </Button>
+            <Button
+              onClick={() => router.push('/auth/login')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              로그인 페이지로
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }

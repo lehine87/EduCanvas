@@ -104,17 +104,13 @@ export function AuthGuard({
         return
       }
 
-      // 5. 역할 기반 리다이렉트 (system_admin 특별 처리)
-      if (profile?.role === 'system_admin' && window.location.pathname === '/admin') {
-        console.log('🔧 시스템 관리자 자동 리다이렉트: /admin → /system-admin')
-        
-        // 강제 로그 출력
-        console.error(`🚨 [AUTHGUARD-REDIRECT] SYSTEM ADMIN REDIRECT TRIGGERED`)
-        console.warn(`⚠️ [AUTHGUARD-REDIRECT] FROM: /admin TO: /system-admin`)
-        
-        router.push('/system-admin')
-        return
-      }
+      // 5. 역할 기반 리다이렉트 (system_admin 특별 처리) - 무한 루프 방지를 위해 제거
+      // 대신 admin 페이지에서 사용자가 직접 system-admin으로 이동하도록 UI 제공
+      // if (profile?.role === 'system_admin' && window.location.pathname === '/admin') {
+      //   console.log('🔧 시스템 관리자 자동 리다이렉트: /admin → /system-admin')
+      //   router.push('/system-admin')
+      //   return
+      // }
 
       // 6. 역할 기반 접근 제어
       if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {

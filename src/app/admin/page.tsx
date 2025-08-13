@@ -63,174 +63,87 @@ export default function AdminPage() {
     }
   }, [user, profile, isVercel, requestId])
 
-  // 역할별 자동 리다이렉트
+  // 역할별 단방향 리다이렉트 (순환 참조 완전 제거)
   useEffect(() => {
-    // 강제 로그 출력
-    console.log(`🔄 [REDIRECT-EFFECT] REDIRECT LOGIC TRIGGERED:`, {
+    console.log(`🔄 [REDIRECT-LOGIC] STARTING SINGLE-DIRECTION REDIRECT:`, {
       hasProfile: !!profile,
       profileRole: profile?.role,
       profileEmail: profile?.email,
       profileStatus: profile?.status,
       tenantId: profile?.tenant_id,
+      currentPath: typeof window !== 'undefined' ? window.location.pathname : 'server',
       timestamp: new Date().toISOString()
     })
     
     if (!profile) {
-      console.log(`❌ [REDIRECT-EFFECT] NO PROFILE - EARLY RETURN`)
+      console.log(`❌ [REDIRECT-LOGIC] NO PROFILE - WAITING FOR PROFILE`)
       return
     }
 
-    console.log(`✅ [REDIRECT-EFFECT] PROFILE EXISTS - STARTING REDIRECT LOGIC`)
+    console.log(`✅ [REDIRECT-LOGIC] PROFILE EXISTS - APPLYING FORWARD-ONLY REDIRECT`)
     setIsRedirecting(true)
 
-    // 시스템 관리자인 경우
+    // 🎯 단방향 리다이렉트 규칙: admin은 모든 역할의 "허브" 역할
+    // 다른 페이지에서 admin으로 되돌아오지 않음 (순환 방지)
+    
+    // 1. 시스템 관리자 → system-admin (단방향, 절대 되돌아오지 않음)
     if (profile.role === 'system_admin' || 
         ['admin@test.com', 'sjlee87@kakao.com'].includes(profile.email)) {
-      console.log('🔧 시스템 관리자로 인식, system-admin 페이지로 리다이렉트')
       
-      if (isVercel) {
-        console.log(`🔄 [VERCEL-ADMIN-${requestId}] SYSTEM ADMIN REDIRECT:`, {
-          from: '/admin',
-          to: '/system-admin',
-          profileRole: profile.role,
-          userEmail: profile.email
-        })
+      const searchParams = new URLSearchParams(window.location.search)
+      const forceStay = searchParams.get('stay') === 'true'
+      
+      if (forceStay) {
+        console.log('👤 [REDIRECT-LOGIC] SYSTEM ADMIN FORCED TO STAY ON /admin')
+        setIsRedirecting(false)
+        return
       }
       
+      console.log('🚀 [REDIRECT-LOGIC] SYSTEM ADMIN → /system-admin (FORWARD ONLY)')
       router.push('/system-admin')
-      
-      if (isVercel) {
-        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
-          destination: '/system-admin',
-          reason: 'system admin redirect'
-        })
-      }
-      
       return
     }
 
-    // 테넌트 관리자인 경우
+    // 2. 테넌트 관리자 → tenant-admin (단방향)
     if (profile.role === 'admin' && profile.tenant_id) {
-      console.log('🏢 테넌트 관리자로 인식, tenant-admin 페이지로 리다이렉트')
-      
-      if (isVercel) {
-        console.log(`🔄 [VERCEL-ADMIN-${requestId}] TENANT ADMIN REDIRECT:`, {
-          from: '/admin',
-          to: '/tenant-admin',
-          profileRole: profile.role,
-          tenantId: profile.tenant_id
-        })
-      }
-      
+      console.log('🚀 [REDIRECT-LOGIC] TENANT ADMIN → /tenant-admin (FORWARD ONLY)')
       router.push('/tenant-admin')
-      
-      if (isVercel) {
-        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
-          destination: '/tenant-admin',
-          reason: 'tenant admin redirect'
-        })
-      }
-      
       return
     }
 
-    // 일반 사용자(강사, 직원)인 경우
+    // 3. 일반 사용자(강사, 직원) → tenant-admin (단방향)
     if (profile.role && ['instructor', 'staff'].includes(profile.role) && profile.tenant_id) {
-      console.log('👨‍🏫 일반 사용자로 인식, tenant-admin 페이지로 리다이렉트')
-      
-      if (isVercel) {
-        console.log(`🔄 [VERCEL-ADMIN-${requestId}] USER REDIRECT:`, {
-          from: '/admin',
-          to: '/tenant-admin',
-          profileRole: profile.role,
-          tenantId: profile.tenant_id
-        })
-      }
-      
+      console.log('🚀 [REDIRECT-LOGIC] STAFF/INSTRUCTOR → /tenant-admin (FORWARD ONLY)')
       router.push('/tenant-admin')
-      
-      if (isVercel) {
-        console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
-          destination: '/tenant-admin',
-          reason: 'user redirect'
-        })
-      }
-      
       return
     }
 
-    // 온보딩이 필요한 사용자 체크
+    // 4. 온보딩/승인 필요 사용자 → onboarding/pending-approval (단방향)
     if (!profile.tenant_id || profile.status === 'pending_approval') {
-      console.log('🎯 온보딩 필요한 사용자 감지:', {
-        hasTenant: !!profile.tenant_id,
-        status: profile.status,
-        role: profile.role
-      })
-
-      // 승인 대기 상태인 경우
+      console.log('🎯 [REDIRECT-LOGIC] ONBOARDING/APPROVAL NEEDED')
+      
+      // 승인 대기 상태 → pending-approval (단방향)
       if (profile.status === 'pending_approval') {
-        console.log('⏳ 승인 대기 중인 사용자, pending-approval 페이지로 리다이렉트')
-        
-        if (isVercel) {
-          console.log(`🔄 [VERCEL-ADMIN-${requestId}] PENDING APPROVAL REDIRECT:`, {
-            from: '/admin',
-            to: '/pending-approval',
-            profileStatus: profile.status
-          })
-        }
-        
+        console.log('🚀 [REDIRECT-LOGIC] PENDING APPROVAL → /pending-approval (FORWARD ONLY)')
         router.push('/pending-approval')
-        
-        if (isVercel) {
-          console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
-            destination: '/pending-approval',
-            reason: 'pending approval redirect'
-          })
-        }
-        
         return
       }
 
-      // 테넌트가 없는 경우 온보딩 페이지로
+      // 테넌트 없음 → onboarding (단방향)
       if (!profile.tenant_id) {
-        console.log('🆕 테넌트 미설정 사용자, onboarding 페이지로 리다이렉트')
-        
-        if (isVercel) {
-          console.log(`🔄 [VERCEL-ADMIN-${requestId}] ONBOARDING REDIRECT:`, {
-            from: '/admin',
-            to: '/onboarding',
-            tenantId: profile.tenant_id
-          })
-        }
-        
+        console.log('🚀 [REDIRECT-LOGIC] NO TENANT → /onboarding (FORWARD ONLY)')
         router.push('/onboarding')
-        
-        if (isVercel) {
-          console.log(`🚀 [VERCEL-ADMIN-${requestId}] ROUTER PUSH CALLED:`, {
-            destination: '/onboarding',
-            reason: 'onboarding redirect'
-          })
-        }
-        
         return
       }
     }
 
-    // 권한이 명확하지 않은 경우 현재 페이지 유지
-    console.log('❓ 권한 불명확, 현재 페이지 유지:', {
-      role: profile.role,
-      tenant_id: profile.tenant_id,
-      status: profile.status
+    // 5. 기본 케이스: admin 페이지 유지 (리다이렉트 없음)
+    console.log('✅ [REDIRECT-LOGIC] STAYING ON /admin - NO REDIRECT NEEDED:', {
+      reason: 'Default case or viewer role',
+      profileRole: profile.role,
+      profileStatus: profile.status,
+      tenantId: profile.tenant_id
     })
-    
-    if (isVercel) {
-      console.log(`✅ [VERCEL-ADMIN-${requestId}] STAY ON ADMIN:`, {
-        reason: 'unclear permissions - staying on admin page',
-        profileRole: profile.role,
-        profileStatus: profile.status,
-        tenantId: profile.tenant_id
-      })
-    }
     
     setIsRedirecting(false)
   }, [profile, router])
@@ -298,6 +211,28 @@ export default function AdminPage() {
                   <li>✅ 미들웨어 인증 검증</li>
                 </ul>
               </div>
+
+              {/* 시스템 관리자를 위한 링크 */}
+              {(profile?.role === 'system_admin' || 
+                ['admin@test.com', 'sjlee87@kakao.com'].includes(profile?.email || '')) && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-md mt-4">
+                  <h3 className="text-sm font-semibold text-blue-800 mb-2">
+                    시스템 관리자 권한 감지됨
+                  </h3>
+                  <p className="text-sm text-blue-700 mb-3">
+                    시스템 관리자 페이지에서 테넌트를 관리할 수 있습니다.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      console.log('🔧 시스템 관리자 페이지로 수동 이동')
+                      router.push('/system-admin')
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                  >
+                    시스템 관리자 페이지로 이동
+                  </Button>
+                </div>
+              )}
 
               <div className="text-sm text-gray-600">
                 <p>
