@@ -22,6 +22,8 @@ import {
 import { hasTenantPermission } from './tenantRoles'
 import { createClient } from '@/lib/db/supabase/client'
 import { isInstructor, hasTenantId } from '@/types/auth.types'
+import type { AttendanceWithRelations, ResourceAccessDebugInterface } from '@/types/utilityTypes'
+import { isAttendanceWithRelations } from '@/types/typeGuards'
 
 // ================================================================
 // 리소스 소유권 타입
@@ -216,7 +218,9 @@ export async function checkAttendanceOwnership(
 
     // 강사인 경우 담당 클래스의 출결인지 확인
     if (userRole === 'instructor') {
-      const classData = (attendance as any).class_schedules?.classes
+      const classData = isAttendanceWithRelations(attendance) 
+        ? attendance.class_schedules?.classes
+        : null
       if (classData?.instructor_id === userId) {
         return {
           resourceType: 'attendance',
@@ -629,7 +633,8 @@ export const resourceAccessCache = new ResourceAccessCache()
 
 if (process.env.NODE_ENV === 'development') {
   if (typeof window !== 'undefined') {
-    (window as any).__RESOURCE_ACCESS__ = {
+    const windowWithResourceAccess = window as Window & { __RESOURCE_ACCESS__?: ResourceAccessDebugInterface }
+    windowWithResourceAccess.__RESOURCE_ACCESS__ = {
       checkResourceAccess,
       checkBulkResourceAccess,
       filterAccessibleResources,

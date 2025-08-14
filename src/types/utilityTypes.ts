@@ -1,0 +1,354 @@
+/**
+ * 유틸리티 타입 정의
+ * @description Any 타입 제거를 위한 안전한 유틸리티 타입들
+ * @version v1.0
+ * @since 2025-08-14
+ */
+
+import type { Database } from './database'
+import type { UserProfile, UserRole } from './auth.types'
+
+// ================================================================
+// 관계형 데이터 타입
+// ================================================================
+
+/**
+ * 출결 관계 데이터 (class_schedules 포함)
+ */
+export interface AttendanceWithRelations {
+  id: string
+  tenant_id: string | null
+  student_id: string
+  class_schedule_id: string
+  status: Database['public']['Enums']['attendance_status']
+  checked_at: string | null
+  memo: string | null
+  created_at: string
+  updated_at: string
+  class_schedules?: {
+    id: string
+    class_id: string
+    classes?: {
+      id: string
+      instructor_id: string | null
+      name: string
+      tenant_id: string | null
+    }
+  }
+}
+
+/**
+ * 학생 관계 데이터 (enrollments 포함)
+ */
+export interface StudentWithRelations {
+  id: string
+  tenant_id: string | null
+  name: string
+  student_number: string
+  email: string | null
+  phone: string | null
+  parent_name: string | null
+  parent_phone_1: string | null
+  parent_phone_2: string | null
+  address: string | null
+  grade: string | null
+  status: Database['public']['Enums']['student_status']
+  enrollment_date: string | null
+  graduation_date: string | null
+  memo: string | null
+  display_color: string | null
+  created_at: string
+  updated_at: string
+  enrollments?: Array<{
+    id: string
+    class_id: string
+    enrollment_date: string
+    classes?: {
+      id: string
+      name: string
+      instructor_id: string | null
+    }
+  }>
+}
+
+/**
+ * 클래스 관계 데이터 (instructor 포함)
+ */
+export interface ClassWithRelations {
+  id: string
+  tenant_id: string | null
+  name: string
+  description: string | null
+  grade: string | null
+  course: string | null
+  subject: string | null
+  instructor_id: string | null
+  max_students: number
+  current_students: number
+  classroom: string | null
+  color: string | null
+  status: Database['public']['Enums']['class_status']
+  start_date: string | null
+  end_date: string | null
+  created_at: string
+  updated_at: string
+  instructor?: {
+    id: string
+    name: string
+    email: string
+    role: UserRole
+  }
+}
+
+// ================================================================
+// 테스트 결과 타입
+// ================================================================
+
+/**
+ * 일반적인 테스트 결과
+ */
+export interface TestResult {
+  success: boolean
+  count?: number
+  error?: string
+  message?: string
+  data?: unknown
+}
+
+/**
+ * RLS 테스트 결과
+ */
+export interface RLSTestResult {
+  success: boolean
+  count: number
+  error?: string
+  description: string
+  expectedResult: 'allow' | 'deny'
+  actualResult: 'allow' | 'deny'
+}
+
+/**
+ * 권한 테스트 결과
+ */
+export interface PermissionTestResult {
+  permission: string
+  resource: string
+  action: string
+  granted: boolean
+  reason?: string
+  userRole: UserRole
+  tenantId?: string
+}
+
+// ================================================================
+// 업데이트 데이터 타입
+// ================================================================
+
+/**
+ * 테넌트 역할 업데이트 데이터
+ */
+export interface TenantRoleUpdate {
+  name?: string
+  description?: string
+  permissions?: string[]
+  is_active?: boolean
+  priority?: number
+  metadata?: Record<string, unknown>
+  updated_at?: string
+}
+
+/**
+ * 사용자 프로필 업데이트 데이터
+ */
+export interface UserProfileUpdate {
+  name?: string
+  email?: string
+  role?: UserRole
+  status?: Database['public']['Enums']['user_status']
+  tenant_id?: string | null
+  metadata?: Record<string, unknown>
+  updated_at?: string
+}
+
+/**
+ * 권한 컨텍스트 메타데이터
+ */
+export interface PermissionMetadata {
+  userId?: string
+  tenantId?: string | null
+  resourceId?: string
+  resourceOwnerId?: string
+  sessionId?: string
+  ipAddress?: string
+  userAgent?: string
+  requestPath?: string
+  timestamp?: string
+  [key: string]: unknown
+}
+
+// ================================================================
+// API 응답 타입
+// ================================================================
+
+/**
+ * 표준 API 응답
+ */
+export interface APIResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+  meta?: {
+    total?: number
+    page?: number
+    limit?: number
+    timestamp: string
+  }
+}
+
+/**
+ * 페이지네이션 응답
+ */
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+// ================================================================
+// 개발 도구 인터페이스
+// ================================================================
+
+/**
+ * RBAC 디버그 인터페이스
+ */
+export interface RBACDebugInterface {
+  checkPermission: (
+    profile: UserProfile,
+    permission: { resource: string; action: string },
+    context?: PermissionMetadata
+  ) => boolean
+  canPerformAction: (
+    profile: UserProfile,
+    resource: string,
+    action: string,
+    context?: PermissionMetadata
+  ) => boolean
+  getUserPermissions: (profile: UserProfile) => string[]
+  getRolePermissions: (role: UserRole) => string[]
+  validatePermissionContext: (context: unknown) => context is PermissionMetadata
+}
+
+/**
+ * 테넌트 역할 디버그 인터페이스
+ */
+export interface TenantRolesDebugInterface {
+  getTenantRoles: (tenantId: string) => Promise<unknown[]>
+  getUserTenantRole: (userId: string, tenantId: string) => Promise<unknown>
+  hasTenantPermission: (
+    profile: UserProfile,
+    tenantId: string,
+    permission: { resource: string; action: string }
+  ) => Promise<boolean>
+  updateTenantRole: (roleId: string, updates: TenantRoleUpdate) => Promise<boolean>
+}
+
+/**
+ * 리소스 접근 디버그 인터페이스
+ */
+export interface ResourceAccessDebugInterface {
+  checkResourceAccess: (
+    profile: UserProfile,
+    resource: string,
+    action: string,
+    resourceId?: string
+  ) => Promise<{ granted: boolean; reason?: string }>
+  filterAccessibleResources: <T extends { id: string }>(
+    profile: UserProfile,
+    resource: string,
+    action: string,
+    items: T[]
+  ) => Promise<T[]>
+  canCreateResource: (
+    profile: UserProfile,
+    resource: string,
+    tenantId?: string
+  ) => Promise<boolean>
+  cache: {
+    get: (key: string) => boolean | null
+    set: (key: string, value: boolean) => void
+    invalidate: (userId?: string) => void
+  }
+}
+
+// ================================================================
+// Window 인터페이스 확장
+// ================================================================
+
+declare global {
+  interface Window {
+    __RBAC__?: RBACDebugInterface
+    __TENANT_ROLES__?: TenantRolesDebugInterface
+    __RESOURCE_ACCESS__?: ResourceAccessDebugInterface
+  }
+}
+
+// ================================================================
+// 타입 유틸리티
+// ================================================================
+
+/**
+ * 옵셔널 필드를 가진 타입에서 특정 필드를 필수로 만들기
+ */
+export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
+
+/**
+ * 특정 필드들만 옵셔널로 만들기
+ */
+export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+/**
+ * 깊은 Partial 타입
+ */
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
+}
+
+/**
+ * 안전한 Record 타입 (unknown 값)
+ */
+export type SafeRecord<K extends string | number | symbol = string> = Record<K, unknown>
+
+/**
+ * 테이블 이름 타입
+ */
+export type TableName = keyof Database['public']['Tables']
+
+/**
+ * 테이블 Row 타입 추출
+ */
+export type TableRow<T extends TableName> = Database['public']['Tables'][T]['Row']
+
+/**
+ * 테이블 Insert 타입 추출
+ */
+export type TableInsert<T extends TableName> = Database['public']['Tables'][T]['Insert']
+
+/**
+ * 테이블 Update 타입 추출
+ */
+export type TableUpdate<T extends TableName> = Database['public']['Tables'][T]['Update']
+
+// ================================================================
+// 내보내기
+// ================================================================
+
+export type {
+  // 기본 내보내기들은 이미 위에서 export interface로 정의됨
+}

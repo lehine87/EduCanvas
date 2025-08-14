@@ -18,6 +18,8 @@ import type {
   Permission,
   PermissionString
 } from '@/types/permissions.types'
+import type { TenantRoleUpdate } from '@/types/utilityTypes'
+import { isTenantRoleUpdate } from '@/types/typeGuards'
 import {
   tenantRoleManager,
   getUserTenantRole,
@@ -52,7 +54,7 @@ interface UseTenantRoleReturn {
     description?: string
     permissions?: Permission[]
   }) => Promise<boolean>
-  updateRole: (roleId: string, updates: any) => Promise<boolean>
+  updateRole: (roleId: string, updates: TenantRoleUpdate) => Promise<boolean>
   assignRole: (userId: string, roleId: string) => Promise<boolean>
   
   // 유틸리티
@@ -176,8 +178,13 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
   // 역할 업데이트
   const updateRoleHandler = useCallback(async (
     roleId: string,
-    updates: any
+    updates: TenantRoleUpdate
   ): Promise<boolean> => {
+    // 입력 검증
+    if (!isTenantRoleUpdate(updates)) {
+      setError('Invalid update data format')
+      return false
+    }
     if (!effectiveTenantId) {
       setError('No tenant ID available')
       return false

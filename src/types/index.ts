@@ -46,6 +46,96 @@ export type CreateEnrollmentRequest = StudentEnrollment // Simplified for now
 export type ClassFlowStudent = Student & { position?: { x: number; y: number } }
 
 // ================================================================
+// 2.5 유틸리티 타입 및 타입 가드 (v1.0 - Any 타입 제거용)
+// ================================================================
+export type {
+  // 관계형 데이터 타입
+  AttendanceWithRelations,
+  StudentWithRelations,
+  ClassWithRelations,
+  
+  // 테스트 결과 타입
+  TestResult,
+  RLSTestResult,
+  PermissionTestResult,
+  
+  // 업데이트 데이터 타입
+  TenantRoleUpdate,
+  UserProfileUpdate as UserProfileUpdateUtil,
+  PermissionMetadata,
+  
+  // API 응답 타입
+  APIResponse,
+  PaginatedResponse,
+  
+  // 개발 도구 인터페이스
+  RBACDebugInterface,
+  TenantRolesDebugInterface,
+  ResourceAccessDebugInterface,
+  
+  // 타입 유틸리티
+  WithRequired,
+  WithOptional,
+  DeepPartial,
+  SafeRecord,
+  TableName,
+  TableRow,
+  TableInsert,
+  TableUpdate
+} from './utilityTypes'
+
+export {
+  // 기본 타입 가드
+  isObject,
+  isString,
+  isNumber,
+  isBoolean,
+  isArray,
+  
+  // 사용자 및 프로필 타입 가드
+  isUserProfile,
+  isUserRole,
+  isUserProfileUpdate,
+  
+  // 권한 및 메타데이터 타입 가드
+  isPermissionMetadata,
+  isTenantRoleUpdate,
+  
+  // 관계형 데이터 타입 가드
+  isAttendanceWithRelations,
+  isStudentWithRelations,
+  isClassWithRelations,
+  
+  // 테스트 결과 타입 가드
+  isTestResult,
+  isRLSTestResult,
+  isPermissionTestResult,
+  
+  // API 응답 타입 가드
+  isAPIResponse,
+  isPaginatedResponse,
+  
+  // 유틸리티 타입 가드
+  isSafeRecord,
+  isNonEmptyObject,
+  hasKey,
+  hasKeys,
+  isArrayOf,
+  
+  // 특수 목적 타입 가드
+  isTableName,
+  isUUID,
+  isEmail,
+  isISODateString,
+  
+  // 조건부 타입 가드
+  isSuccessfulTestResult,
+  isFailedTestResult,
+  isAPIResponseWithData,
+  isAPIResponseWithError
+} from './typeGuards'
+
+// ================================================================
 // 3. UI 및 컴포넌트 타입들
 // ================================================================
 export type {

@@ -2,7 +2,10 @@ import { createClient } from '@/lib/supabase/middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimiter, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
 import { ROUTE_PERMISSIONS } from '@/types/permissions.types'
-import type { UserRole } from '@/types/auth.types'
+import type { UserRole, UserProfile } from '@/types/auth.types'
+import type { Database } from '@/types/database'
+import { isUserProfile } from '@/types/typeGuards'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 // ================================================================
 // 권한 검증 함수들
@@ -13,8 +16,8 @@ import type { UserRole } from '@/types/auth.types'
  */
 async function checkRoutePermissions(
   pathname: string,
-  userProfile: any,
-  supabase: any,
+  userProfile: UserProfile | null,
+  supabase: ReturnType<typeof createClient>,
   requestId: string
 ): Promise<{ hasAccess: boolean; reason?: string }> {
   // 정확한 경로 매칭
@@ -68,7 +71,10 @@ async function checkRoutePermissions(
 /**
  * 사용자 프로필 가져오기
  */
-async function getUserProfile(supabase: any, requestId: string) {
+async function getUserProfile(
+  supabase: ReturnType<typeof createClient>, 
+  requestId: string
+): Promise<UserProfile | null> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     

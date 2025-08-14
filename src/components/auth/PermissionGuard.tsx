@@ -112,7 +112,7 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const { profile } = useAuth()
   
-  const hasRole = profile && profile.role && allowedRoles.includes(profile.role as any)
+  const hasRole = profile && profile.role && allowedRoles.includes(profile.role)
   
   return hasRole ? <>{children}</> : <>{fallback}</>
 }

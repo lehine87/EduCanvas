@@ -25,6 +25,8 @@ import type {
   PermissionCheckOptions,
   PermissionError as PermissionErrorType
 } from '@/types/permissions.types'
+import type { RBACDebugInterface } from '@/types/utilityTypes'
+import { isPermissionMetadata } from '@/types/typeGuards'
 import {
   ROLE_PERMISSIONS,
   ROLE_PERMISSION_STRINGS,
@@ -320,7 +322,9 @@ function checkPermissionConditions(
 
     // 필드 기반 조건 체크
     if (condition.field && condition.operator && condition.value !== undefined) {
-      const fieldValue = (context.metadata as any)?.[condition.field]
+      const fieldValue = isPermissionMetadata(context.metadata) 
+        ? context.metadata[condition.field]
+        : undefined
       
       switch (condition.operator) {
         case 'eq':
@@ -630,7 +634,8 @@ export function getPermissionCacheStats() {
 if (process.env.NODE_ENV === 'development') {
   // 개발 환경에서 전역 디버깅 도구 제공
   if (typeof window !== 'undefined') {
-    (window as any).__RBAC__ = {
+    const windowWithRBAC = window as Window & { __RBAC__?: RBACDebugInterface }
+    windowWithRBAC.__RBAC__ = {
       hasPermission,
       hasAnyPermission,
       hasAllPermissions,

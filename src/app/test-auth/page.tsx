@@ -1,8 +1,8 @@
 'use client'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import type { RLSTestResult } from '@/types/utilityTypes'
 import { PermissionGuard, StudentWriteGuard, AdminOnly } from '@/components/auth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { supabase } from '@/lib/auth/supabaseAuth'
@@ -164,7 +164,7 @@ function AuthTestPanel() {
 
 function RLSTestPanel() {
   const { user, tenantId } = useAuth()
-  const [rlsResults, setRlsResults] = useState<Record<string, any>>({})
+  const [rlsResults, setRlsResults] = useState<Record<string, RLSTestResult>>({})
   const [testing, setTesting] = useState(false)
   
   const testRLSPolicies = async () => {
@@ -254,16 +254,16 @@ function RLSTestPanel() {
               <div className="flex justify-between items-center">
                 <h4 className="font-medium">{testName}</h4>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  (result as any)?.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  result?.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {(result as any)?.success ? '✅ 성공' : '❌ 실패'}
+                  {result?.success ? '✅ 성공' : '❌ 실패'}
                 </span>
               </div>
               
               <div className="mt-2 text-sm">
-                <p><strong>조회된 레코드 수:</strong> {(result as any)?.count}</p>
-                {(result as any)?.error && (
-                  <p className="text-red-600"><strong>오류:</strong> {(result as any)?.error}</p>
+                <p><strong>조회된 레코드 수:</strong> {result?.count}</p>
+                {result?.error && (
+                  <p className="text-red-600"><strong>오류:</strong> {result?.error}</p>
                 )}
                 
                 {testName === '다른 테넌트 접근 시도' && (
@@ -280,7 +280,7 @@ function RLSTestPanel() {
           <div className="mt-4 p-3 bg-green-50 rounded-md">
             <h4 className="font-medium text-green-800 mb-2">🎯 RLS 정책 평가</h4>
             <div className="text-sm text-green-700">
-              {(rlsResults['다른 테넌트 접근 시도'] as any)?.count === 0 ? 
+              {rlsResults['다른 테넌트 접근 시도']?.count === 0 ? 
                 '✅ 테넌트 격리가 제대로 작동하고 있습니다!' :
                 '⚠️  다른 테넌트 데이터에 접근이 가능합니다. RLS 정책을 확인해주세요.'
               }

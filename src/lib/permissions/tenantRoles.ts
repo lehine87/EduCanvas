@@ -14,6 +14,8 @@ import type {
   PermissionContext 
 } from '@/types/permissions.types'
 import { ROLE_PERMISSIONS, parsePermissionString } from '@/types/permissions.types'
+import type { TenantRoleUpdate as TenantRoleUpdateUtil, TenantRolesDebugInterface } from '@/types/utilityTypes'
+import { isTenantRoleUpdate } from '@/types/typeGuards'
 import { createClient } from '@/lib/db/supabase/client'
 
 // ================================================================
@@ -421,7 +423,7 @@ export async function updateTenantRole(
 ): Promise<boolean> {
   const supabase = createClient()
 
-  const updateData: any = {}
+  const updateData: Partial<TenantRoleUpdate> = {}
   
   if (updates.display_name !== undefined) {
     updateData.display_name = updates.display_name
@@ -504,7 +506,8 @@ export async function assignTenantRole(
 
 if (process.env.NODE_ENV === 'development') {
   if (typeof window !== 'undefined') {
-    (window as any).__TENANT_ROLES__ = {
+    const windowWithTenantRoles = window as Window & { __TENANT_ROLES__?: TenantRolesDebugInterface }
+    windowWithTenantRoles.__TENANT_ROLES__ = {
       manager: tenantRoleManager,
       hasTenantPermission,
       getUserTenantRole,

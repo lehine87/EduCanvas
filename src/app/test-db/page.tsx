@@ -1,8 +1,7 @@
 'use client'
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { TableName } from '@/types/utilityTypes'
 
 interface TestResult {
   test: string
@@ -158,7 +157,7 @@ export default function DatabaseTestPage() {
       for (const tableName of expectedTables) {
         try {
           const { error } = await supabase
-            .from(tableName as any)
+            .from(tableName as TableName)
             .select('count', { count: 'exact', head: true })
           
           if (error) {
@@ -255,7 +254,7 @@ export default function DatabaseTestPage() {
                   {result.message}
                 </p>
                 
-                {result.data && (result.data as any) && (
+                {result.data && result.data && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
                       상세 데이터 보기
