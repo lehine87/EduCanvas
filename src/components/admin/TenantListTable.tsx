@@ -35,13 +35,33 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     try {
       console.log(`🔄 테넌트 상태 변경 중: ${currentStatus ? '비활성화' : '활성화'}`)
       
-      const { error } = await supabase
-        .from('tenants')
-        .update({ is_active: !currentStatus })
-        .eq('id', tenantId)
+      // 현재 세션의 access_token 가져오기
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session?.access_token) {
+        console.error('❌ 세션 토큰 가져오기 실패:', sessionError?.message)
+        alert('인증 토큰을 가져올 수 없습니다. 다시 로그인해주세요.')
+        return
+      }
 
-      if (error) {
-        console.error('테넌트 상태 변경 실패:', error)
+      // API 호출로 변경
+      const response = await fetch('/api/system-admin/toggle-tenant-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          tenantId,
+          isActive: !currentStatus
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('❌ 테넌트 상태 변경 API 실패:', result.error)
+        alert(result.error || '테넌트 상태 변경에 실패했습니다.')
         return
       }
 
@@ -58,10 +78,11 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
         onTenantsUpdate(updatedTenants)
       }
 
-      console.log('✅ 테넌트 상태 변경 성공')
+      console.log('✅ 테넌트 상태 변경 성공:', result.message)
       
     } catch (error) {
-      console.error('테넌트 상태 변경 예외:', error)
+      console.error('❌ 테넌트 상태 변경 예외:', error)
+      alert('테넌트 상태 변경 중 오류가 발생했습니다.')
     } finally {
       // 로딩 상태 종료
       setToggleLoadingStates(prev => {

@@ -255,7 +255,25 @@ export type {
   ApproveMemberRequest,
   UpdateMemberRequest,
   CreateTenantRequest,
-  CreateTenantResponse
+  CreateTenantResponse,
+  ToggleTenantStatusRequest,
+  ToggleTenantStatusResponse,
+  
+  // 학생 관리 API
+  GetStudentsRequest,
+  GetStudentsResponse,
+  CreateStudentRequest,
+  CreateStudentResponse,
+  BulkUpdateStudentsRequest,
+  BulkUpdateStudentsResponse,
+  
+  // 클래스 관리 API
+  GetClassesRequest,
+  GetClassesResponse,
+  CreateClassRequest,
+  CreateClassResponse,
+  MoveStudentRequest,
+  MoveStudentResponse
 } from './api.types'
 
 export {

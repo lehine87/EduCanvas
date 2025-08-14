@@ -188,6 +188,281 @@ export interface CreateTenantResponse {
   }
 }
 
+/**
+ * 테넌트 상태 토글 요청 타입
+ */
+export interface ToggleTenantStatusRequest {
+  tenantId: string
+  isActive: boolean
+}
+
+/**
+ * 테넌트 상태 토글 응답 타입
+ */
+export interface ToggleTenantStatusResponse {
+  success: boolean
+  data: {
+    tenant: {
+      id: string
+      name: string
+      is_active: boolean
+    }
+  }
+  message: string
+}
+
+// ================================================================
+// 4. 학생 관리 API 타입
+// ================================================================
+
+/**
+ * 학생 목록 조회 요청 타입
+ */
+export interface GetStudentsRequest {
+  tenantId: string
+  classId?: string
+  status?: 'active' | 'inactive' | 'graduated' | 'all'
+  limit?: number
+  offset?: number
+  search?: string
+}
+
+/**
+ * 학생 목록 조회 응답 타입
+ */
+export interface GetStudentsResponse {
+  success: boolean
+  data: {
+    students: Array<Database['public']['Tables']['students']['Row'] & {
+      classes?: {
+        id: string
+        name: string
+        grade?: string
+        course?: string
+      }
+      student_enrollments?: Array<{
+        id: string
+        status: string
+        enrolled_at: string
+        course_packages?: {
+          id: string
+          name: string
+          duration_months?: number
+        }
+      }>
+    }>
+    pagination: {
+      total: number
+      limit: number
+      offset: number
+      hasMore: boolean
+    }
+  }
+}
+
+/**
+ * 학생 생성 요청 타입
+ */
+export interface CreateStudentRequest {
+  tenantId: string
+  name: string
+  student_number: string
+  phone?: string
+  email?: string
+  parent_name?: string
+  parent_phone_1?: string
+  parent_phone_2?: string
+  grade?: string
+  school?: string
+  address?: string
+  notes?: string
+  status?: 'active' | 'inactive'
+}
+
+/**
+ * 학생 생성 응답 타입
+ */
+export interface CreateStudentResponse {
+  success: boolean
+  data: {
+    student: Database['public']['Tables']['students']['Row']
+  }
+  message: string
+}
+
+/**
+ * 학생 대량 업데이트 요청 타입
+ */
+export interface BulkUpdateStudentsRequest {
+  tenantId: string
+  updates: Array<{
+    studentId: string
+    updates: {
+      class_id?: string
+      status?: 'active' | 'inactive' | 'graduated'
+      grade?: string
+      phone?: string
+      email?: string
+      parent_name?: string
+      parent_phone_1?: string
+      parent_phone_2?: string
+      notes?: string
+    }
+  }>
+}
+
+/**
+ * 학생 대량 업데이트 응답 타입
+ */
+export interface BulkUpdateStudentsResponse {
+  success: boolean
+  data: {
+    total: number
+    successful: number
+    failed: number
+    results: Array<{
+      studentId: string
+      success: boolean
+      student?: {
+        id: string
+        name: string
+        student_number: string
+        class_id?: string
+        status: string
+      }
+    }>
+    errors: Array<{
+      studentId: string
+      error: string
+    }>
+  }
+  message: string
+}
+
+// ================================================================
+// 5. 클래스 관리 API 타입
+// ================================================================
+
+/**
+ * 클래스 목록 조회 요청 타입
+ */
+export interface GetClassesRequest {
+  tenantId: string
+  includeStudents?: boolean
+  status?: 'active' | 'inactive' | 'all'
+  grade?: string
+  course?: string
+}
+
+/**
+ * 클래스 목록 조회 응답 타입
+ */
+export interface GetClassesResponse {
+  success: boolean
+  data: {
+    classes: Array<Database['public']['Tables']['classes']['Row'] & {
+      instructors?: {
+        id: string
+        name: string
+        email: string
+      }
+      classrooms?: {
+        id: string
+        name: string
+        capacity?: number
+      }
+      students?: Array<{
+        id: string
+        name: string
+        student_number: string
+        status: string
+        grade?: string
+        phone?: string
+        email?: string
+      }>
+      student_count?: number
+    }>
+    total: number
+  }
+}
+
+/**
+ * 클래스 생성 요청 타입
+ */
+export interface CreateClassRequest {
+  tenantId: string
+  name: string
+  grade?: string
+  course?: string
+  instructor_id?: string
+  classroom_id?: string
+  max_students?: number
+  description?: string
+  status?: 'active' | 'inactive'
+}
+
+/**
+ * 클래스 생성 응답 타입
+ */
+export interface CreateClassResponse {
+  success: boolean
+  data: {
+    class: Database['public']['Tables']['classes']['Row'] & {
+      instructors?: {
+        id: string
+        name: string
+        email: string
+      }
+      classrooms?: {
+        id: string
+        name: string
+        capacity?: number
+      }
+    }
+  }
+  message: string
+}
+
+/**
+ * 학생 클래스 이동 요청 타입
+ */
+export interface MoveStudentRequest {
+  tenantId: string
+  studentId: string
+  sourceClassId: string | null
+  targetClassId: string | null
+  moveReason?: string
+  effectiveDate?: string
+}
+
+/**
+ * 학생 클래스 이동 응답 타입
+ */
+export interface MoveStudentResponse {
+  success: boolean
+  data: {
+    student: Database['public']['Tables']['students']['Row'] & {
+      classes?: {
+        id: string
+        name: string
+      }
+    }
+    move: {
+      from: {
+        classId: string | null
+        className: string
+      }
+      to: {
+        classId: string | null
+        className: string
+      }
+      movedAt: string
+      movedBy: string
+    }
+  }
+  message: string
+}
+
 // ================================================================
 // 4. 타입 가드 함수들
 // ================================================================
