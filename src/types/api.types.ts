@@ -15,7 +15,7 @@ import type { UserStatus } from './index'
 /**
  * 표준 API 응답 타입
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success?: boolean
   data?: T
   error?: string
@@ -25,7 +25,7 @@ export interface ApiResponse<T = any> {
 /**
  * 페이지네이션 응답 타입
  */
-export interface PaginatedApiResponse<T = any> extends ApiResponse<T[]> {
+export interface PaginatedApiResponse<T = unknown> extends ApiResponse<T[]> {
   pagination?: {
     page: number
     limit: number
