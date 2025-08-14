@@ -1,6 +1,98 @@
 import { createClient } from '@/lib/supabase/middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimiter, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
+import { ROUTE_PERMISSIONS } from '@/types/permissions.types'
+import type { UserRole } from '@/types/auth.types'
+
+// ================================================================
+// 권한 검증 함수들
+// ================================================================
+
+/**
+ * 경로에 대한 권한 체크
+ */
+async function checkRoutePermissions(
+  pathname: string,
+  userProfile: any,
+  supabase: any,
+  requestId: string
+): Promise<{ hasAccess: boolean; reason?: string }> {
+  // 정확한 경로 매칭
+  let routeConfig = ROUTE_PERMISSIONS[pathname]
+  
+  // 동적 경로 처리 (예: /admin/students/[id])
+  if (!routeConfig) {
+    const dynamicRoutes = Object.keys(ROUTE_PERMISSIONS).filter(route => 
+      route.includes('[') || route.includes('*')
+    )
+    
+    for (const route of dynamicRoutes) {
+      const pattern = route
+        .replace(/\[.*?\]/g, '[^/]+')  // [id] → [^/]+
+        .replace(/\*/g, '.*')          // * → .*
+      
+      const regex = new RegExp(`^${pattern}$`)
+      if (regex.test(pathname)) {
+        routeConfig = ROUTE_PERMISSIONS[route]
+        break
+      }
+    }
+  }
+  
+  // 라우트 설정이 없으면 허용 (기본 동작)
+  if (!routeConfig) {
+    return { hasAccess: true }
+  }
+  
+  // 역할 기반 체크
+  if (routeConfig.roles) {
+    if (!userProfile?.role) {
+      return { hasAccess: false, reason: 'no_role' }
+    }
+    
+    if (!routeConfig.roles.includes(userProfile.role as UserRole)) {
+      return { hasAccess: false, reason: 'insufficient_role' }
+    }
+  }
+  
+  // 권한 문자열 체크 (향후 구현)
+  if (routeConfig.permissions) {
+    // 여기서는 기본적인 체크만 수행
+    // 실제 권한 체크는 페이지 레벨에서 수행
+    console.log(`🔍 [${requestId}] Route permissions required:`, routeConfig.permissions)
+  }
+  
+  return { hasAccess: true }
+}
+
+/**
+ * 사용자 프로필 가져오기
+ */
+async function getUserProfile(supabase: any, requestId: string) {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return null
+    }
+    
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id, role, tenant_id, status, email_verified')
+      .eq('id', user.id)
+      .single()
+    
+    if (profileError || !profile) {
+      console.warn(`⚠️ [${requestId}] Profile not found for user:`, user.id)
+      return null
+    }
+    
+    return { user, profile }
+  } catch (error) {
+    console.error(`❌ [${requestId}] Error fetching user profile:`, error)
+    return null
+  }
+}
 
 // 보안 헤더 설정
 const SECURITY_HEADERS = {
@@ -156,6 +248,113 @@ export async function middleware(request: NextRequest) {
     }
     
     return Response.redirect(redirectUrl.toString())
+  }
+
+  // 인증된 사용자의 권한 체크 (새로운 RBAC 시스템)
+  if (isProtectedPath && isAuthenticated) {
+    try {
+      const userProfileData = await getUserProfile(supabase, requestId)
+      
+      if (!userProfileData) {
+        // 프로필이 없는 경우 에러 페이지로 리다이렉트
+        const errorUrl = new URL('/auth/login', request.url)
+        errorUrl.searchParams.set('error', 'profile-error')
+        errorUrl.searchParams.set('message', 'User profile not found')
+        
+        if (isVercel) {
+          console.warn(`⚠️ [VERCEL-${requestId}] PROFILE NOT FOUND:`, {
+            path: url.pathname,
+            redirect: errorUrl.toString()
+          })
+        }
+        
+        return Response.redirect(errorUrl.toString())
+      }
+
+      const { user, profile } = userProfileData
+
+      // 계정 상태 확인
+      if (profile.status === 'suspended' || profile.status === 'inactive') {
+        const errorUrl = new URL('/auth/login', request.url)
+        errorUrl.searchParams.set('error', 'account-suspended')
+        errorUrl.searchParams.set('message', 'Account is suspended or inactive')
+        
+        if (isVercel) {
+          console.warn(`🚨 [VERCEL-${requestId}] ACCOUNT SUSPENDED:`, {
+            userId: user.id,
+            status: profile.status,
+            path: url.pathname
+          })
+        }
+        
+        return Response.redirect(errorUrl.toString())
+      }
+
+      // 이메일 인증 확인 (필요한 경로에 대해)
+      const requireEmailVerification = ['/admin', '/onboarding']
+      const needsVerification = requireEmailVerification.some(path => url.pathname.startsWith(path))
+      
+      if (needsVerification && !profile.email_verified) {
+        const errorUrl = new URL('/auth/login', request.url)
+        errorUrl.searchParams.set('error', 'email-not-verified')
+        errorUrl.searchParams.set('message', 'Please verify your email address')
+        
+        if (isVercel) {
+          console.warn(`📧 [VERCEL-${requestId}] EMAIL NOT VERIFIED:`, {
+            userId: user.id,
+            email: user.email,
+            path: url.pathname
+          })
+        }
+        
+        return Response.redirect(errorUrl.toString())
+      }
+
+      // 라우트별 권한 체크
+      const permissionCheck = await checkRoutePermissions(
+        url.pathname,
+        profile,
+        supabase,
+        requestId
+      )
+
+      if (!permissionCheck.hasAccess) {
+        const unauthorizedUrl = new URL('/unauthorized', request.url)
+        unauthorizedUrl.searchParams.set('reason', permissionCheck.reason || 'access_denied')
+        unauthorizedUrl.searchParams.set('path', url.pathname)
+        
+        if (isVercel) {
+          console.warn(`🚫 [VERCEL-${requestId}] ACCESS DENIED:`, {
+            userId: user.id,
+            role: profile.role,
+            path: url.pathname,
+            reason: permissionCheck.reason
+          })
+        }
+        
+        return Response.redirect(unauthorizedUrl.toString())
+      }
+
+      // 권한 체크 통과 로깅
+      if (isVercel) {
+        console.log(`✅ [VERCEL-${requestId}] ACCESS GRANTED:`, {
+          userId: user.id,
+          role: profile.role,
+          path: url.pathname,
+          tenantId: profile.tenant_id
+        })
+      }
+
+    } catch (error) {
+      console.error(`❌ [${requestId}] Permission check error:`, error)
+      
+      // 권한 체크 실패 시 에러 페이지로 리다이렉트
+      const errorUrl = new URL('/auth/login', request.url)
+      errorUrl.searchParams.set('error', 'permission-check-failed')
+      errorUrl.searchParams.set('message', 'Failed to verify permissions')
+      
+      return Response.redirect(errorUrl.toString())
+    }
   }
 
   // 인증된 사용자가 auth 페이지에 접근하는 경우

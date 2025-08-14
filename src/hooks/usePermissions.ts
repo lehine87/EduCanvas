@@ -1,7 +1,47 @@
+/**
+ * 권한 관련 커스텀 훅 (통합 버전)
+ * @description RBAC 권한 시스템을 React 컴포넌트에서 쉽게 사용하기 위한 훅
+ * @version v4.1 - 기존 인터페이스 유지하면서 새로운 RBAC 시스템 통합
+ * @since 2025-08-14
+ */
+
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useMemo } from 'react'
+import { useMemo, useCallback, useEffect, useState } from 'react'
+import type { 
+  UserRole,
+  UserProfile 
+} from '@/types/auth.types'
+import type { 
+  Resource, 
+  Action, 
+  Permission,
+  PermissionString,
+  PermissionContext,
+  PermissionCheckDetails
+} from '@/types/permissions.types'
+import { 
+  hasPermission as checkPermission,
+  hasAnyPermission as checkAnyPermission,
+  hasAllPermissions as checkAllPermissions,
+  canPerformAction as canPerform,
+  getUserPermissions,
+  getUserPermissionStrings,
+  checkPermissionDetails,
+  invalidatePermissionCache
+} from '@/lib/permissions/rbac'
+import { 
+  checkResourceAccess,
+  filterAccessibleResources,
+  isInstructorStudent,
+  isInstructorClass,
+  isResourceOwner
+} from '@/lib/permissions/resourceAccess'
+
+// ================================================================
+// 기존 인터페이스 유지 (하위 호환성)
+// ================================================================
 
 export interface PermissionCheck {
   canRead: (resource: string) => boolean
@@ -66,9 +106,59 @@ export interface ResourcePermissions {
   }
 }
 
+// ================================================================
+// 메인 usePermissions 훅 (기존 인터페이스 유지 + 확장)
+// ================================================================
+
 export function usePermissions() {
-  const { user, hasPermission, isOwner, isAdmin, isInstructor } = useAuth()
+  const { user, profile, hasPermission: legacyHasPermission, isOwner, isAdmin, isInstructor } = useAuth()
   
+  // 새로운 RBAC 시스템의 권한 체크 함수
+  const hasNewPermission = useCallback((
+    resource: string,
+    action: string
+  ): boolean => {
+    if (!profile) return false
+    
+    // 리소스와 액션을 새로운 타입으로 매핑
+    const resourceMap: Record<string, Resource> = {
+      'students': 'student',
+      'classes': 'class',
+      'videos': 'document', // videos를 document로 매핑
+      'payments': 'payment',
+      'reports': 'analytics',
+      'settings': 'system',
+      'users': 'user'
+    }
+    
+    const actionMap: Record<string, Action> = {
+      'read': 'read',
+      'write': 'update',
+      'delete': 'delete',
+      'admin': 'manage',
+      'create': 'create'
+    }
+    
+    const mappedResource = resourceMap[resource] || resource as Resource
+    const mappedAction = actionMap[action] || action as Action
+    
+    return canPerform(profile, mappedResource, mappedAction, {
+      userId: user?.id || '',
+      tenantId: profile.tenant_id
+    })
+  }, [profile, user])
+  
+  // 기존 인터페이스와의 호환성을 위한 래퍼
+  const hasPermission = useCallback((resource: string, action: string): boolean => {
+    // 먼저 새로운 RBAC 시스템으로 체크
+    const newPermissionResult = hasNewPermission(resource, action)
+    if (newPermissionResult) return true
+    
+    // 폴백으로 기존 시스템 체크
+    return legacyHasPermission(resource, action)
+  }, [hasNewPermission, legacyHasPermission])
+  
+  // PermissionCheck 인터페이스 구현
   const permissionCheck: PermissionCheck = useMemo(() => ({
     canRead: (resource: string) => hasPermission(resource, 'read'),
     canWrite: (resource: string) => hasPermission(resource, 'write'),
@@ -77,29 +167,31 @@ export function usePermissions() {
     hasPermission
   }), [hasPermission])
   
+  // RoleCheck 인터페이스 구현
   const roleCheck: RoleCheck = useMemo(() => {
-    const role = user?.role
+    const role = profile?.role || user?.role
     return {
-      isOwner: isOwner(),
-      isAdmin: isAdmin(),
-      isInstructor: isInstructor(),
+      isOwner: isOwner() || role === 'system_admin',
+      isAdmin: isAdmin() || role === 'admin' || role === 'system_admin',
+      isInstructor: isInstructor() || role === 'instructor',
       isStaff: role === 'staff',
       isViewer: role === 'viewer',
       role,
       roleLevel: getRoleLevel(role)
     }
-  }, [user?.role, isOwner, isAdmin, isInstructor])
+  }, [user?.role, profile?.role, isOwner, isAdmin, isInstructor])
   
+  // ResourcePermissions 인터페이스 구현
   const resourcePermissions: ResourcePermissions = useMemo(() => ({
     students: {
       canRead: hasPermission('students', 'read'),
-      canWrite: hasPermission('students', 'write'),
+      canWrite: hasPermission('students', 'write') || hasPermission('students', 'create'),
       canDelete: hasPermission('students', 'delete'),
       canAdmin: hasPermission('students', 'admin')
     },
     classes: {
       canRead: hasPermission('classes', 'read'),
-      canWrite: hasPermission('classes', 'write'),
+      canWrite: hasPermission('classes', 'write') || hasPermission('classes', 'create'),
       canDelete: hasPermission('classes', 'delete'),
       canAdmin: hasPermission('classes', 'admin')
     },
@@ -111,7 +203,7 @@ export function usePermissions() {
     },
     payments: {
       canRead: hasPermission('payments', 'read'),
-      canWrite: hasPermission('payments', 'write'),
+      canWrite: hasPermission('payments', 'write') || hasPermission('payments', 'create'),
       canDelete: hasPermission('payments', 'delete'),
       canAdmin: hasPermission('payments', 'admin')
     },
@@ -135,16 +227,39 @@ export function usePermissions() {
     }
   }), [hasPermission])
   
+  // 새로운 RBAC 시스템의 추가 기능들
+  const permissions = useMemo(() => {
+    if (!profile) return []
+    return getUserPermissions(profile)
+  }, [profile])
+  
+  const permissionStrings = useMemo(() => {
+    if (!profile) return []
+    return getUserPermissionStrings(profile)
+  }, [profile]) as PermissionString[]
+  
+  // 권한 새로고침
+  const refreshPermissions = useCallback(() => {
+    if (user?.id) {
+      invalidatePermissionCache(user.id)
+    }
+  }, [user])
+  
   return {
     ...permissionCheck,
     ...roleCheck,
     resources: resourcePermissions,
-    user
+    user,
+    // 새로운 RBAC 시스템 추가 기능
+    permissions,
+    permissionStrings,
+    refreshPermissions
   }
 }
 
 function getRoleLevel(role?: string): number {
   switch (role) {
+    case 'system_admin': return 0
     case 'owner': return 1
     case 'admin': return 2
     case 'instructor': return 3
@@ -154,7 +269,10 @@ function getRoleLevel(role?: string): number {
   }
 }
 
-// Specialized hooks for common permission patterns
+// ================================================================
+// 기존 특화 훅들 (하위 호환성 유지)
+// ================================================================
+
 export function useStudentPermissions() {
   const { resources } = usePermissions()
   return resources.students
@@ -252,4 +370,166 @@ export function useBulkOperationPermissions() {
     canExportData: isAdmin,
     canImportData: isAdmin
   }), [isAdmin, isInstructor, resources])
+}
+
+// ================================================================
+// 새로운 RBAC 시스템 전용 훅들
+// ================================================================
+
+/**
+ * 특정 리소스에 대한 권한 체크 훅
+ */
+export function useResourcePermissions(
+  resource: Resource,
+  resourceId?: string
+) {
+  const { profile } = useAuth()
+  const [permissions, setPermissions] = useState({
+    canRead: false,
+    canCreate: false,
+    canUpdate: false,
+    canDelete: false,
+    isOwner: false,
+    loading: true
+  })
+  
+  useEffect(() => {
+    if (!profile) {
+      setPermissions({
+        canRead: false,
+        canCreate: false,
+        canUpdate: false,
+        canDelete: false,
+        isOwner: false,
+        loading: false
+      })
+      return
+    }
+    
+    const checkPermissions = async () => {
+      const [read, update, del] = await Promise.all([
+        checkResourceAccess(profile, resource, 'read', resourceId),
+        checkResourceAccess(profile, resource, 'update', resourceId),
+        checkResourceAccess(profile, resource, 'delete', resourceId)
+      ])
+      
+      const create = canPerform(profile, resource, 'create')
+      const owner = resourceId ? await isResourceOwner(profile.id, resource, resourceId) : false
+      
+      setPermissions({
+        canRead: read.granted,
+        canCreate: create,
+        canUpdate: update.granted,
+        canDelete: del.granted,
+        isOwner: owner,
+        loading: false
+      })
+    }
+    
+    checkPermissions()
+  }, [profile, resource, resourceId])
+  
+  return permissions
+}
+
+/**
+ * 강사의 담당 학생/클래스 확인 훅
+ */
+export function useInstructorResources() {
+  const { user, profile } = useAuth()
+  
+  const checkIfMyStudent = useCallback(async (studentId: string): Promise<boolean> => {
+    if (!user || profile?.role !== 'instructor') return false
+    return isInstructorStudent(user.id, studentId)
+  }, [user, profile])
+  
+  const checkIfMyClass = useCallback(async (classId: string): Promise<boolean> => {
+    if (!user || profile?.role !== 'instructor') return false
+    return isInstructorClass(user.id, classId)
+  }, [user, profile])
+  
+  return {
+    checkIfMyStudent,
+    checkIfMyClass
+  }
+}
+
+/**
+ * 접근 가능한 리소스 필터링 훅
+ */
+export function useFilteredResources<T extends { id: string }>(
+  resource: Resource,
+  items: T[],
+  action: Action = 'read'
+) {
+  const { profile } = useAuth()
+  const [filteredItems, setFilteredItems] = useState<T[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    if (!profile) {
+      setFilteredItems([])
+      setLoading(false)
+      return
+    }
+    
+    const filterItems = async () => {
+      setLoading(true)
+      const accessible = await filterAccessibleResources(
+        profile,
+        resource,
+        action,
+        items
+      )
+      setFilteredItems(accessible)
+      setLoading(false)
+    }
+    
+    filterItems()
+  }, [profile, resource, action, items])
+  
+  return { items: filteredItems, loading }
+}
+
+/**
+ * 권한 기반 조건부 렌더링 훅
+ */
+export function useConditionalRender(
+  permission: PermissionString | Permission,
+  context?: PermissionContext
+) {
+  const { profile, user } = useAuth()
+  
+  const shouldRender = useMemo(() => {
+    if (!profile) return false
+    
+    const ctx = context || {
+      userId: user?.id || '',
+      tenantId: profile.tenant_id
+    }
+    
+    return checkPermission(profile, permission, ctx)
+  }, [profile, user, permission, context])
+  
+  return shouldRender
+}
+
+/**
+ * 역할 기반 네비게이션 아이템 필터링 훅
+ */
+export function useNavigationItems<T extends { requiredRoles?: UserRole[] }>(
+  items: T[]
+): T[] {
+  const { role } = usePermissions()
+  
+  return useMemo(() => {
+    if (!role) return []
+    
+    return items.filter(item => {
+      if (!item.requiredRoles || item.requiredRoles.length === 0) {
+        return true
+      }
+      return item.requiredRoles.includes(role as UserRole)
+    })
+  }, [items, role])
 }

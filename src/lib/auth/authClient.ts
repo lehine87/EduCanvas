@@ -56,116 +56,45 @@ export class AuthClient {
   private supabase = createClient()
 
   async signUp({ email, password, full_name }: SignUpData) {
-    console.log('🔐 SignUp 시도 (새로운 플로우):', { email, full_name })
+    console.log('🔐 SignUp 시도 (API 라우트 사용):', { email, full_name })
     
-    // 1. 이메일 중복 검사 (사전 검증)
-    console.log('📧 이메일 중복 검사 중...', email)
-    const { data: existingUser } = await this.supabase
-      .from('user_profiles')
-      .select('email')
-      .eq('email', email)
-      .single()
-    
-    if (existingUser) {
-      console.warn('⚠️ 이미 등록된 이메일:', email)
-      throw new Error('이미 등록된 이메일입니다. 로그인을 시도하거나 다른 이메일을 사용해주세요.')
-    }
-    
-    // 2. Supabase Auth 회원가입
-    const { data, error } = await this.supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${getAppUrl()}/auth/callback?next=/onboarding`,
-        data: {
+    try {
+      // API 라우트를 통해 회원가입 처리
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
           full_name
-        }
-      }
-    })
-
-    if (error) {
-      console.error('🚨 SignUp 오류:', error)
-      
-      // Supabase 특정 오류 메시지 변환
-      if (error.message?.includes('User already registered')) {
-        throw new Error('이미 등록된 이메일입니다. 로그인을 시도해주세요.')
-      } else if (error.message?.includes('Password should be')) {
-        throw new Error('비밀번호는 최소 8자 이상이어야 합니다.')
-      } else if (error.message?.includes('email_address_invalid')) {
-        throw new Error('유효하지 않은 이메일 주소입니다.')
-      } else if (error.message?.includes('weak_password')) {
-        throw new Error('비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.')
-      } else if (error.message?.includes('signup_disabled')) {
-        throw new Error('현재 회원가입이 비활성화되어 있습니다. 관리자에게 문의해주세요.')
-      }
-      
-      throw error
-    }
-    
-    console.log('✅ SignUp 성공:', data.user?.email)
-
-    // 기본 프로필만 생성 (tenant_id는 온보딩에서 설정)
-    if (data.user) {
-      try {
-        console.log('🔄 기본 사용자 프로필 생성 중...')
-
-        // 안전한 프로필 생성 (최소 필수 필드만 사용)
-        const profileData = {
-          id: data.user.id,
-          email: email,
-          name: full_name || email.split('@')[0] || 'User'
-          // role과 status는 DB 기본값 사용 (안전성 확보)
-          // tenant_id도 null로 유지 (온보딩에서 설정)
-        }
-        
-        console.log('🔄 프로필 생성 데이터:', profileData)
-
-        const { data: insertData, error: profileError } = await this.supabase
-          .from('user_profiles')
-          .insert(profileData)
-          .select()
-        
-        if (profileError) {
-          // 모든 에러 속성을 확인해보자
-          console.error('🚨 사용자 프로필 생성 오류 (상세):', {
-            message: profileError.message,
-            details: profileError.details,
-            hint: profileError.hint,
-            code: profileError.code,
-            stack: profileError.stack,
-            fullError: JSON.stringify(profileError, null, 2)
-          })
-          
-          // PostgreSQL 에러 코드 확인
-          if (profileError.code === '23502') {
-            throw new Error('필수 필드가 누락되었습니다. 관리자에게 문의해주세요.')
-          } else if (profileError.code === '23505') {
-            throw new Error('이미 존재하는 사용자입니다.')
-          } else if (profileError.code === '23503') {
-            throw new Error('데이터 참조 오류가 발생했습니다.')
-          }
-          
-          // 사용자에게 던질 에러
-          throw new Error(`프로필 생성 실패: ${profileError.message || profileError.code || 'Unknown error'}`)
-        } else {
-          console.log('✅ 기본 사용자 프로필 생성 성공:', insertData?.[0]?.email)
-        }
-      } catch (profileError: unknown) {
-        console.error('🚨 사용자 프로필 생성 예외 (상세):', {
-          name: profileError instanceof Error ? profileError.name : 'Unknown',
-          message: profileError instanceof Error ? profileError.message : String(profileError),
-          stack: profileError instanceof Error ? profileError.stack : undefined,
-          constructor: profileError instanceof Error ? profileError.constructor.name : 'Unknown',
-          keys: typeof profileError === 'object' && profileError ? Object.keys(profileError) : [],
-          stringified: JSON.stringify(profileError, undefined, 2)
         })
-        
-        // 사용자에게 던질 에러
-        throw new Error(`프로필 생성 예외: ${profileError instanceof Error ? profileError.message : String(profileError)}`)
-      }
-    }
+      })
 
-    return data
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('🚨 SignUp API 오류:', result)
+        throw new Error(result.error || '회원가입 중 오류가 발생했습니다.')
+      }
+
+      console.log('✅ SignUp 성공:', result.user?.email)
+      
+      return {
+        user: result.user,
+        session: null // 이메일 인증 전까지는 세션 없음
+      }
+    } catch (error) {
+      console.error('🚨 SignUp 예외:', error)
+      
+      if (error instanceof Error) {
+        // 이미 처리된 에러 메시지 그대로 전달
+        throw error
+      }
+      
+      throw new Error('회원가입 중 예상치 못한 오류가 발생했습니다.')
+    }
   }
 
   async signIn({ email, password }: SignInData) {
