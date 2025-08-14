@@ -148,13 +148,10 @@ export function isTenantRoleUpdate(value: unknown): value is TenantRoleUpdate {
   
   const update = value as Partial<TenantRoleUpdate>
   
-  if (update.name !== undefined && !isString(update.name)) return false
+  if (update.display_name !== undefined && !isString(update.display_name)) return false
   if (update.description !== undefined && !isString(update.description)) return false
-  if (update.permissions !== undefined && (!isArray(update.permissions) || !update.permissions.every(isString))) return false
-  if (update.is_active !== undefined && !isBoolean(update.is_active)) return false
-  if (update.priority !== undefined && !isNumber(update.priority)) return false
-  if (update.metadata !== undefined && !isObject(update.metadata)) return false
-  if (update.updated_at !== undefined && !isString(update.updated_at)) return false
+  if (update.permissions !== undefined && !isArray(update.permissions)) return false
+  if (update.hierarchy_level !== undefined && !isNumber(update.hierarchy_level)) return false
   
   return true
 }

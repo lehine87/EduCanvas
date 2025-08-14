@@ -89,7 +89,7 @@ export class TenantRoleManager {
       if (error || !data) return null
 
       // 권한 파싱
-      const permissions = this.parsePermissions(data.base_permissions as any)
+      const permissions = this.parsePermissions(data.base_permissions as Record<string, unknown> | null)
       
       const roleWithPermissions: TenantRoleWithPermissions = {
         ...data,
@@ -167,8 +167,9 @@ export class TenantRoleManager {
     }
 
     // 3. 멤버십의 권한 오버라이드 처리
-    if ((membership as any).permissions_override) {
-      const overridePermissions = this.parsePermissions((membership as any).permissions_override)
+    const membershipData = membership as TenantMembership & { permissions_override?: Record<string, unknown> }
+    if (membershipData.permissions_override) {
+      const overridePermissions = this.parsePermissions(membershipData.permissions_override)
       const basePermissions = baseRole ? ROLE_PERMISSIONS[baseRole] || [] : []
       return this.mergePermissions(baseRole, overridePermissions)
     }
@@ -435,7 +436,8 @@ export async function updateTenantRole(
   }
   
   if (updates.permissions) {
-    (updateData as any).permissions_override = {
+    const extendedUpdateData = updateData as TenantRoleUpdate & { permissions_override?: Record<string, unknown> }
+    extendedUpdateData.permissions_override = {
       permissions: updates.permissions.map(p => `${p.resource}:${p.action}`)
     }
   }

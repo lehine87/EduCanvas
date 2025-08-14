@@ -131,7 +131,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
   ): Promise<boolean> => {
     if (!user || !effectiveTenantId) return false
     
-    return hasTenantPermission(user as any, effectiveTenantId, permission)
+    return hasTenantPermission(user as unknown as UserProfile, effectiveTenantId, permission)
   }, [user, effectiveTenantId])
   
   // 테넌트 권한 목록 가져오기
@@ -191,7 +191,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
     }
     
     try {
-      const success = await updateTenantRole(effectiveTenantId, roleId, updates as any)
+      const success = await updateTenantRole(effectiveTenantId, roleId, updates)
       if (success) {
         await loadTenantRole() // 역할 정보 새로고침
       }

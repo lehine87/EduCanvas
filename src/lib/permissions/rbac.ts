@@ -332,13 +332,17 @@ function checkPermissionConditions(
         case 'neq':
           return fieldValue !== condition.value
         case 'gt':
-          return (fieldValue as any) > (condition.value as any)
+          return typeof fieldValue === 'number' && typeof condition.value === 'number' &&
+                 fieldValue > condition.value
         case 'gte':
-          return (fieldValue as any) >= (condition.value as any)
+          return typeof fieldValue === 'number' && typeof condition.value === 'number' &&
+                 fieldValue >= condition.value
         case 'lt':
-          return (fieldValue as any) < (condition.value as any)
+          return typeof fieldValue === 'number' && typeof condition.value === 'number' &&
+                 fieldValue < condition.value
         case 'lte':
-          return (fieldValue as any) <= (condition.value as any)
+          return typeof fieldValue === 'number' && typeof condition.value === 'number' &&
+                 fieldValue <= condition.value
         case 'in':
           return Array.isArray(condition.value) && 
                  condition.value.includes(fieldValue)
@@ -635,9 +639,10 @@ if (process.env.NODE_ENV === 'development') {
   // 개발 환경에서 전역 디버깅 도구 제공
   if (typeof window !== 'undefined') {
     const windowWithRBAC = window as Window & { __RBAC__?: RBACDebugInterface }
+    // Development only: Debug interface (타입 호환성을 위한 예외)
     windowWithRBAC.__RBAC__ = {
       hasPermission: hasPermission as any,
-      hasAnyPermission: hasAnyPermission as any,
+      hasAnyPermission: hasAnyPermission as any, 
       hasAllPermissions: hasAllPermissions as any,
       canPerformAction: canPerformAction as any,
       checkPermissionDetails: checkPermissionDetails as any,

@@ -634,6 +634,7 @@ export const resourceAccessCache = new ResourceAccessCache()
 if (process.env.NODE_ENV === 'development') {
   if (typeof window !== 'undefined') {
     const windowWithResourceAccess = window as Window & { __RESOURCE_ACCESS__?: ResourceAccessDebugInterface }
+    // Development only: Debug interface (타입 호환성을 위한 예외)
     windowWithResourceAccess.__RESOURCE_ACCESS__ = {
       checkResourceAccess: checkResourceAccess as any,
       checkBulkResourceAccess: checkBulkResourceAccess as any,

@@ -161,7 +161,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
     return NAVIGATION_ITEMS.filter(item => {
       // 역할 체크
       if (item.requiredRoles && item.requiredRoles.length > 0) {
-        if (!role || !item.requiredRoles.includes(role as any)) {
+        if (!role || !item.requiredRoles.includes(role as unknown as UserRole)) {
           return false
         }
       }
@@ -177,7 +177,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
       ...item,
       children: item.children?.filter(child => {
         if (child.requiredRoles && child.requiredRoles.length > 0) {
-          return role && child.requiredRoles.includes(role as any)
+          return role && child.requiredRoles.includes(role as unknown as UserRole)
         }
         return true
       })
@@ -296,7 +296,7 @@ export function useFilteredNavigation() {
   return useMemo(() => {
     return NAVIGATION_ITEMS.filter(item => {
       if (item.requiredRoles && item.requiredRoles.length > 0) {
-        return role && item.requiredRoles.includes(role as any)
+        return role && item.requiredRoles.includes(role as unknown as UserRole)
       }
       return true
     })

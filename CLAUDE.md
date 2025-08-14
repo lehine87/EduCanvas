@@ -122,6 +122,65 @@ const useSecureMemoryMonitor = () => {
 - **테스팅 단계**: 보안 테스트, 메모리 누수 테스트, 권한 테스트
 - **배포 단계**: 보안 헤더 검증, 환경변수 검증, 의존성 취약점 스캔
 
+## 🚨 CRITICAL: TypeScript 안전성 준수 (MANDATORY)
+
+**⚠️ 보안-수준 의무사항**: TypeScript 타입 에러는 보안 취약점과 동급으로 간주됩니다. 모든 코드는 strict mode 통과 필수입니다.
+
+### 📋 필수 체크리스트 (매 코드 작성시 MANDATORY)
+
+**🔥 NEVER SKIP**: 다음 체크리스트를 건너뛰면 런타임 에러 및 보안 위험이 발생합니다.
+
+#### ✅ 코드 작성 전
+- [ ] **DB 스키마 최신화**: `npx supabase gen types typescript` 실행
+- [ ] **Manual 참조**: `docs/typescript-safety-manual.md` 필수 확인
+- [ ] **기존 타입 검색**: 중복 정의 방지를 위한 `src/types/` 검색
+
+#### ✅ 코드 작성 중  
+- [ ] **Database-First 원칙**: 모든 데이터 타입은 `Database['public']['Tables']['테이블']['Row']` 기반
+- [ ] **any 절대 금지**: `any` 타입 사용시 즉시 `unknown` + 타입가드로 교체
+- [ ] **Type-Guard 필수**: `unknown` 타입에 대해 타입가드 함수 적용
+- [ ] **null 안전성**: 옵셔널 체이닝(`?.`) 및 명시적 null 체크
+
+#### ✅ 코드 작성 후 (절대 생략 불가)
+- [ ] **Strict Mode 검증**: `npx tsc --noEmit --strict` → **0 errors 필수**
+- [ ] **빌드 검증**: `npm run build` → 성공 확인
+- [ ] **타입 Export**: 새로운 타입은 `src/types/index.ts`에 추가
+
+### 🚫 위반시 강제 중단 사항
+
+다음 패턴 발견시 **즉시 작업 중단하고 수정** 필요:
+
+1. **`any` 타입 사용** → 보안 위험
+2. **중복 타입 정의** → 유지보수 위험  
+3. **타입 에러 무시** → 런타임 버그 위험
+4. **Database 스키마 무시** → 데이터 무결성 위험
+
+### ⚡ 긴급 참조 (타입 에러 발생시)
+
+```bash
+# 1. 타입 에러 확인
+npx tsc --noEmit --strict
+
+# 2. 매뉴얼 확인  
+cat docs/typescript-safety-manual.md
+
+# 3. DB 타입 업데이트 (필요시)
+npx supabase gen types typescript
+
+# 4. 재검증
+npx tsc --noEmit --strict  # 반드시 0 errors
+```
+
+### 🎯 성공 지표 (매일 확인)
+
+- ✅ **TypeScript strict mode**: 0 errors (필수)
+- ✅ **새로운 any 타입**: 0건 (절대 금지)
+- ✅ **빌드 성공**: 100% (타입 에러로 인한 실패 0건)
+
+**📚 완전한 가이드**: `docs/typescript-safety-manual.md`에서 상세 내용 확인
+
+---
+
 ## 🎯 TypeScript 타입 시스템 철학 및 권장사항
 
 **⚠️ 2025-08-12 Type Refactoring Completion**: 코드베이스 전체 타입 불일치 문제 해결 완료

@@ -7,6 +7,7 @@
 
 import type { Database } from './database'
 import type { UserProfile, UserRole } from './auth.types'
+import type { Permission } from './permissions.types'
 
 // ================================================================
 // 관계형 데이터 타입
@@ -143,16 +144,13 @@ export interface PermissionTestResult {
 // ================================================================
 
 /**
- * 테넌트 역할 업데이트 데이터
+ * 테넌트 역할 업데이트 데이터 (매뉴얼 Pattern 1: Database-First 통합)
  */
 export interface TenantRoleUpdate {
-  name?: string
+  display_name?: string
   description?: string
-  permissions?: string[]
-  is_active?: boolean
-  priority?: number
-  metadata?: Record<string, unknown>
-  updated_at?: string
+  permissions?: Permission[]
+  hierarchy_level?: number
 }
 
 /**

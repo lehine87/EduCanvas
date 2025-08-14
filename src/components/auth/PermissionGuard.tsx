@@ -8,6 +8,7 @@ import type {
   PermissionString,
   PermissionContext 
 } from '@/types/permissions.types'
+import type { UserProfile, UserRole } from '@/types/auth.types'
 import { hasPermission, canPerformAction } from '@/lib/permissions/rbac'
 import { checkResourceAccess } from '@/lib/permissions/resourceAccess'
 
@@ -47,8 +48,8 @@ export function PermissionGuard({
   const hasAccess = useMemo(() => {
     if (!user) return false
 
-    // AuthUser를 UserProfile로 변환 (타입 호환성을 위해)
-    const userProfile = user as any
+    // AuthUser를 UserProfile로 안전하게 변환 (매뉴얼 Pattern 2)
+    const userProfile = user as unknown as UserProfile
 
     // 권한 문자열이 직접 제공된 경우
     if (permissionString) {
@@ -115,7 +116,7 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const { user } = useAuth()
   
-  const hasRole = user && user.role && allowedRoles.includes(user.role as any)
+  const hasRole = user && user.role && allowedRoles.includes(user.role as unknown as UserRole)
   
   return hasRole ? <>{children}</> : <>{fallback}</>
 }

@@ -142,9 +142,10 @@ export function usePermissions() {
     const mappedResource = resourceMap[resource] || resource as Resource
     const mappedAction = actionMap[action] || action as Action
     
-    return canPerform(user as any, mappedResource, mappedAction, {
-      userId: user?.id || '',
-      tenantId: user.tenant_id
+    if (!user?.id) return false
+    return canPerform(user as unknown as UserProfile, mappedResource, mappedAction, {
+      userId: user.id,
+      tenantId: user.tenant_id || ''
     })
   }, [user])
   
@@ -230,12 +231,12 @@ export function usePermissions() {
   // 새로운 RBAC 시스템의 추가 기능들
   const permissions = useMemo(() => {
     if (!user) return []
-    return getUserPermissions(user as any)
+    return getUserPermissions(user as unknown as UserProfile)
   }, [user])
   
   const permissionStrings = useMemo(() => {
     if (!user) return []
-    return getUserPermissionStrings(user as any)
+    return getUserPermissionStrings(user as unknown as UserProfile)
   }, [user]) as PermissionString[]
   
   // 권한 새로고침
@@ -408,12 +409,12 @@ export function useResourcePermissions(
     
     const checkPermissions = async () => {
       const [read, update, del] = await Promise.all([
-        checkResourceAccess(user as any, resource, 'read', resourceId),
-        checkResourceAccess(user as any, resource, 'update', resourceId),
-        checkResourceAccess(user as any, resource, 'delete', resourceId)
+        checkResourceAccess(user as unknown as UserProfile, resource, 'read', resourceId),
+        checkResourceAccess(user as unknown as UserProfile, resource, 'update', resourceId),
+        checkResourceAccess(user as unknown as UserProfile, resource, 'delete', resourceId)
       ])
       
-      const create = canPerform(user as any, resource, 'create')
+      const create = canPerform(user as unknown as UserProfile, resource, 'create')
       const owner = resourceId ? await isResourceOwner(user.id, resource, resourceId) : false
       
       setPermissions({
@@ -476,7 +477,7 @@ export function useFilteredResources<T extends { id: string }>(
     const filterItems = async () => {
       setLoading(true)
       const accessible = await filterAccessibleResources(
-        user as any,
+        user as unknown as UserProfile,
         resource,
         action,
         items
@@ -508,7 +509,7 @@ export function useConditionalRender(
       tenantId: user.tenant_id
     }
     
-    return checkPermission(user as any, permission, ctx)
+    return checkPermission(user as unknown as UserProfile, permission, ctx)
   }, [user, permission, context])
   
   return shouldRender
