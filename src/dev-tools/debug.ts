@@ -21,7 +21,7 @@ import {
   getUserPermissionStrings,
   invalidatePermissionCache,
   getPermissionCacheStats
-} from './rbac'
+} from '@/lib/permissions/rbac'
 import {
   ROLE_PERMISSIONS,
   ROLE_PERMISSION_STRINGS
@@ -39,7 +39,7 @@ import {
   checkPaymentOwnership,
   checkAttendanceOwnership,
   resourceAccessCache
-} from './resourceAccess'
+} from '@/lib/permissions/resourceAccess'
 import {
   tenantRoleManager,
   hasTenantPermission,
@@ -48,7 +48,7 @@ import {
   createTenantRole,
   updateTenantRole,
   assignTenantRole
-} from './tenantRoles'
+} from '@/lib/permissions/tenantRoles'
 
 /**
  * 개발 환경에서만 전역 디버그 도구 등록

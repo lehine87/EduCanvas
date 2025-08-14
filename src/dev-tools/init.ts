@@ -11,7 +11,7 @@ export const DEV_MODE = true
 // ⚠️ 이 파일 전체가 Production에서 Tree-shake됩니다
 if (process.env.NODE_ENV === 'development') {
   // Dynamic import로 Debug Interface 로드 (더 확실한 분리)
-  import('./permissions/debug.dev')
+  import('./debug')
     .then(({ registerDebugInterfaces }) => {
       registerDebugInterfaces()
       console.log('🔧 Development tools initialized')

@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePermissions } from '@/hooks/usePermissions'
 import Link from 'next/link'
 
-export default function UnauthorizedPage() {
+function UnauthorizedContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -225,5 +225,14 @@ export default function UnauthorizedPage() {
   )
 }
 
-// 메타데이터는 서버 컴포넌트에서만 export 가능하므로 별도 파일 필요
-// 또는 layout.tsx에서 처리
+export default function UnauthorizedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <UnauthorizedContent />
+    </Suspense>
+  )
+}
