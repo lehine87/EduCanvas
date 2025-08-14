@@ -635,23 +635,5 @@ export function getPermissionCacheStats() {
 // 개발 도구 (Development Only)
 // ================================================================
 
-if (process.env.NODE_ENV === 'development') {
-  // 개발 환경에서 전역 디버깅 도구 제공
-  if (typeof window !== 'undefined') {
-    const windowWithRBAC = window as Window & { __RBAC__?: RBACDebugInterface }
-    // Development only: Debug interface (타입 호환성을 위한 예외)
-    windowWithRBAC.__RBAC__ = {
-      hasPermission: hasPermission as any,
-      hasAnyPermission: hasAnyPermission as any, 
-      hasAllPermissions: hasAllPermissions as any,
-      canPerformAction: canPerformAction as any,
-      checkPermissionDetails: checkPermissionDetails as any,
-      getUserPermissions: getUserPermissions as any,
-      getUserPermissionStrings: getUserPermissionStrings as any,
-      invalidateCache: invalidatePermissionCache,
-      getCacheStats: getPermissionCacheStats,
-      ROLE_PERMISSIONS: ROLE_PERMISSIONS as any,
-      ROLE_PERMISSION_STRINGS: ROLE_PERMISSION_STRINGS as any
-    }
-  }
-}
+// Debug Interface는 별도 파일에서 관리 (src/lib/permissions/debug.ts)
+// Production 빌드에서 완전히 제외됨

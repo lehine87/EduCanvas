@@ -500,20 +500,8 @@ export async function assignTenantRole(
 }
 
 // ================================================================
-// 개발 도구
+// 개발 도구 (Development Only)
 // ================================================================
 
-if (process.env.NODE_ENV === 'development') {
-  if (typeof window !== 'undefined') {
-    const windowWithTenantRoles = window as Window & { __TENANT_ROLES__?: TenantRolesDebugInterface }
-    windowWithTenantRoles.__TENANT_ROLES__ = {
-      manager: tenantRoleManager,
-      hasTenantPermission: hasTenantPermission as any,
-      getUserTenantRole,
-      checkTenantMembershipStatus,
-      createTenantRole: createTenantRole as any,
-      updateTenantRole: updateTenantRole as any,
-      assignTenantRole
-    }
-  }
-}
+// Debug Interface는 별도 파일에서 관리 (src/lib/permissions/debug.ts)
+// Production 빌드에서 완전히 제외됨

@@ -628,26 +628,8 @@ class ResourceAccessCache {
 export const resourceAccessCache = new ResourceAccessCache()
 
 // ================================================================
-// 개발 도구
+// 개발 도구 (Development Only)
 // ================================================================
 
-if (process.env.NODE_ENV === 'development') {
-  if (typeof window !== 'undefined') {
-    const windowWithResourceAccess = window as Window & { __RESOURCE_ACCESS__?: ResourceAccessDebugInterface }
-    // Development only: Debug interface (타입 호환성을 위한 예외)
-    windowWithResourceAccess.__RESOURCE_ACCESS__ = {
-      checkResourceAccess: checkResourceAccess as any,
-      checkBulkResourceAccess: checkBulkResourceAccess as any,
-      filterAccessibleResources: filterAccessibleResources as any,
-      canCreateResource: canCreateResource as any,
-      isInstructorStudent,
-      isInstructorClass,
-      isResourceOwner: isResourceOwner as any,
-      checkStudentOwnership,
-      checkClassOwnership,
-      checkPaymentOwnership,
-      checkAttendanceOwnership,
-      cache: resourceAccessCache as any
-    }
-  }
-}
+// Debug Interface는 별도 파일에서 관리 (src/lib/permissions/debug.ts)
+// Production 빌드에서 완전히 제외됨
