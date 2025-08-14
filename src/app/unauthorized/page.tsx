@@ -9,8 +9,8 @@ import Link from 'next/link'
 export default function UnauthorizedPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, profile, isLoading } = useAuth()
-  const { role, isSystemAdmin, isAdmin, isInstructor, isStaff } = usePermissions()
+  const { user } = useAuth()
+  const { role } = usePermissions()
   
   const [errorDetails, setErrorDetails] = useState({
     reason: 'access_denied',
@@ -79,8 +79,8 @@ export default function UnauthorizedPage() {
     }
   }
 
-  // 로딩 중일 때
-  if (isLoading) {
+  // 로딩 중일 때 (간단 처리)
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -120,13 +120,13 @@ export default function UnauthorizedPage() {
             </p>
             
             {/* 현재 사용자 정보 표시 */}
-            {user && profile && (
+            {user && (
               <div className="bg-gray-50 rounded-md p-4 mb-4">
                 <div className="text-sm text-gray-700">
                   <div className="font-medium">현재 계정 정보:</div>
                   <div>이메일: {user.email}</div>
-                  <div>역할: {profile.role || '설정되지 않음'}</div>
-                  <div>상태: {profile.status || '알 수 없음'}</div>
+                  <div>역할: {user.role || '설정되지 않음'}</div>
+                  <div>테넌트: {user.tenant_id || '설정되지 않음'}</div>
                 </div>
               </div>
             )}
@@ -215,8 +215,7 @@ export default function UnauthorizedPage() {
                 path: errorDetails.path,
                 userRole: role,
                 userId: user?.id,
-                profileStatus: profile?.status,
-                emailVerified: profile?.email_verified
+                tenantId: user?.tenant_id
               }, null, 2)}
             </pre>
           </div>

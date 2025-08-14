@@ -62,7 +62,7 @@ import type {
   BillingType
 } from '@/types'
 
-import type { Database } from '@/types/database.types'
+import type { Database } from '@/types/database'
 
 // Database type aliases for testing
 type Tables = Database['public']['Tables']

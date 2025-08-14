@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createClient as createMiddlewareClient } from '@/lib/supabase/middleware'
+import { isApproveMemberRequest, createErrorResponse, createSuccessResponse } from '@/types'
+import type { ApproveMemberRequest } from '@/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,10 +14,7 @@ export async function POST(request: NextRequest) {
     
     if (sessionError || !session?.user) {
       console.error('❌ 인증 실패:', sessionError?.message)
-      return NextResponse.json(
-        { error: '로그인이 필요합니다.' },
-        { status: 401 }
-      )
+      return createErrorResponse('로그인이 필요합니다.', 401)
     }
 
     // 현재 사용자가 테넌트 관리자인지 확인
@@ -29,21 +28,18 @@ export async function POST(request: NextRequest) {
 
     if (!currentUserProfile || currentUserProfile.status !== 'active') {
       console.error('❌ 사용자 프로필을 찾을 수 없거나 활성화되지 않음')
-      return NextResponse.json(
-        { error: '유효하지 않은 사용자입니다.' },
-        { status: 403 }
-      )
+      return createErrorResponse('유효하지 않은 사용자입니다.', 403)
     }
     
-    const body = await request.json()
-    const { userId, action, tenantId } = body // action: 'approve' | 'reject'
+    const body: unknown = await request.json()
     
-    if (!userId || !action || !tenantId) {
-      return NextResponse.json(
-        { error: '필수 파라미터가 누락되었습니다.' },
-        { status: 400 }
-      )
+    // 타입 가드를 사용한 안전한 입력 검증
+    if (!isApproveMemberRequest(body)) {
+      console.warn('⚠️ ApproveMember API 잘못된 요청 형식:', body)
+      return createErrorResponse('필수 파라미터가 누락되었거나 형식이 올바르지 않습니다.', 400)
     }
+
+    const { userId, action, tenantId }: ApproveMemberRequest = body
 
     // 같은 테넌트 관리자만 승인 가능 (보안 검증)
     if (currentUserProfile.tenant_id !== tenantId) {
@@ -51,10 +47,7 @@ export async function POST(request: NextRequest) {
         currentTenant: currentUserProfile.tenant_id, 
         requestedTenant: tenantId 
       })
-      return NextResponse.json(
-        { error: '해당 테넌트의 회원을 관리할 권한이 없습니다.' },
-        { status: 403 }
-      )
+      return createErrorResponse('해당 테넌트의 회원을 관리할 권한이 없습니다.', 403)
     }
     
     console.log(`👤 사용자 ${userId} ${action === 'approve' ? '승인' : '거부'} 처리 중...`)
@@ -72,10 +65,7 @@ export async function POST(request: NextRequest) {
       
       if (error) {
         console.error('❌ 회원 승인 실패:', error)
-        return NextResponse.json(
-          { error: `회원 승인 실패: ${error.message}` },
-          { status: 500 }
-        )
+        return createErrorResponse(`회원 승인 실패: ${error.message}`, 500)
       }
       
       console.log('✅ 회원 승인 성공')
@@ -90,10 +80,7 @@ export async function POST(request: NextRequest) {
       
       if (profileError) {
         console.error('❌ 프로필 삭제 실패:', profileError)
-        return NextResponse.json(
-          { error: `프로필 삭제 실패: ${profileError.message}` },
-          { status: 500 }
-        )
+        return createErrorResponse(`프로필 삭제 실패: ${profileError.message}`, 500)
       }
       
       // auth.users에서도 삭제
@@ -106,16 +93,13 @@ export async function POST(request: NextRequest) {
       
       console.log('✅ 회원 거부 및 삭제 성공')
     } else {
-      return NextResponse.json(
-        { error: '유효하지 않은 action입니다. (approve/reject)' },
-        { status: 400 }
-      )
+      return createErrorResponse('유효하지 않은 action입니다. (approve/reject)', 400)
     }
 
-    return NextResponse.json({ 
-      success: true,
-      message: action === 'approve' ? '회원이 승인되었습니다.' : '회원이 거부되었습니다.'
-    })
+    return createSuccessResponse(
+      null, 
+      action === 'approve' ? '회원이 승인되었습니다.' : '회원이 거부되었습니다.'
+    )
 
   } catch (error) {
     console.error('💥 테넌트 관리자 API - 회원 승인/거부 오류:', error)
@@ -125,11 +109,8 @@ export async function POST(request: NextRequest) {
       ? error.message 
       : typeof error === 'string' 
       ? error 
-      : '내부 서버 오류가 발생했습니다.';
+      : '내부 서버 오류가 발생했습니다.'
     
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    )
+    return createErrorResponse(errorMessage, 500)
   }
 }

@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { isCheckEmailRequest, createErrorResponse } from '@/types'
+import type { CheckEmailRequest, CheckEmailResponse } from '@/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const body: unknown = await request.json()
     
-    if (!email) {
-      return NextResponse.json(
-        { error: '이메일이 필요합니다.' },
-        { status: 400 }
-      )
+    // 타입 가드를 사용한 안전한 입력 검증
+    if (!isCheckEmailRequest(body)) {
+      console.warn('⚠️ CheckEmail API 잘못된 요청 형식:', body)
+      return createErrorResponse('이메일 주소가 필요합니다.', 400)
     }
+
+    const { email }: CheckEmailRequest = body
 
     console.log('📧 이메일 중복 검사:', email)
 
@@ -26,22 +29,17 @@ export async function POST(request: NextRequest) {
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
       console.error('❌ 이메일 검사 오류:', error)
-      return NextResponse.json(
-        { error: '이메일 검사 중 오류가 발생했습니다.' },
-        { status: 500 }
-      )
+      return createErrorResponse('이메일 검사 중 오류가 발생했습니다.', 500)
     }
 
     const exists = !!data
     console.log(`${exists ? '❌' : '✅'} 이메일 중복 검사 결과:`, { email, exists })
 
-    return NextResponse.json({
-      exists,
-      email,
-      message: exists 
-        ? '이미 사용 중인 이메일입니다' 
-        : '사용 가능한 이메일입니다'
-    })
+    const response: CheckEmailResponse = {
+      exists
+    }
+
+    return NextResponse.json(response, { status: 200 })
 
   } catch (error) {
     console.error('💥 이메일 검사 API 오류:', error)
@@ -50,9 +48,6 @@ export async function POST(request: NextRequest) {
       ? error.message 
       : '내부 서버 오류가 발생했습니다.'
       
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    )
+    return createErrorResponse(errorMessage, 500)
   }
 }

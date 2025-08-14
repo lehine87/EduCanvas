@@ -2,7 +2,7 @@
 // Provides runtime type checking and validation using both custom guards and Zod schemas
 
 import { z } from 'zod'
-import type { Database, Json } from '@/types/database.types'
+import type { Database, Json } from '@/types/database'
 import type { Student } from '@/types/student.types'
 import type { ClassFlowStudent } from '@/types/app.types'
 

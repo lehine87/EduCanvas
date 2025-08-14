@@ -254,7 +254,7 @@ export default function DatabaseTestPage() {
                   {result.message}
                 </p>
                 
-                {result.data && result.data && (
+                {result.data !== undefined && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
                       상세 데이터 보기

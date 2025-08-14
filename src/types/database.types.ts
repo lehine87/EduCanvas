@@ -2280,6 +2280,7 @@ export type Database = {
     Enums: {
       attendance_status: "present" | "absent" | "late" | "excused"
       billing_type: "monthly" | "sessions" | "hours" | "package" | "drop_in"
+      class_status: "draft" | "active" | "inactive" | "archived" | "cancelled"
       consultation_status: "scheduled" | "completed" | "cancelled" | "no_show"
       consultation_type:
         | "enrollment"
@@ -2288,6 +2289,7 @@ export type Database = {
         | "career"
         | "parent_meeting"
         | "follow_up"
+      gender: "male" | "female" | "other" | "prefer_not_to_say"
       history_action:
         | "create"
         | "update"
@@ -2296,6 +2298,8 @@ export type Database = {
         | "enroll"
         | "withdraw"
         | "payment"
+      tenant_status: "active" | "inactive" | "suspended" | "deleted"
+      user_role: "owner" | "admin" | "instructor" | "staff" | "viewer"
         | "exam"
         | "consultation"
       payment_status:

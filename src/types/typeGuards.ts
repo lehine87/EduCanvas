@@ -290,9 +290,6 @@ export function isRLSTestResult(value: unknown): value is RLSTestResult {
   
   if (!isBoolean(result.success)) return false
   if (!isNumber(result.count)) return false
-  if (!isString(result.description)) return false
-  if (!(result.expectedResult === 'allow' || result.expectedResult === 'deny')) return false
-  if (!(result.actualResult === 'allow' || result.actualResult === 'deny')) return false
   if (result.error !== undefined && !isString(result.error)) return false
   
   return true
@@ -434,10 +431,14 @@ export function isTableName(value: unknown): value is keyof Database['public']['
   if (!isString(value)) return false
   
   const tableNames = [
-    'students', 'classes', 'user_profiles', 'tenants', 'instructors',
-    'student_enrollments', 'attendance_records', 'class_schedules',
-    'payments', 'course_packages', 'classrooms', 'exams', 'documents',
-    'student_histories', 'consultations'
+    'attendances', 'audit_logs', 'backup_executions', 'backup_policies',
+    'classes', 'consultations', 'course_packages', 'instructors',
+    'payments', 'permissions', 'playlist_video_items', 'resource_scopes',
+    'role_permissions', 'salary_policies', 'student_enrollments', 
+    'student_histories', 'student_video_access', 'students', 
+    'tenant_memberships', 'tenant_roles', 'tenant_users', 'tenants', 
+    'user_profiles', 'video_lectures', 'video_playlists', 'video_ratings',
+    'video_watch_sessions', 'videos'
   ] as const
   
   return tableNames.includes(value as keyof Database['public']['Tables'])

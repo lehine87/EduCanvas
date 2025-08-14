@@ -33,8 +33,9 @@ export function Header({
   onToggleSidebar,
   showSidebarToggle = true 
 }: HeaderProps) {
-  const { user, profile, signOut } = useAuth()
-  const { role, isSystemAdmin, isAdmin } = usePermissions()
+  const { user, signOut } = useAuth()
+  const { role, isAdmin } = usePermissions()
+  const isSystemAdmin = role === 'system_admin' || role === 'developer'
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -65,13 +66,13 @@ export function Header({
       name: '설정',
       href: '/admin/settings',
       icon: Cog6ToothIcon,
-      show: isAdmin()
+      show: isAdmin
     },
     {
       name: '시스템 관리',
       href: '/system-admin',
       icon: ShieldCheckIcon,
-      show: isSystemAdmin()
+      show: isSystemAdmin
     }
   ]
 
@@ -142,7 +143,7 @@ export function Header({
               <UserCircleIcon className="h-8 w-8 text-gray-400" />
               <div className="hidden md:block text-left">
                 <div className="text-sm font-medium">
-                  {profile?.name || user?.email?.split('@')[0]}
+                  {user?.email?.split('@')[0]}
                 </div>
                 <div className="text-xs text-gray-500 capitalize">
                   {role?.replace('_', ' ')}
@@ -156,7 +157,7 @@ export function Header({
                 {/* 사용자 정보 */}
                 <div className="px-4 py-2 border-b border-gray-100">
                   <div className="text-sm font-medium text-gray-900">
-                    {profile?.name || user?.email}
+                    {user?.email}
                   </div>
                   <div className="text-xs text-gray-500">
                     {user?.email}

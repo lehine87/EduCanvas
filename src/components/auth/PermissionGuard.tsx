@@ -41,42 +41,45 @@ export function PermissionGuard({
   showLoading = false,
   onDenied
 }: PermissionGuardProps) {
-  const { user, profile, isLoading } = useAuth()
+  const { user, loading } = useAuth()
 
   // 권한 체크
   const hasAccess = useMemo(() => {
-    if (!user || !profile) return false
+    if (!user) return false
+
+    // AuthUser를 UserProfile로 변환 (타입 호환성을 위해)
+    const userProfile = user as any
 
     // 권한 문자열이 직접 제공된 경우
     if (permissionString) {
-      return hasPermission(profile, permissionString)
+      return hasPermission(userProfile, permissionString)
     }
 
     // 리소스 ID가 있고 소유권 체크가 필요한 경우
     if (resourceId && requireOwnership) {
       const context: PermissionContext = {
         userId: user.id,
-        tenantId: profile.tenant_id,
+        tenantId: user.tenant_id,
         resourceId,
         resourceOwnerId: user.id // 소유권 체크를 위해 현재 사용자 ID 사용
       }
       
       return hasPermission(
-        profile,
+        userProfile,
         { resource, action, scope: 'own' },
         context
       )
     }
 
     // 일반적인 권한 체크
-    return canPerformAction(profile, resource, action, {
+    return canPerformAction(userProfile, resource, action, {
       userId: user.id,
-      tenantId: profile.tenant_id
+      tenantId: user.tenant_id
     })
-  }, [user, profile, resource, action, resourceId, requireOwnership, permissionString])
+  }, [user, resource, action, resourceId, requireOwnership, permissionString])
 
   // 로딩 중일 때
-  if (isLoading && showLoading) {
+  if (loading && showLoading) {
     return (
       <div className="animate-pulse">
         <div className="h-8 bg-gray-200 rounded"></div>
@@ -110,9 +113,9 @@ export function RoleGuard({
   children, 
   fallback = null 
 }: RoleGuardProps) {
-  const { profile } = useAuth()
+  const { user } = useAuth()
   
-  const hasRole = profile && profile.role && allowedRoles.includes(profile.role)
+  const hasRole = user && user.role && allowedRoles.includes(user.role as any)
   
   return hasRole ? <>{children}</> : <>{fallback}</>
 }
@@ -120,6 +123,20 @@ export function RoleGuard({
 // ================================================================
 // 특화된 가드 컴포넌트들
 // ================================================================
+
+/**
+ * 소유자 전용
+ */
+export function OwnerOnly({ 
+  children, 
+  fallback 
+}: { 
+  children: React.ReactNode
+  fallback?: React.ReactNode 
+}) {
+  const { isOwner } = useAuth()
+  return isOwner() ? <>{children}</> : <>{fallback}</>
+}
 
 /**
  * 시스템 관리자 전용
@@ -214,7 +231,31 @@ export function StudentCreateGuard({
 }
 
 /**
- * 학생 수정 권한
+ * 학생 업데이트 권한
+ */
+export function StudentUpdateGuard({ 
+  children, 
+  fallback,
+  studentId
+}: { 
+  children: React.ReactNode
+  fallback?: React.ReactNode
+  studentId?: string
+}) {
+  return (
+    <PermissionGuard 
+      resource="student" 
+      action="update" 
+      resourceId={studentId}
+      fallback={fallback}
+    >
+      {children}
+    </PermissionGuard>
+  )
+}
+
+/**
+ * 학생 수정 권한 (별칭)
  */
 export function StudentEditGuard({ 
   children, 
@@ -272,7 +313,31 @@ export function ClassCreateGuard({
 }
 
 /**
- * 클래스 수정 권한
+ * 클래스 업데이트 권한
+ */
+export function ClassUpdateGuard({ 
+  children, 
+  fallback,
+  classId
+}: { 
+  children: React.ReactNode
+  fallback?: React.ReactNode
+  classId?: string
+}) {
+  return (
+    <PermissionGuard 
+      resource="class" 
+      action="update" 
+      resourceId={classId}
+      fallback={fallback}
+    >
+      {children}
+    </PermissionGuard>
+  )
+}
+
+/**
+ * 클래스 수정 권한 (별칭)
  */
 export function ClassEditGuard({ 
   children, 

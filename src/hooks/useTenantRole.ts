@@ -67,7 +67,7 @@ interface UseTenantRoleReturn {
  * 테넌트 역할 관리 훅
  */
 export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [tenantRole, setTenantRole] = useState<TenantRoleWithPermissions | null>(null)
   const [membership, setMembership] = useState({
     isMember: false,
@@ -78,7 +78,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
   const [error, setError] = useState<string | null>(null)
   
   // 사용할 테넌트 ID 결정 (제공된 ID 또는 프로필의 테넌트 ID)
-  const effectiveTenantId = tenantId || profile?.tenant_id
+  const effectiveTenantId = tenantId || user?.tenant_id
   
   // 테넌트 역할 및 멤버십 로드
   const loadTenantRole = useCallback(async () => {
@@ -129,10 +129,10 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
   const checkTenantPermission = useCallback(async (
     permission: Permission | PermissionString
   ): Promise<boolean> => {
-    if (!profile || !effectiveTenantId) return false
+    if (!user || !effectiveTenantId) return false
     
-    return hasTenantPermission(profile, effectiveTenantId, permission)
-  }, [profile, effectiveTenantId])
+    return hasTenantPermission(user as any, effectiveTenantId, permission)
+  }, [user, effectiveTenantId])
   
   // 테넌트 권한 목록 가져오기
   const getTenantPermissions = useCallback(async (): Promise<Permission[]> => {
@@ -141,9 +141,9 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
     return tenantRoleManager.getUserTenantPermissions(
       user.id,
       effectiveTenantId,
-      profile?.role as UserRole | undefined
+      user?.role as UserRole | undefined
     )
-  }, [user, effectiveTenantId, profile])
+  }, [user, effectiveTenantId])
   
   // 커스텀 역할 생성
   const createCustomRole = useCallback(async (roleData: {
@@ -160,7 +160,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
     try {
       const newRole = await createTenantRole(effectiveTenantId, {
         ...roleData,
-        base_role: profile?.role as UserRole | undefined
+        base_role: user?.role as UserRole | undefined
       })
       
       if (newRole) {
@@ -173,7 +173,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
       setError(err instanceof Error ? err.message : 'Failed to create role')
       return false
     }
-  }, [effectiveTenantId, profile, loadTenantRole])
+  }, [effectiveTenantId, user, loadTenantRole])
   
   // 역할 업데이트
   const updateRoleHandler = useCallback(async (
@@ -191,7 +191,7 @@ export function useTenantRole(tenantId?: string): UseTenantRoleReturn {
     }
     
     try {
-      const success = await updateTenantRole(effectiveTenantId, roleId, updates)
+      const success = await updateTenantRole(effectiveTenantId, roleId, updates as any)
       if (success) {
         await loadTenantRole() // 역할 정보 새로고침
       }
@@ -275,9 +275,9 @@ export function useMultiTenantRoles() {
  * 테넌트 전환 훅
  */
 export function useTenantSwitcher() {
-  const { profile } = useAuth()
+  const { user } = useAuth()
   const [currentTenantId, setCurrentTenantId] = useState<string | null>(
-    profile?.tenant_id || null
+    user?.tenant_id || null
   )
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(false)
@@ -304,7 +304,7 @@ export function useTenantSwitcher() {
   
   // 사용 가능한 테넌트 목록 로드
   const loadAvailableTenants = useCallback(async () => {
-    if (!profile) {
+    if (!user) {
       setAvailableTenants([])
       return
     }
@@ -319,7 +319,7 @@ export function useTenantSwitcher() {
     } finally {
       setLoading(false)
     }
-  }, [profile])
+  }, [user])
   
   useEffect(() => {
     loadAvailableTenants()
@@ -337,19 +337,19 @@ export function useTenantSwitcher() {
  * 테넌트 권한 계층 확인 훅
  */
 export function useTenantHierarchy(tenantId?: string) {
-  const { profile } = useAuth()
+  const { user } = useAuth()
   const { tenantRole } = useTenantRole(tenantId)
   
   const canManageRole = useCallback((targetRoleLevel: number): boolean => {
     if (!tenantRole) return false
     
     // 시스템 관리자는 모든 역할 관리 가능
-    if (profile?.role === 'system_admin') return true
+    if (user?.role === 'system_admin') return true
     
     // 계층 레벨 비교
     const myLevel = tenantRole.hierarchy_level || 0
     return myLevel < targetRoleLevel // 낮은 숫자가 더 높은 권한
-  }, [tenantRole, profile])
+  }, [tenantRole, user])
   
   const getSubordinateRoles = useCallback((): string[] => {
     if (!tenantRole) return []

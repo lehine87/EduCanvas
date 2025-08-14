@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/db/supabase'
-import type { Database } from '@/types/database.types'
+import type { Database } from '@/types/database'
+import { isSignupRequest, createErrorResponse } from '@/types'
+import type { SignupRequest, SignupResponse } from '@/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, password, full_name } = body
+    const body: unknown = await request.json()
+
+    // 타입 가드를 사용한 안전한 입력 검증
+    if (!isSignupRequest(body)) {
+      console.warn('⚠️ SignUp API 잘못된 요청 형식:', body)
+      return createErrorResponse('필수 정보가 누락되었거나 형식이 올바르지 않습니다.', 400)
+    }
+
+    const { email, password, full_name }: SignupRequest = body
 
     console.log('🔐 SignUp API 시도:', { email, full_name })
-
-    // 1. 입력 검증
-    if (!email || !password || !full_name) {
-      return NextResponse.json(
-        { error: '필수 정보가 누락되었습니다.' },
-        { status: 400 }
-      )
-    }
 
     // 2. Service Role 클라이언트로 이메일 중복 검사
     const supabaseServiceRole = createServiceRoleClient()
@@ -29,14 +30,11 @@ export async function POST(request: NextRequest) {
     
     if (existingUser) {
       console.warn('⚠️ 이미 등록된 이메일:', email)
-      return NextResponse.json(
-        { error: '이미 등록된 이메일입니다.' },
-        { status: 409 }
-      )
+      return createErrorResponse('이미 등록된 이메일입니다.', 409)
     }
 
     // 3. 일반 클라이언트로 Auth 회원가입
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -53,28 +51,16 @@ export async function POST(request: NextRequest) {
       
       // Supabase 특정 오류 메시지 변환
       if (authError.message?.includes('User already registered')) {
-        return NextResponse.json(
-          { error: '이미 등록된 이메일입니다.' },
-          { status: 409 }
-        )
+        return createErrorResponse('이미 등록된 이메일입니다.', 409)
       } else if (authError.message?.includes('Password should be')) {
-        return NextResponse.json(
-          { error: '비밀번호는 최소 8자 이상이어야 합니다.' },
-          { status: 400 }
-        )
+        return createErrorResponse('비밀번호는 최소 8자 이상이어야 합니다.', 400)
       }
       
-      return NextResponse.json(
-        { error: authError.message || '회원가입 중 오류가 발생했습니다.' },
-        { status: 400 }
-      )
+      return createErrorResponse(authError.message || '회원가입 중 오류가 발생했습니다.', 400)
     }
 
     if (!authData.user) {
-      return NextResponse.json(
-        { error: '사용자 생성에 실패했습니다.' },
-        { status: 500 }
-      )
+      return createErrorResponse('사용자 생성에 실패했습니다.', 500)
     }
 
     // 4. Service Role로 user_profiles 생성
@@ -121,28 +107,27 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ 사용자 프로필 생성 성공:', profileInsertData.email)
 
-    return NextResponse.json(
-      { 
-        success: true,
-        user: {
-          id: authData.user.id,
-          email: authData.user.email,
-          name: profileInsertData.name
-        },
-        message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.'
+    const response: SignupResponse = {
+      success: true,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email || email,
+        name: profileInsertData.name
       },
-      { status: 201 }
-    )
+      message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.'
+    }
+
+    return NextResponse.json(response, { status: 201 })
 
   } catch (error) {
     console.error('🚨 SignUp API 예외:', error)
     
-    return NextResponse.json(
-      { 
-        error: '회원가입 처리 중 오류가 발생했습니다.',
-        details: error instanceof Error ? error.message : '알 수 없는 오류'
-      },
-      { status: 500 }
-    )
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+      ? error 
+      : '회원가입 처리 중 알 수 없는 오류가 발생했습니다.'
+    
+    return createErrorResponse(errorMessage, 500)
   }
 }

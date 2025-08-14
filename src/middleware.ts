@@ -17,7 +17,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 async function checkRoutePermissions(
   pathname: string,
   userProfile: UserProfile | null,
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient>['supabase'],
   requestId: string
 ): Promise<{ hasAccess: boolean; reason?: string }> {
   // 정확한 경로 매칭
@@ -72,7 +72,7 @@ async function checkRoutePermissions(
  * 사용자 프로필 가져오기
  */
 async function getUserProfile(
-  supabase: ReturnType<typeof createClient>, 
+  supabase: ReturnType<typeof createClient>['supabase'], 
   requestId: string
 ): Promise<UserProfile | null> {
   try {
@@ -93,7 +93,7 @@ async function getUserProfile(
       return null
     }
     
-    return { user, profile }
+    return profile as UserProfile
   } catch (error) {
     console.error(`❌ [${requestId}] Error fetching user profile:`, error)
     return null
@@ -277,7 +277,8 @@ export async function middleware(request: NextRequest) {
         return Response.redirect(errorUrl.toString())
       }
 
-      const { user, profile } = userProfileData
+      const profile = userProfileData
+      const { data: { user } } = await supabase.auth.getUser()
 
       // 계정 상태 확인
       if (profile.status === 'suspended' || profile.status === 'inactive') {
@@ -287,7 +288,7 @@ export async function middleware(request: NextRequest) {
         
         if (isVercel) {
           console.warn(`🚨 [VERCEL-${requestId}] ACCOUNT SUSPENDED:`, {
-            userId: user.id,
+            userId: profile.id,
             status: profile.status,
             path: url.pathname
           })
@@ -307,8 +308,8 @@ export async function middleware(request: NextRequest) {
         
         if (isVercel) {
           console.warn(`📧 [VERCEL-${requestId}] EMAIL NOT VERIFIED:`, {
-            userId: user.id,
-            email: user.email,
+            userId: user?.id,
+            email: user?.email,
             path: url.pathname
           })
         }
@@ -331,7 +332,7 @@ export async function middleware(request: NextRequest) {
         
         if (isVercel) {
           console.warn(`🚫 [VERCEL-${requestId}] ACCESS DENIED:`, {
-            userId: user.id,
+            userId: user?.id,
             role: profile.role,
             path: url.pathname,
             reason: permissionCheck.reason
@@ -344,7 +345,7 @@ export async function middleware(request: NextRequest) {
       // 권한 체크 통과 로깅
       if (isVercel) {
         console.log(`✅ [VERCEL-${requestId}] ACCESS GRANTED:`, {
-          userId: user.id,
+          userId: user?.id || 'unknown',
           role: profile.role,
           path: url.pathname,
           tenantId: profile.tenant_id

@@ -122,9 +122,7 @@ export interface RLSTestResult {
   success: boolean
   count: number
   error?: string
-  description: string
-  expectedResult: 'allow' | 'deny'
-  actualResult: 'allow' | 'deny'
+  data?: unknown
 }
 
 /**
@@ -229,34 +227,81 @@ export interface PaginatedResponse<T> {
  * RBAC 디버그 인터페이스
  */
 export interface RBACDebugInterface {
-  checkPermission: (
-    profile: UserProfile,
-    permission: { resource: string; action: string },
+  hasPermission: (
+    profile: UserProfile | null | undefined,
+    permission: string | { resource: string; action: string },
+    context?: PermissionMetadata
+  ) => boolean
+  hasAnyPermission: (
+    profile: UserProfile | null | undefined,
+    permissions: (string | { resource: string; action: string })[],
+    context?: PermissionMetadata
+  ) => boolean
+  hasAllPermissions: (
+    profile: UserProfile | null | undefined,
+    permissions: (string | { resource: string; action: string })[],
     context?: PermissionMetadata
   ) => boolean
   canPerformAction: (
-    profile: UserProfile,
+    profile: UserProfile | null | undefined,
     resource: string,
     action: string,
     context?: PermissionMetadata
   ) => boolean
-  getUserPermissions: (profile: UserProfile) => string[]
-  getRolePermissions: (role: UserRole) => string[]
-  validatePermissionContext: (context: unknown) => context is PermissionMetadata
+  checkPermissionDetails: (
+    profile: UserProfile | null | undefined,
+    permission: string | { resource: string; action: string },
+    context?: PermissionMetadata
+  ) => unknown
+  getUserPermissions: (profile: UserProfile | null | undefined) => unknown[]
+  getUserPermissionStrings: (profile: UserProfile | null | undefined) => string[]
+  invalidateCache: (userId?: string) => void
+  getCacheStats: () => { size: number; maxSize: number; ttl: number }
+  ROLE_PERMISSIONS: Record<string, unknown[]>
+  ROLE_PERMISSION_STRINGS: Record<string, string[]>
 }
 
 /**
  * 테넌트 역할 디버그 인터페이스
  */
 export interface TenantRolesDebugInterface {
-  getTenantRoles: (tenantId: string) => Promise<unknown[]>
-  getUserTenantRole: (userId: string, tenantId: string) => Promise<unknown>
+  manager: {
+    getTenantRole: (tenantId: string, roleId: string) => Promise<unknown>
+    getUserTenantMembership: (userId: string, tenantId: string) => Promise<unknown>
+    getUserTenantPermissions: (userId: string, tenantId: string, baseRole?: UserRole) => Promise<unknown[]>
+    invalidateCache: (userId?: string, tenantId?: string) => void
+  }
   hasTenantPermission: (
     profile: UserProfile,
     tenantId: string,
-    permission: { resource: string; action: string }
+    permission: { resource: string; action: string } | string
   ) => Promise<boolean>
-  updateTenantRole: (roleId: string, updates: TenantRoleUpdate) => Promise<boolean>
+  getUserTenantRole: (userId: string, tenantId: string) => Promise<unknown>
+  checkTenantMembershipStatus: (userId: string, tenantId: string) => Promise<{
+    isMember: boolean
+    status?: string | null
+    role?: unknown
+    acceptedAt?: string | null
+  }>
+  createTenantRole: (tenantId: string, roleData: {
+    name: string
+    display_name: string
+    description?: string
+    base_role?: UserRole
+    permissions?: unknown[]
+    hierarchy_level?: number
+  }) => Promise<unknown>
+  updateTenantRole: (
+    tenantId: string,
+    roleId: string,
+    updates: Partial<{
+      display_name: string
+      description: string
+      permissions: unknown[]
+      hierarchy_level: number
+    }>
+  ) => Promise<boolean>
+  assignTenantRole: (userId: string, tenantId: string, roleId: string) => Promise<boolean>
 }
 
 /**
@@ -269,6 +314,14 @@ export interface ResourceAccessDebugInterface {
     action: string,
     resourceId?: string
   ) => Promise<{ granted: boolean; reason?: string }>
+  checkBulkResourceAccess: (
+    profile: UserProfile,
+    resources: Array<{
+      resource: string
+      action: string
+      resourceId?: string
+    }>
+  ) => Promise<Map<string, { granted: boolean; reason?: string }>>
   filterAccessibleResources: <T extends { id: string }>(
     profile: UserProfile,
     resource: string,
@@ -280,9 +333,17 @@ export interface ResourceAccessDebugInterface {
     resource: string,
     tenantId?: string
   ) => Promise<boolean>
+  isInstructorStudent: (instructorId: string, studentId: string) => Promise<boolean>
+  isInstructorClass: (instructorId: string, classId: string) => Promise<boolean>
+  isResourceOwner: (userId: string, resource: string, resourceId: string) => Promise<boolean>
+  checkStudentOwnership: (userId: string, studentId: string, userRole?: UserRole) => Promise<unknown>
+  checkClassOwnership: (userId: string, classId: string, userRole?: UserRole) => Promise<unknown>
+  checkPaymentOwnership: (userId: string, paymentId: string, userRole?: UserRole) => Promise<unknown>
+  checkAttendanceOwnership: (userId: string, attendanceId: string, userRole?: UserRole) => Promise<unknown>
   cache: {
-    get: (key: string) => boolean | null
-    set: (key: string, value: boolean) => void
+    getCacheKey: (userId: string, resource: string, action: string, resourceId?: string) => string
+    get: (userId: string, resource: string, action: string, resourceId?: string) => boolean | null
+    set: (userId: string, resource: string, action: string, result: boolean, resourceId?: string) => void
     invalidate: (userId?: string) => void
   }
 }

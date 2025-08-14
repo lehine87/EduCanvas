@@ -12,16 +12,22 @@ export type { Database, Json } from './database.types'
 // ================================================================
 // 2. 도메인별 핵심 타입들
 // ================================================================
-// Database table types (from Supabase generated types)
-export type Student = Database['public']['Tables']['students']['Row']
-export type StudentInsert = Database['public']['Tables']['students']['Insert']
-export type StudentUpdate = Database['public']['Tables']['students']['Update']
+// Database table types - Student 타입은 student.types.ts에서 가져옴
+// 다른 기본 타입들은 여기서 정의
+export type {
+  Student,
+  StudentInsert,
+  StudentUpdate,
+  ClassFlowStudent
+} from './student.types'
 
-export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+// UserProfile 타입은 auth.types.ts에서 확장된 버전 사용
+// 기본 DB 타입은 BaseUserProfile로 참조 가능
+export type BaseUserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']
 export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update']
 
-export type Tenant = Database['public']['Tables']['tenants']['Row']
+// Tenant 타입은 auth.types.ts에서 참조
 export type TenantInsert = Database['public']['Tables']['tenants']['Insert']
 export type TenantUpdate = Database['public']['Tables']['tenants']['Update']
 
@@ -33,7 +39,6 @@ export type StudentEnrollment = Database['public']['Tables']['student_enrollment
 // Enum types
 export type {
   StudentStatus,
-  UserRole,
   BillingType,
   PaymentStatus,
   PaymentMethod,
@@ -43,7 +48,7 @@ export type {
 // Utility types
 export type UserStatus = Database['public']['Enums']['user_status']
 export type CreateEnrollmentRequest = StudentEnrollment // Simplified for now
-export type ClassFlowStudent = Student & { position?: { x: number; y: number } }
+// ClassFlowStudent는 student.types.ts에서 import됨
 
 // ================================================================
 // 2.5 유틸리티 타입 및 타입 가드 (v1.0 - Any 타입 제거용)
@@ -66,7 +71,6 @@ export type {
   
   // API 응답 타입
   APIResponse,
-  PaginatedResponse,
   
   // 개발 도구 인터페이스
   RBACDebugInterface,
@@ -76,7 +80,6 @@ export type {
   // 타입 유틸리티
   WithRequired,
   WithOptional,
-  DeepPartial,
   SafeRecord,
   TableName,
   TableRow,
@@ -188,7 +191,6 @@ export type {
   CamelToKebab,
   WithTenant,
   WithTimestamps,
-  ApiResponse,
   PaginatedResponse
 } from './utility.types'
 
@@ -230,6 +232,48 @@ export type Consultation = Database['public']['Tables']['consultations']['Row']
 export type StudentHistory = Database['public']['Tables']['student_histories']['Row']
 
 // ================================================================
+// 6.5 API 관련 타입들 (Phase 4 - API Routes 타입 안정성)
+// ================================================================
+export type {
+  // API 응답 타입
+  ApiResponse,
+  PaginatedApiResponse,
+  
+  // 인증 관련 API
+  LoginRequest,
+  LoginResponse,
+  SignupRequest,
+  SignupResponse,
+  ResetPasswordRequest,
+  CheckEmailRequest,
+  CheckEmailResponse,
+  SearchTenantsRequest,
+  SearchTenantsResponse,
+  OnboardingRequest,
+  
+  // 테넌트 관리 API
+  ApproveMemberRequest,
+  UpdateMemberRequest,
+  CreateTenantRequest,
+  CreateTenantResponse
+} from './api.types'
+
+export {
+  // API 타입 가드
+  isLoginRequest,
+  isSignupRequest,
+  isApproveMemberRequest,
+  isUpdateMemberRequest,
+  isCheckEmailRequest,
+  isSearchTenantsRequest,
+  isCreateTenantRequest,
+  
+  // API 유틸리티 함수
+  createErrorResponse,
+  createSuccessResponse
+} from './api.types'
+
+// ================================================================
 // 7. 타입 가드 함수들 Export
 // ================================================================
 
@@ -259,8 +303,12 @@ export {
   createSecurityContext,
   DEFAULT_PERMISSIONS,
   ROLE_HIERARCHY,
-  SESSION_EXPIRY
+  SESSION_EXPIRY,
+// 확장된 UserProfile과 Tenant은 auth.types에서 import
 } from './auth.types'
+
+// Auth 관련 핵심 타입들 별도 export
+export type { UserProfile, Tenant, UserRole } from './auth.types'
 
 // Student 관련 타입 가드
 export {

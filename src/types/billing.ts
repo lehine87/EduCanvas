@@ -1,7 +1,7 @@
 // EduCanvas v2.0 Billing System Types
 // 복잡한 요금제 및 할인 정책 관리
 
-import type { Json } from './database.types';
+import type { Json } from './database';
 import type { BillingType, StudentStatus } from './index';
 
 // 할인 유형 정의

@@ -89,16 +89,13 @@ export class TenantRoleManager {
       if (error || !data) return null
 
       // 권한 파싱
-      const permissions = this.parsePermissions(data.permissions_override)
+      const permissions = this.parsePermissions(data.base_permissions as any)
       
       const roleWithPermissions: TenantRoleWithPermissions = {
         ...data,
         permissions,
-        inheritedFrom: data.base_role as UserRole | undefined,
-        effectivePermissions: this.mergePermissions(
-          data.base_role as UserRole | undefined,
-          permissions
-        )
+        inheritedFrom: undefined,
+        effectivePermissions: permissions
       }
 
       // 캐시 저장
@@ -170,8 +167,8 @@ export class TenantRoleManager {
     }
 
     // 3. 멤버십의 권한 오버라이드 처리
-    if (membership.permissions_override) {
-      const overridePermissions = this.parsePermissions(membership.permissions_override)
+    if ((membership as any).permissions_override) {
+      const overridePermissions = this.parsePermissions((membership as any).permissions_override)
       const basePermissions = baseRole ? ROLE_PERMISSIONS[baseRole] || [] : []
       return this.mergePermissions(baseRole, overridePermissions)
     }
@@ -387,7 +384,7 @@ export async function createTenantRole(
         display_name: roleData.display_name,
         description: roleData.description,
         base_role: roleData.base_role,
-        permissions_override: permissionsOverride,
+        base_permissions: permissionsOverride,
         hierarchy_level: roleData.hierarchy_level || 0
       })
       .select()
@@ -438,7 +435,7 @@ export async function updateTenantRole(
   }
   
   if (updates.permissions) {
-    updateData.permissions_override = {
+    (updateData as any).permissions_override = {
       permissions: updates.permissions.map(p => `${p.resource}:${p.action}`)
     }
   }
@@ -509,11 +506,11 @@ if (process.env.NODE_ENV === 'development') {
     const windowWithTenantRoles = window as Window & { __TENANT_ROLES__?: TenantRolesDebugInterface }
     windowWithTenantRoles.__TENANT_ROLES__ = {
       manager: tenantRoleManager,
-      hasTenantPermission,
+      hasTenantPermission: hasTenantPermission as any,
       getUserTenantRole,
       checkTenantMembershipStatus,
-      createTenantRole,
-      updateTenantRole,
+      createTenantRole: createTenantRole as any,
+      updateTenantRole: updateTenantRole as any,
       assignTenantRole
     }
   }

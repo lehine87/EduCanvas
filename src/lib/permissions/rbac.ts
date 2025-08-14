@@ -166,7 +166,7 @@ export function hasPermission(
   if (isSystemAdmin(userProfile)) return true
 
   // 역할이 없는 경우
-  if (!hasRole(userProfile)) return false
+  if (!hasRoleAuth(userProfile)) return false
 
   const role = userProfile.role as UserRole
 
@@ -209,7 +209,7 @@ export function hasPermission(
       if (rolePermission.conditions) {
         const conditionCheck = checkPermissionConditions(
           rolePermission.conditions,
-          context || {}
+          context || { userId: userProfile.id, tenantId: userProfile.tenant_id || '' }
         )
         if (!conditionCheck) continue
       }
@@ -332,13 +332,13 @@ function checkPermissionConditions(
         case 'neq':
           return fieldValue !== condition.value
         case 'gt':
-          return fieldValue > condition.value
+          return (fieldValue as any) > (condition.value as any)
         case 'gte':
-          return fieldValue >= condition.value
+          return (fieldValue as any) >= (condition.value as any)
         case 'lt':
-          return fieldValue < condition.value
+          return (fieldValue as any) < (condition.value as any)
         case 'lte':
-          return fieldValue <= condition.value
+          return (fieldValue as any) <= (condition.value as any)
         case 'in':
           return Array.isArray(condition.value) && 
                  condition.value.includes(fieldValue)
@@ -438,7 +438,7 @@ export function checkPermissionDetails(
   }
 
   // 역할 없음
-  if (!hasRole(userProfile)) {
+  if (!hasRoleAuth(userProfile)) {
     return {
       granted: false,
       role: 'viewer',
@@ -500,7 +500,7 @@ export function checkPermissionDetails(
       if (rolePermission.conditions) {
         const conditionCheck = checkPermissionConditions(
           rolePermission.conditions,
-          context || {}
+          context || { userId: userProfile.id, tenantId: userProfile.tenant_id || '' }
         )
         if (!conditionCheck) {
           return {
@@ -567,7 +567,7 @@ export function hasAnyRole(
 export function getUserPermissions(
   userProfile: UserProfile | null | undefined
 ): Permission[] {
-  if (!userProfile || !hasRole(userProfile)) return []
+  if (!userProfile || !hasRoleAuth(userProfile)) return []
   
   const role = userProfile.role as UserRole
   return ROLE_PERMISSIONS[role] || []
@@ -579,7 +579,7 @@ export function getUserPermissions(
 export function getUserPermissionStrings(
   userProfile: UserProfile | null | undefined
 ): PermissionString[] {
-  if (!userProfile || !hasRole(userProfile)) return []
+  if (!userProfile || !hasRoleAuth(userProfile)) return []
   
   const role = userProfile.role as UserRole
   return ROLE_PERMISSION_STRINGS[role] || []
@@ -636,17 +636,17 @@ if (process.env.NODE_ENV === 'development') {
   if (typeof window !== 'undefined') {
     const windowWithRBAC = window as Window & { __RBAC__?: RBACDebugInterface }
     windowWithRBAC.__RBAC__ = {
-      hasPermission,
-      hasAnyPermission,
-      hasAllPermissions,
-      canPerformAction,
-      checkPermissionDetails,
-      getUserPermissions,
-      getUserPermissionStrings,
+      hasPermission: hasPermission as any,
+      hasAnyPermission: hasAnyPermission as any,
+      hasAllPermissions: hasAllPermissions as any,
+      canPerformAction: canPerformAction as any,
+      checkPermissionDetails: checkPermissionDetails as any,
+      getUserPermissions: getUserPermissions as any,
+      getUserPermissionStrings: getUserPermissionStrings as any,
       invalidateCache: invalidatePermissionCache,
       getCacheStats: getPermissionCacheStats,
-      ROLE_PERMISSIONS,
-      ROLE_PERMISSION_STRINGS
+      ROLE_PERMISSIONS: ROLE_PERMISSIONS as any,
+      ROLE_PERMISSION_STRINGS: ROLE_PERMISSION_STRINGS as any
     }
   }
 }

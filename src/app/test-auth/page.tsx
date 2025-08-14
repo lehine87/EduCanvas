@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import type { RLSTestResult } from '@/types/utilityTypes'
-import { PermissionGuard, StudentWriteGuard, AdminOnly } from '@/components/auth'
+import { PermissionGuard } from '@/components/auth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { supabase } from '@/lib/auth/supabaseAuth'
 
@@ -200,7 +200,7 @@ function RLSTestPanel() {
       }
     ]
     
-    const results: Record<string, unknown> = {}
+    const results: Record<string, RLSTestResult> = {}
     
     for (const test of tests) {
       try {
@@ -249,21 +249,21 @@ function RLSTestPanel() {
       
       {Object.keys(rlsResults).length > 0 && (
         <div className="space-y-3">
-          {Object.entries(rlsResults).map(([testName, result]: [string, unknown]) => (
+          {Object.entries(rlsResults).map(([testName, result]: [string, RLSTestResult]) => (
             <div key={testName} className="border rounded-lg p-3">
               <div className="flex justify-between items-center">
                 <h4 className="font-medium">{testName}</h4>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  result?.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  result.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {result?.success ? '✅ 성공' : '❌ 실패'}
+                  {result.success ? '✅ 성공' : '❌ 실패'}
                 </span>
               </div>
               
               <div className="mt-2 text-sm">
-                <p><strong>조회된 레코드 수:</strong> {result?.count}</p>
-                {result?.error && (
-                  <p className="text-red-600"><strong>오류:</strong> {result?.error}</p>
+                <p><strong>조회된 레코드 수:</strong> {result.count}</p>
+                {result.error && (
+                  <p className="text-red-600"><strong>오류:</strong> {result.error}</p>
                 )}
                 
                 {testName === '다른 테넌트 접근 시도' && (
@@ -307,17 +307,17 @@ function PermissionTestPanel() {
   } = usePermissions()
 
   const testPermissions = [
-    { resource: 'students', action: 'read' },
-    { resource: 'students', action: 'write' },
-    { resource: 'students', action: 'delete' },
-    { resource: 'classes', action: 'read' },
-    { resource: 'classes', action: 'write' },
-    { resource: 'videos', action: 'read' },
-    { resource: 'videos', action: 'write' },
-    { resource: 'payments', action: 'read' },
-    { resource: 'payments', action: 'write' },
-    { resource: 'settings', action: 'read' },
-    { resource: 'users', action: 'admin' }
+    { resource: 'student', action: 'read' },
+    { resource: 'student', action: 'create' },
+    { resource: 'student', action: 'delete' },
+    { resource: 'class', action: 'read' },
+    { resource: 'class', action: 'create' },
+    { resource: 'document', action: 'read' },
+    { resource: 'document', action: 'create' },
+    { resource: 'payment', action: 'read' },
+    { resource: 'payment', action: 'create' },
+    { resource: 'system', action: 'read' },
+    { resource: 'user', action: 'manage' }
   ]
 
   return (
@@ -341,9 +341,9 @@ function PermissionTestPanel() {
           <div>
             <h4 className="font-semibold mb-2">기본 권한</h4>
             <div className="space-y-1 text-sm">
-              <p><span className="font-medium">읽기:</span> {canRead('students') ? '✅' : '❌'}</p>
-              <p><span className="font-medium">쓰기:</span> {canWrite('students') ? '✅' : '❌'}</p>
-              <p><span className="font-medium">삭제:</span> {canDelete('students') ? '✅' : '❌'}</p>
+              <p><span className="font-medium">읽기:</span> {canRead('student') ? '✅' : '❌'}</p>
+              <p><span className="font-medium">쓰기:</span> {canWrite('student') ? '✅' : '❌'}</p>
+              <p><span className="font-medium">삭제:</span> {canDelete('student') ? '✅' : '❌'}</p>
             </div>
           </div>
         </div>
@@ -410,28 +410,36 @@ function PermissionTestPanel() {
         <div className="space-y-4">
           <div className="border rounded-lg p-4">
             <h4 className="font-semibold mb-2">Student Write Guard</h4>
-            <StudentWriteGuard fallback={<p className="text-red-600">❌ 학생 쓰기 권한이 없습니다.</p>}>
+            <PermissionGuard 
+              resource="student" 
+              action="create"
+              fallback={<p className="text-red-600">❌ 학생 쓰기 권한이 없습니다.</p>}
+            >
               <p className="text-green-600">✅ 학생 쓰기 권한이 있습니다!</p>
               <button className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm">
                 학생 추가 버튼
               </button>
-            </StudentWriteGuard>
+            </PermissionGuard>
           </div>
           
           <div className="border rounded-lg p-4">
             <h4 className="font-semibold mb-2">Admin Only</h4>
-            <AdminOnly fallback={<p className="text-red-600">❌ 관리자 권한이 없습니다.</p>}>
+            <PermissionGuard 
+              resource="system" 
+              action="manage"
+              fallback={<p className="text-red-600">❌ 관리자 권한이 없습니다.</p>}
+            >
               <p className="text-green-600">✅ 관리자 권한이 있습니다!</p>
               <button className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm">
                 관리자 전용 버튼
               </button>
-            </AdminOnly>
+            </PermissionGuard>
           </div>
           
           <div className="border rounded-lg p-4">
             <h4 className="font-semibold mb-2">Permission Guard (결제 읽기)</h4>
             <PermissionGuard 
-              resource="payments" 
+              resource="payment" 
               action="read"
               fallback={<p className="text-red-600">❌ 결제 정보 읽기 권한이 없습니다.</p>}
             >

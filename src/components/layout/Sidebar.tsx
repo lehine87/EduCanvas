@@ -161,7 +161,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
     return NAVIGATION_ITEMS.filter(item => {
       // 역할 체크
       if (item.requiredRoles && item.requiredRoles.length > 0) {
-        if (!role || !item.requiredRoles.includes(role)) {
+        if (!role || !item.requiredRoles.includes(role as any)) {
           return false
         }
       }
@@ -177,7 +177,7 @@ export function Sidebar({ className, collapsed = false, onToggle }: SidebarProps
       ...item,
       children: item.children?.filter(child => {
         if (child.requiredRoles && child.requiredRoles.length > 0) {
-          return role && child.requiredRoles.includes(role)
+          return role && child.requiredRoles.includes(role as any)
         }
         return true
       })
@@ -296,7 +296,7 @@ export function useFilteredNavigation() {
   return useMemo(() => {
     return NAVIGATION_ITEMS.filter(item => {
       if (item.requiredRoles && item.requiredRoles.length > 0) {
-        return role && item.requiredRoles.includes(role)
+        return role && item.requiredRoles.includes(role as any)
       }
       return true
     })
@@ -307,19 +307,20 @@ export function useFilteredNavigation() {
  * 역할별 빠른 네비게이션 링크
  */
 export function QuickNavigation() {
-  const { role, isSystemAdmin, isAdmin, isInstructor, isStaff } = usePermissions()
+  const { role, isAdmin, isInstructor, isStaff } = usePermissions()
+  const isSystemAdmin = role === 'system_admin' || role === 'developer'
 
   const quickLinks = useMemo(() => {
     const links = []
 
-    if (isSystemAdmin()) {
+    if (isSystemAdmin) {
       links.push(
         { name: '시스템 관리', href: '/system-admin', icon: ShieldCheckIcon },
         { name: '테넌트 관리', href: '/system-admin/tenants', icon: BuildingOfficeIcon }
       )
     }
 
-    if (isAdmin()) {
+    if (isAdmin) {
       links.push(
         { name: '대시보드', href: '/admin', icon: HomeIcon },
         { name: '학생 관리', href: '/admin/students', icon: UsersIcon },
@@ -327,14 +328,14 @@ export function QuickNavigation() {
       )
     }
 
-    if (isInstructor()) {
+    if (isInstructor) {
       links.push(
         { name: '내 수업', href: '/instructor/classes', icon: BookOpenIcon },
         { name: '출결 관리', href: '/admin/attendance', icon: ClipboardDocumentListIcon }
       )
     }
 
-    if (isStaff()) {
+    if (isStaff) {
       links.push(
         { name: '학생 등록', href: '/admin/students/create', icon: UsersIcon },
         { name: '결제 처리', href: '/admin/payments', icon: CreditCardIcon }

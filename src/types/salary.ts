@@ -1,7 +1,7 @@
 // EduCanvas v2.0 Salary System Types  
 // 복잡한 급여 정책 및 계산 시스템
 
-import type { Json } from './database.types';
+import type { Json } from './database';
 
 // BaseEntity 타입 정의 (공통 엔티티 필드)
 interface BaseEntity {

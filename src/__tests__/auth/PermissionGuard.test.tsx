@@ -3,11 +3,13 @@ import { render, screen } from '@testing-library/react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { 
   PermissionGuard, 
-  OwnerOnly, 
   AdminOnly, 
-  StudentWriteGuard,
+  OwnerOnly,
+  StudentCreateGuard,
+  StudentUpdateGuard,
   StudentDeleteGuard,
-  ClassWriteGuard 
+  ClassCreateGuard,
+  ClassUpdateGuard 
 } from '@/components/auth/PermissionGuard'
 
 // Mock AuthContext
@@ -42,7 +44,7 @@ describe('PermissionGuard', () => {
     mockAuth.hasPermission.mockReturnValue(true)
 
     render(
-      <PermissionGuard resource="students" action="read">
+      <PermissionGuard resource="student" action="read">
         <div>Protected Content</div>
       </PermissionGuard>
     )
@@ -54,7 +56,7 @@ describe('PermissionGuard', () => {
     mockAuth.hasPermission.mockReturnValue(false)
 
     render(
-      <PermissionGuard resource="students" action="write">
+      <PermissionGuard resource="student" action="update">
         <div>Protected Content</div>
       </PermissionGuard>
     )
@@ -67,8 +69,8 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="students" 
-        action="write"
+        resource="student" 
+        action="update"
         fallback={<div>Access Denied</div>}
       >
         <div>Protected Content</div>
@@ -85,9 +87,9 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="settings" 
-        action="admin"
-        requireOwner
+        resource="system" 
+        action="manage"
+        requireOwnership
       >
         <div>Owner Only Content</div>
       </PermissionGuard>
@@ -102,9 +104,9 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="settings" 
-        action="admin"
-        requireOwner
+        resource="system" 
+        action="manage"
+        requireOwnership
       >
         <div>Owner Only Content</div>
       </PermissionGuard>
@@ -119,9 +121,9 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="users" 
-        action="write"
-        requireAdmin
+        resource="user" 
+        action="update"
+        fallback={<div>Admin required</div>}
       >
         <div>Admin Only Content</div>
       </PermissionGuard>
@@ -136,9 +138,9 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="users" 
-        action="write"
-        requireAdmin
+        resource="user" 
+        action="update"
+        fallback={<div>Admin required</div>}
       >
         <div>Admin Only Content</div>
       </PermissionGuard>
@@ -153,9 +155,9 @@ describe('PermissionGuard', () => {
 
     render(
       <PermissionGuard 
-        resource="classes" 
-        action="write"
-        requireInstructor
+        resource="class" 
+        action="update"
+        fallback={<div>Instructor required</div>}
       >
         <div>Instructor Only Content</div>
       </PermissionGuard>
@@ -222,9 +224,9 @@ describe('Specialized Permission Guards', () => {
     })
 
     render(
-      <StudentWriteGuard>
+      <StudentUpdateGuard>
         <div>Student Write Content</div>
-      </StudentWriteGuard>
+      </StudentUpdateGuard>
     )
 
     expect(screen.getByText('Student Write Content')).toBeInTheDocument()
@@ -252,9 +254,9 @@ describe('Specialized Permission Guards', () => {
     })
 
     render(
-      <ClassWriteGuard>
+      <ClassUpdateGuard>
         <div>Class Write Content</div>
-      </ClassWriteGuard>
+      </ClassUpdateGuard>
     )
 
     expect(screen.getByText('Class Write Content')).toBeInTheDocument()

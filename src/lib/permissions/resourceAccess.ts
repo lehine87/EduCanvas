@@ -104,7 +104,7 @@ export async function checkStudentOwnership(
     return {
       resourceType: 'student',
       resourceId: studentId,
-      ownerId: student.tenant_id,
+      ownerId: student.tenant_id || '',
       ownerType: 'tenant'
     }
   } catch (error) {
@@ -147,7 +147,7 @@ export async function checkClassOwnership(
     return {
       resourceType: 'class',
       resourceId: classId,
-      ownerId: classData.tenant_id,
+      ownerId: classData.tenant_id || '',
       ownerType: 'tenant'
     }
   } catch (error) {
@@ -179,7 +179,7 @@ export async function checkPaymentOwnership(
     return {
       resourceType: 'payment',
       resourceId: paymentId,
-      ownerId: payment.tenant_id,
+      ownerId: payment.tenant_id || '',
       ownerType: 'tenant',
       metadata: { studentId: payment.student_id }
     }
@@ -201,7 +201,7 @@ export async function checkAttendanceOwnership(
 
   try {
     const { data: attendance, error } = await supabase
-      .from('attendance_records')
+      .from('attendances')
       .select(`
         id,
         tenant_id,
@@ -236,7 +236,7 @@ export async function checkAttendanceOwnership(
     return {
       resourceType: 'attendance',
       resourceId: attendanceId,
-      ownerId: attendance.tenant_id,
+      ownerId: attendance.tenant_id || '',
       ownerType: 'tenant'
     }
   } catch (error) {
@@ -262,7 +262,7 @@ export async function checkResourceAccess(
   const basePermissionCheck = checkPermissionDetails(
     userProfile,
     { resource, action },
-    { userId: userProfile.id, tenantId: userProfile.tenant_id }
+    { userId: userProfile.id, tenantId: userProfile.tenant_id || '' }
   )
 
   // 기본 권한이 있으면 허용
@@ -316,7 +316,7 @@ export async function checkResourceAccess(
         { resource, action, scope: 'own' },
         {
           userId: userProfile.id,
-          tenantId: userProfile.tenant_id,
+          tenantId: userProfile.tenant_id || '',
           resourceId,
           resourceOwnerId: ownership.ownerId
         }
@@ -464,7 +464,7 @@ export async function canCreateResource(
     userProfile,
     resource,
     'create',
-    { userId: userProfile.id, tenantId: userProfile.tenant_id }
+    { userId: userProfile.id, tenantId: userProfile.tenant_id || '' }
   )
 }
 
@@ -635,18 +635,18 @@ if (process.env.NODE_ENV === 'development') {
   if (typeof window !== 'undefined') {
     const windowWithResourceAccess = window as Window & { __RESOURCE_ACCESS__?: ResourceAccessDebugInterface }
     windowWithResourceAccess.__RESOURCE_ACCESS__ = {
-      checkResourceAccess,
-      checkBulkResourceAccess,
-      filterAccessibleResources,
-      canCreateResource,
+      checkResourceAccess: checkResourceAccess as any,
+      checkBulkResourceAccess: checkBulkResourceAccess as any,
+      filterAccessibleResources: filterAccessibleResources as any,
+      canCreateResource: canCreateResource as any,
       isInstructorStudent,
       isInstructorClass,
-      isResourceOwner,
+      isResourceOwner: isResourceOwner as any,
       checkStudentOwnership,
       checkClassOwnership,
       checkPaymentOwnership,
       checkAttendanceOwnership,
-      cache: resourceAccessCache
+      cache: resourceAccessCache as any
     }
   }
 }
