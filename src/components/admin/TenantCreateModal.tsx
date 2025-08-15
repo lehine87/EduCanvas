@@ -60,7 +60,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || '테넌트 생성에 실패했습니다.')
+        throw new Error(result.error || '학원 생성에 실패했습니다.')
       }
 
       console.log('✅ 테넌트 생성 성공:', result.tenant.name)
@@ -75,7 +75,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
 
     } catch (error) {
       console.error('테넌트 생성 과정 오류:', error)
-      setError(error instanceof Error ? error.message : '테넌트 생성 중 오류가 발생했습니다.')
+      setError(error instanceof Error ? error.message : '학원 생성 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -104,7 +104,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
     <Modal 
       isOpen={isOpen} 
       onClose={handleClose}
-      title={step === 'tenant' ? '새 테넌트 생성' : '테넌트 생성 완료'}
+      title={step === 'tenant' ? '새 학원 생성' : '학원 생성 완료'}
       size="lg"
     >
       {step === 'tenant' ? (
@@ -210,7 +210,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
               loading={isLoading}
               disabled={isLoading}
             >
-              테넌트 생성
+              학원 생성
             </Button>
           </div>
         </form>
@@ -223,7 +223,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              테넌트 생성 완료! 🎉
+              학원 생성 완료! 🎉
             </h3>
             <p className="text-gray-600">
               {createdData?.tenant?.name}가 성공적으로 생성되었습니다.

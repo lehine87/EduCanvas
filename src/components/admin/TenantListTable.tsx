@@ -61,7 +61,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
 
       if (!response.ok) {
         console.error('❌ 테넌트 상태 변경 API 실패:', result.error)
-        alert(result.error || '테넌트 상태 변경에 실패했습니다.')
+        alert(result.error || '학원 상태 변경에 실패했습니다.')
         return
       }
 
@@ -82,7 +82,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
       
     } catch (error) {
       console.error('❌ 테넌트 상태 변경 예외:', error)
-      alert('테넌트 상태 변경 중 오류가 발생했습니다.')
+      alert('학원 상태 변경 중 오류가 발생했습니다.')
     } finally {
       // 로딩 상태 종료
       setToggleLoadingStates(prev => {
@@ -133,10 +133,10 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
       <div className="text-center py-8">
         <div className="text-gray-400 text-4xl mb-4">🏫</div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          생성된 테넌트가 없습니다
+          생성된 학원이 없습니다
         </h3>
         <p className="text-gray-600 mb-4">
-          첫 번째 테넌트를 생성하여 시작해보세요
+          첫 번째 학원을 생성하여 시작해보세요
         </p>
         <Button onClick={onRefresh} variant="outline">
           새로고침
@@ -267,7 +267,7 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-600">
-          총 {tenants.length}개의 테넌트
+          총 {tenants.length}개의 학원
         </div>
         <Button
           variant="outline"

@@ -128,7 +128,7 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
     settings: '설정',
     profile: '프로필',
     'system-admin': '시스템 관리',
-    'tenant-admin': '테넌트 관리',
+    'tenant-admin': '학원 관리',
     instructor: '강사',
     staff: '스태프'
   }

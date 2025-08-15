@@ -48,11 +48,6 @@ export interface StudentWithRelations extends Student {
  */
 export interface StudentFormData extends Omit<StudentInsert, 'id' | 'tenant_id' | 'created_at' | 'updated_at'> {
   confirmParentPhone?: string
-  emergencyContact?: {
-    name: string
-    relationship: string
-    phone: string
-  }
 }
 
 /**
@@ -61,7 +56,7 @@ export interface StudentFormData extends Omit<StudentInsert, 'id' | 'tenant_id' 
 export interface StudentFilters {
   status?: StudentStatus[]
   class_id?: string[]
-  grade?: string[]
+  grade_level?: string[]
   search?: string
   created_after?: string
   created_before?: string

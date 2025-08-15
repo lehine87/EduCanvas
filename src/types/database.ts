@@ -9,10 +9,8 @@ export * from './database.types'
 // ================================================================
 // 1. ENUM TYPES (PostgreSQL Enums → TypeScript)
 // ================================================================
-
-export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended'
-
-export type UserRole = 'system_admin' | 'admin' | 'instructor' | 'staff' | 'viewer'
+// StudentStatus는 student.types.ts에서 정의됨
+// UserRole은 auth.types.ts에서 정의됨
 
 export type AttendanceStatus = 'present' | 'late' | 'absent' | 'excused'
 
@@ -56,15 +54,8 @@ export type WithTimestamps<T> = T & {
 }
 
 // ================================================================
-// 4. API RESPONSE TYPES
+// 4. PAGINATION TYPES (API Response는 api.types.ts에서 처리)
 // ================================================================
-
-export interface ApiResponse<T = unknown> {
-  data?: T
-  error?: string
-  message?: string
-  success: boolean
-}
 
 export interface PaginationParams {
   page: number

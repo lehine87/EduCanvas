@@ -86,6 +86,18 @@ export interface ResourcePermissions {
     canDelete: boolean
     canAdmin: boolean
   }
+  attendance: {
+    canRead: boolean
+    canWrite: boolean
+    canDelete: boolean
+    canAdmin: boolean
+  }
+  analytics: {
+    canRead: boolean
+    canWrite: boolean
+    canDelete: boolean
+    canAdmin: boolean
+  }
   reports: {
     canRead: boolean
     canWrite: boolean
@@ -223,6 +235,18 @@ export function usePermissions() {
       canWrite: hasPermission('payments', 'write') || hasPermission('payments', 'create'),
       canDelete: hasPermission('payments', 'delete'),
       canAdmin: hasPermission('payments', 'admin')
+    },
+    attendance: {
+      canRead: hasPermission('attendance', 'read'),
+      canWrite: hasPermission('attendance', 'write') || hasPermission('attendance', 'create'),
+      canDelete: hasPermission('attendance', 'delete'),
+      canAdmin: hasPermission('attendance', 'admin')
+    },
+    analytics: {
+      canRead: hasPermission('analytics', 'read'),
+      canWrite: hasPermission('analytics', 'write') || hasPermission('analytics', 'create'),
+      canDelete: hasPermission('analytics', 'delete'),
+      canAdmin: hasPermission('analytics', 'admin')
     },
     reports: {
       canRead: hasPermission('reports', 'read'),

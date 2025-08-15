@@ -159,7 +159,7 @@ export default function AdminPage() {
     })
     
     setIsRedirecting(false)
-  }, [profile, router])
+  }, [profile, router, isVercel])
 
   const handleSignOut = async () => {
     try {

@@ -6,6 +6,7 @@ import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
+import { TenantAdminSidebar, useTenantAdminSidebar } from '@/components/layout/TenantAdminSidebar'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile, Tenant } from '@/types/auth.types'
 import { hasTenantId } from '@/types/auth.types'
@@ -23,6 +24,7 @@ export default function TenantAdminPage() {
     staff: 0
   })
   const router = useRouter()
+  const { collapsed, toggle } = useTenantAdminSidebar()
 
   useEffect(() => {
     async function checkTenantAdmin() {
@@ -145,38 +147,56 @@ export default function TenantAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {tenant?.name || '테넌트'} 관리자
-              </h1>
-              <p className="text-gray-600">
-                회원 관리 및 승인 시스템
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-sm">
-                <div className="text-gray-900 font-medium">{user?.profile?.name}</div>
-                <div className="text-gray-500">{user?.profile?.email}</div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* 사이드바 */}
+      <div className={`${collapsed ? 'w-16' : 'w-64'} flex-shrink-0 transition-all duration-300`}>
+        <TenantAdminSidebar
+          collapsed={collapsed}
+          onToggle={toggle}
+          tenantName={tenant?.name}
+          userInfo={{
+            name: user?.profile?.name,
+            email: user?.profile?.email || user?.auth?.email,
+            role: user?.profile?.role || undefined
+          }}
+          className="h-screen sticky top-0"
+        />
+      </div>
+
+      {/* 메인 컨텐츠 영역 */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* 헤더 */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="px-6 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  대시보드
+                </h1>
+                <p className="text-gray-600">
+                  {tenant?.name || '테넌트'} 관리 현황
+                </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => authClient.signOut().then(() => router.push('/auth/login'))}
-              >
-                로그아웃
-              </Button>
+              
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const tenantId = user?.profile?.tenant_id
+                    if (tenantId) {
+                      loadStats(tenantId)
+                    }
+                  }}
+                >
+                  🔄 새로고침
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 메인 컨텐츠 */}
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* 메인 컨텐츠 */}
+        <div className="flex-1 p-6 overflow-auto">
         {/* 통계 카드들 */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
@@ -297,6 +317,7 @@ export default function TenantAdminPage() {
             />
           </CardBody>
         </Card>
+        </div>
       </div>
     </div>
   )

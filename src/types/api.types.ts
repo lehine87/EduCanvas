@@ -6,7 +6,8 @@
  */
 
 import type { Database } from './database'
-import type { UserStatus } from './index'
+// UserStatus 직접 정의하여 순환 참조 제거
+type UserStatus = Database['public']['Enums']['user_status']
 
 // ================================================================
 // 1. 공통 API 타입

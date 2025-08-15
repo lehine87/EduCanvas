@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
 import { authClient } from '@/lib/auth/authClient'
@@ -12,6 +13,7 @@ export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const searchParams = useSearchParams()
 
   const {
     register,
@@ -20,6 +22,30 @@ export function ResetPasswordForm() {
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema)
   })
+
+  // URL 파라미터에서 에러 메시지 확인
+  useEffect(() => {
+    const urlError = searchParams.get('error')
+    const urlErrorDescription = searchParams.get('error_description')
+    
+    if (urlError) {
+      let errorMessage = '비밀번호 재설정 요청 중 문제가 발생했습니다.'
+      
+      switch (urlError) {
+        case 'callback_error':
+          errorMessage = urlErrorDescription || '비밀번호 재설정 링크가 만료되었거나 이미 사용되었습니다. 새로운 링크를 요청해주세요.'
+          break
+        case 'no_code':
+        case 'no_auth':
+          errorMessage = urlErrorDescription || '잘못된 링크입니다. 새로운 비밀번호 재설정 링크를 요청해주세요.'
+          break
+        default:
+          errorMessage = urlErrorDescription || errorMessage
+      }
+      
+      setError(errorMessage)
+    }
+  }, [searchParams])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsLoading(true)

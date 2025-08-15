@@ -35,16 +35,16 @@ export function AuthGuard({
   const isAuthenticated = !!user && isSessionValid()
   const isActive = profile?.status === 'active'
   
-  const hasRole = (roles: string | string[]) => {
+  const hasRole = useCallback((roles: string | string[]) => {
     if (!profile?.role) return false
     const roleArray = Array.isArray(roles) ? roles : [roles]
     return roleArray.includes(profile.role)
-  }
+  }, [profile?.role])
   
-  const canAccessTenant = (tenantId: string) => {
+  const canAccessTenant = useCallback((tenantId: string) => {
     if (profile?.role === 'system_admin') return true
     return profile?.tenant_id === tenantId
-  }
+  }, [profile?.role, profile?.tenant_id])
   
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)

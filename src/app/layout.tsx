@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { Toaster } from "react-hot-toast";
+import { toastConfig } from "@/lib/toast/toastConfig";
 
 // 개발 환경에서만 Debug Interface 초기화 (런타임에서만 실행)
 const initDevTools = () => {
@@ -13,9 +16,20 @@ const initDevTools = () => {
   }
 }
 
+// 글로벌 에러 핸들러 초기화
+const initErrorHandling = () => {
+  // Dynamic import로 글로벌 에러 핸들러 로드
+  import('@/lib/errors/globalErrorHandler').then(({ initGlobalErrorHandler }) => {
+    initGlobalErrorHandler()
+  }).catch(() => {
+    console.warn('Failed to initialize global error handler')
+  })
+}
+
 // 브라우저 환경에서만 실행
 if (typeof window !== 'undefined') {
   initDevTools()
+  initErrorHandling()
 }
 
 const geistSans = Geist({
@@ -43,9 +57,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ErrorBoundary
+          level="page"
+          enableAnalytics={true}
+          showDetails={process.env.NODE_ENV === 'development'}
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          
+          {/* Toast 알림 시스템 */}
+          <Toaster
+            position={toastConfig.position}
+            toastOptions={toastConfig}
+          />
+        </ErrorBoundary>
       </body>
     </html>
   );

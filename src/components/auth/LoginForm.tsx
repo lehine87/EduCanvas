@@ -51,15 +51,20 @@ export function LoginForm() {
     const urlError = searchParams.get('error')
     const errorCode = searchParams.get('error_code')
     const errorDescription = searchParams.get('error_description')
+    const urlMessage = searchParams.get('message')
 
     if (urlError === 'access_denied' && errorCode === 'otp_expired') {
       setError('이메일 인증 링크가 만료되었습니다. 새로운 인증 이메일을 요청해주세요.')
     } else if (urlError === 'callback_error') {
       setError('인증 중 오류가 발생했습니다. 다시 시도해주세요.')
-    } else if (searchParams.get('message') === 'check_email') {
+    } else if (urlError === 'no_code') {
+      setError('유효하지 않은 링크입니다. 비밀번호 재설정을 다시 요청해주세요.')
+    } else if (urlMessage === 'check_email') {
       setMessage('이메일로 전송된 인증 링크를 확인해주세요.')
-    } else if (searchParams.get('message') === 'email_confirmed') {
+    } else if (urlMessage === 'email_confirmed') {
       setMessage('이메일 인증이 완료되었습니다! 이제 로그인하실 수 있습니다.')
+    } else if (urlMessage === 'password_updated') {
+      setMessage('비밀번호가 성공적으로 변경되었습니다! 새 비밀번호로 로그인해주세요.')
     }
   }, [searchParams])
 

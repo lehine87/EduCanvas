@@ -56,11 +56,13 @@ export type ComponentSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
  * Common color variants for UI components
  */
 export type ComponentVariant = 
+  | 'default'
   | 'primary' 
   | 'secondary' 
   | 'success' 
   | 'warning' 
   | 'error' 
+  | 'destructive'
   | 'ghost' 
   | 'outline';
 

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     
     // Supabase Auth로 비밀번호 재설정 이메일 발송
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/auth/update-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/auth/update-password&type=recovery`,
     })
     
     if (error) {

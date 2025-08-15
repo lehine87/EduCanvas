@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Button, Badge, Loading, Modal } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile } from '@/types/auth.types'
@@ -19,13 +19,7 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
 
   const supabase = createClient()
 
-  useEffect(() => {
-    if (tenantId) {
-      loadPendingUsers()
-    }
-  }, [tenantId])
-
-  const loadPendingUsers = async () => {
+  const loadPendingUsers = useCallback(async () => {
     setIsLoading(true)
     try {
       console.log('🕐 승인 대기 사용자 목록 로드 중...', tenantId)
@@ -47,7 +41,13 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [tenantId])
+
+  useEffect(() => {
+    if (tenantId) {
+      loadPendingUsers()
+    }
+  }, [tenantId, loadPendingUsers])
 
   const handleApproveUser = async (userId: string, approved: boolean) => {
     setActionLoading(userId)

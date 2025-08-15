@@ -26,7 +26,10 @@
       "Bash(git push:*)",
       "Bash(npm outdated)",
       "Bash(npm uninstall:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(npm run start:*)",
+      "WebSearch",
+      "Bash(npx kill-port:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

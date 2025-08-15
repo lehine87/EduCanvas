@@ -78,7 +78,7 @@ export function Badge({
     <span 
       className={cn(
         baseClasses,
-        variantClasses[variant],
+        variantClasses[variant as keyof typeof variantClasses] || variantClasses.secondary,
         sizeClasses[size],
         removable && 'pr-1',
         className
@@ -92,7 +92,7 @@ export function Badge({
           className={cn(
             'rounded-full mr-1.5',
             dotSizes[size],
-            dotColors[variant]
+            dotColors[variant as keyof typeof dotColors] || dotColors.secondary
           )}
           aria-hidden="true"
         />

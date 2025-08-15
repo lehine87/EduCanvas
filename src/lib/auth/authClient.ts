@@ -165,23 +165,49 @@ export class AuthClient {
   }
 
   async updatePassword(password: string) {
-    const { error } = await this.supabase.auth.updateUser({
-      password
-    })
+    try {
+      const { error } = await this.supabase.auth.updateUser({
+        password
+      })
 
-    if (error) throw error
+      if (error) {
+        console.error('🚨 [AUTH-CLIENT] 비밀번호 업데이트 에러:', error.message)
+        throw error
+      }
+      
+      console.log('✅ [AUTH-CLIENT] 비밀번호 업데이트 성공')
+    } catch (error) {
+      console.error('🚨 [AUTH-CLIENT] 비밀번호 업데이트 예외:', error)
+      throw error
+    }
   }
 
   async getCurrentUser() {
-    const { data: { user }, error } = await this.supabase.auth.getUser()
-    if (error) throw error
-    return user
+    try {
+      const { data: { user }, error } = await this.supabase.auth.getUser()
+      if (error) {
+        console.warn('🔍 [AUTH-CLIENT] 사용자 조회 에러:', error.message)
+        return null
+      }
+      return user
+    } catch (error) {
+      console.warn('🔍 [AUTH-CLIENT] 사용자 조회 예외:', error)
+      return null
+    }
   }
 
   async getCurrentSession() {
-    const { data: { session }, error } = await this.supabase.auth.getSession()
-    if (error) throw error
-    return session
+    try {
+      const { data: { session }, error } = await this.supabase.auth.getSession()
+      if (error) {
+        console.warn('🔍 [AUTH-CLIENT] 세션 조회 에러:', error.message)
+        return null
+      }
+      return session
+    } catch (error) {
+      console.warn('🔍 [AUTH-CLIENT] 세션 조회 예외:', error)
+      return null
+    }
   }
 
   async getUserProfile(): Promise<UserProfile | null> {

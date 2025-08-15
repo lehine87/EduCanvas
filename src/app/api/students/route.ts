@@ -29,8 +29,8 @@ const createStudentSchema = z.object({
   parent_name: z.string().optional(),
   parent_phone_1: z.string().optional(),
   parent_phone_2: z.string().optional(),
-  grade: z.string().optional(),
-  school: z.string().optional(),
+  grade_level: z.string().optional(),
+  school_name: z.string().optional(),
   address: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(['active', 'inactive']).default('active')
@@ -187,11 +187,13 @@ export async function POST(request: NextRequest) {
         throw new Error('이미 존재하는 학번입니다.')
       }
 
-      // 학생 생성
+      // 학생 생성 - tenantId를 tenant_id로 매핑
+      const { tenantId, ...restStudentData } = studentData
       const { data: newStudent, error } = await supabase
         .from('students')
         .insert({
-          ...studentData,
+          ...restStudentData,
+          tenant_id: tenantId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

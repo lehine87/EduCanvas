@@ -36,9 +36,10 @@ export type Instructor = Database['public']['Tables']['instructors']['Row']
 export type CoursePackage = Database['public']['Tables']['course_packages']['Row']
 export type StudentEnrollment = Database['public']['Tables']['student_enrollments']['Row']
 
-// Enum types
+// Enum types from different modules
+export type { StudentStatus } from './student.types'
+export type { UserRole } from './auth.types'
 export type {
-  StudentStatus,
   BillingType,
   PaymentStatus,
   PaymentMethod,
@@ -159,40 +160,12 @@ export type {
 } from '../components/ui/types'
 
 // ================================================================
-// 4. 유틸리티 타입들
+// 4. 유틸리티 타입들 (utilityTypes.ts에서 실용적인 타입들만 가져옴)
 // ================================================================
 export type {
   DeepPartial,
-  DeepReadonly,
-  DeepRequired,
-  DeepNullable,
-  DeepNonNullable,
-  PartialBy,
-  RequiredBy,
-  ReadonlyBy,
-  WritableBy,
-  NullableBy,
-  NonNullableBy,
-  KeysOfType,
-  PickByType,
-  OmitByType,
-  PickFunctions,
-  OmitFunctions,
-  Head,
-  Tail,
-  Length,
-  Args,
-  Return,
-  IsEqual,
-  IsNever,
-  IsUnknown,
-  IsAny,
-  KebabToCamel,
-  CamelToKebab,
-  WithTenant,
-  WithTimestamps,
   PaginatedResponse
-} from './utility.types'
+} from './utilityTypes'
 
 // ================================================================
 // 5. 애플리케이션 레벨 타입들
@@ -325,8 +298,8 @@ export {
 // 확장된 UserProfile과 Tenant은 auth.types에서 import
 } from './auth.types'
 
-// Auth 관련 핵심 타입들 별도 export
-export type { UserProfile, Tenant, UserRole } from './auth.types'
+// Auth 관련 핵심 타입들 별도 export (UserRole은 이미 위에서 export됨)
+export type { UserProfile, Tenant } from './auth.types'
 
 // Student 관련 타입 가드
 export {
@@ -335,3 +308,28 @@ export {
   isActiveStudent,
   isSearchableStudent
 } from './student.types'
+
+// ================================================================
+// 8. Navigation System Types (v5.0 - 제로베이스 리디렉션 시스템)
+// ================================================================
+export type {
+  NavigationContext,
+  UserNavigationState,
+  RouteConfig,
+  RedirectionResult,
+  RouteMatchResult,
+  NavigationEvent,
+  NavigationHistoryEntry,
+  NavigationConfig,
+  NavigationCacheEntry,
+  NavigationErrorCode,
+  NavigationMiddlewareOptions
+} from './navigation.types'
+
+export {
+  isValidNavigationState,
+  isValidNavigationContext,
+  createNavigationContext,
+  createNoRedirectResult,
+  createRedirectResult
+} from './navigation.types'

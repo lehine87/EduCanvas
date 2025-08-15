@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sidebar } from './Sidebar'
+import { AdaptiveSidebar } from './AdaptiveSidebar'
 import { Header } from './Header'
 import { Breadcrumbs } from './Breadcrumbs'
 import { AuthGuard } from '@/components/auth/AuthGuard'
@@ -106,7 +106,7 @@ export function MainLayout({
             'hidden lg:flex transition-all duration-300 ease-in-out',
             sidebarCollapsed ? 'w-16' : 'w-64'
           )}>
-            <Sidebar 
+            <AdaptiveSidebar 
               collapsed={sidebarCollapsed}
               onToggle={toggleSidebar}
               className="h-full"
@@ -119,7 +119,7 @@ export function MainLayout({
               'fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden',
               mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             )}>
-              <Sidebar 
+              <AdaptiveSidebar 
                 collapsed={false}
                 onToggle={closeMobileMenu}
                 className="h-full bg-white shadow-xl"

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   // ESLint 설정
@@ -11,6 +12,23 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+
+  // 개발 서버 설정 - EPIPE 에러 방지
+  ...(process.env.NODE_ENV === 'development' && {
+    experimental: {
+      // Turbopack 최적화
+      turbo: {
+        loaders: {
+          '.ts': ['ts-loader'],
+          '.tsx': ['ts-loader'],
+        },
+      },
+    },
+    // 개발 서버 옵션
+    devIndicators: {
+      buildActivity: false, // 빌드 인디케이터 비활성화 (콘솔 출력 감소)
+    },
+  }),
 
   // Webpack 설정 - Production에서 dev-tools 디렉터리 완전 제외
   webpack: (config, { dev, isServer }) => {
@@ -46,4 +64,35 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry 설정 옵션 통합
+const sentryWebpackPluginOptions = {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  // Sentry 조직 및 프로젝트 설정
+  org: process.env.SENTRY_ORG || "educanvas",
+  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // 소스맵 업로드 설정
+  silent: !process.env.CI, // CI에서만 로그 출력
+  hideSourceMaps: true, // 프로덕션에서 소스맵 숨기기
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // 빌드 옵션
+  widenClientFileUpload: true, // 클라이언트 파일 업로드 범위 확대
+
+  // 터널링 설정 (광고 차단기 우회)
+  tunnelRoute: "/monitoring",
+
+  // 자동 계측 설정
+  disableLogger: true, // Sentry 로거 비활성화
+  automaticVercelMonitors: true // Vercel 모니터링 자동 설정
+};
+
+// 개발/프로덕션 환경 모두에서 Sentry 활성화 (환경변수가 있을 때만)
+export default process.env.NEXT_PUBLIC_SENTRY_DSN 
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;

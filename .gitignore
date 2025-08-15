@@ -61,3 +61,6 @@ supabase/complete_*.sql
 supabase/rls_policies*.sql
 supabase/sample_data*.sql
 supabase/schema_setup.sql
+
+# Sentry Config File
+.env.sentry-build-plugin

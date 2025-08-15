@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
@@ -26,6 +26,19 @@ export default function SystemAdminPage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
+  // 함수를 안정적으로 만들기 위해 useCallback 사용
+  const handleGoToAdmin = useCallback(() => {
+    router.push('/admin?stay=true')
+  }, [router])
+
+  const handleGoToLogin = useCallback(() => {
+    router.push('/auth/login')
+  }, [router])
+
+  const handleCreateTenant = useCallback(() => {
+    setShowCreateModal(true)
+  }, [])
+
   // 개발 환경에서만 로그 출력 (프로덕션 429 에러 방지)
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -35,7 +48,7 @@ export default function SystemAdminPage() {
         isLoading
       })
     }
-  }, []) // 빈 의존성 배열로 한 번만 실행
+  }, [isLoading]) // isLoading 의존성 추가
 
   useEffect(() => {
     async function checkSystemAdmin() {
@@ -192,13 +205,13 @@ export default function SystemAdminPage() {
           </p>
           <div className="flex gap-3 justify-center">
             <Button
-              onClick={() => router.push('/admin?stay=true')}
+              onClick={handleGoToAdmin}
               variant="outline"
             >
               일반 관리자 페이지로
             </Button>
             <Button
-              onClick={() => router.push('/auth/login')}
+              onClick={handleGoToLogin}
               className="bg-blue-600 hover:bg-blue-700"
             >
               로그인 페이지로
@@ -214,21 +227,18 @@ export default function SystemAdminPage() {
     { label: '시스템 관리', href: '/system-admin', current: true }
   ]
 
-  // 헤더 액션 버튼
-  const headerActions = (
-    <Button
-      onClick={() => setShowCreateModal(true)}
-      className="bg-blue-600 hover:bg-blue-700"
-    >
-      + 새 테넌트 생성
-    </Button>
-  )
-
   return (
     <MainLayout
       title="시스템 관리자"
       breadcrumbs={breadcrumbs}
-      actions={headerActions}
+      actions={
+        <Button
+          onClick={handleCreateTenant}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          + 새 학원 생성
+        </Button>
+      }
       allowedRoles={['system_admin']}
     >
       <div className="space-y-8">
@@ -245,7 +255,7 @@ export default function SystemAdminPage() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">총 테넌트 수</p>
+                  <p className="text-sm font-medium text-gray-600">총 학원 수</p>
                   <p className="text-2xl font-bold text-gray-900">{tenants.length}</p>
                 </div>
               </div>
@@ -263,7 +273,7 @@ export default function SystemAdminPage() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">활성 테넌트</p>
+                  <p className="text-sm font-medium text-gray-600">활성 학원</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {tenants.filter(t => t.is_active).length}
                   </p>
@@ -293,10 +303,10 @@ export default function SystemAdminPage() {
           </Card>
         </div>
 
-        {/* 테넌트 관리 섹션 */}
+        {/* 학원 관리 섹션 */}
         <Card>
           <CardHeader>
-            <CardTitle>테넌트 관리</CardTitle>
+            <CardTitle>학원 관리</CardTitle>
           </CardHeader>
           <CardBody>
             <TenantListTable 
@@ -309,7 +319,7 @@ export default function SystemAdminPage() {
         </Card>
       </div>
 
-      {/* 테넌트 생성 모달 */}
+      {/* 학원 생성 모달 */}
       <TenantCreateModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

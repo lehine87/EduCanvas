@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Button, Badge, Loading, Input } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile } from '@/types/auth.types'
@@ -21,17 +21,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
 
   const supabase = createClient()
 
-  useEffect(() => {
-    if (tenantId) {
-      loadMembers()
-    }
-  }, [tenantId])
-
-  useEffect(() => {
-    filterMembers()
-  }, [members, searchQuery, filterRole, filterStatus])
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     setIsLoading(true)
     try {
       console.log('👥 활성 회원 목록 로드 중...', tenantId)
@@ -53,9 +43,9 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [tenantId])
 
-  const filterMembers = () => {
+  const filterMembers = useCallback(() => {
     let filtered = members
 
     // 검색어 필터링
@@ -78,7 +68,17 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     }
 
     setFilteredMembers(filtered)
-  }
+  }, [members, searchQuery, filterRole, filterStatus])
+
+  useEffect(() => {
+    if (tenantId) {
+      loadMembers()
+    }
+  }, [tenantId, loadMembers])
+
+  useEffect(() => {
+    filterMembers()
+  }, [filterMembers])
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {
     setActionLoading(userId)

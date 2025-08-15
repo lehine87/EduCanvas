@@ -115,6 +115,25 @@ export function CardDescription({
   )
 }
 
+export interface CardContentProps extends BaseComponentProps {}
+
+export function CardContent({ 
+  className, 
+  children, 
+  'data-testid': testId,
+  ...props 
+}: CardContentProps) {
+  return (
+    <div 
+      className={cn('pt-0', className)} 
+      data-testid={testId}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
 export interface CardBodyProps extends BaseComponentProps {}
 
 export function CardBody({ 

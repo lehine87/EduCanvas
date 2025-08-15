@@ -88,7 +88,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       ref={ref}
       className={cn(
         baseClasses,
-        variantClasses[variant],
+        variantClasses[variant as keyof typeof variantClasses] || variantClasses.primary,
         sizeClasses[size],
         fullWidth && 'w-full',
         className
