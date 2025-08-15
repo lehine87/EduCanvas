@@ -1,3 +1,1 @@
-import { createClient } from '@/lib/supabase/client'
-
-export { createClient }
+export { createClient } from '@/lib/supabase/client'

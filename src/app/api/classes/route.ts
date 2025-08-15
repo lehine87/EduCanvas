@@ -129,10 +129,11 @@ export async function GET(request: NextRequest) {
       }
 
       // 기본 클래스 정보 반환 (간소화)
-      const classesWithStats = (classes || []).map(cls => ({
-        ...cls,
-        student_count: 0 // 실제 구현시 계산 필요
-      })) as Array<typeof classes[0] & { student_count: number }>
+      const classesWithStats = (classes || [])
+        .filter((cls): cls is NonNullable<typeof cls> => cls !== null && cls !== undefined)
+        .map(cls => Object.assign({}, cls, {
+          student_count: 0 // 실제 구현시 계산 필요
+        }))
 
       const result = {
         classes: classesWithStats,

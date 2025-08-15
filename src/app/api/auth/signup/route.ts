@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/db/supabase'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 import { isSignupRequest, createErrorResponse } from '@/types'
 import type { SignupRequest, SignupResponse } from '@/types'
