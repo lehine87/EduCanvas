@@ -50,17 +50,11 @@ export function AuthGuard({
   const [isChecking, setIsChecking] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
 
-  // Vercel 환경에서 AuthGuard 강제 로그
-  const isVercel = typeof window !== 'undefined' && 
-    process.env.NODE_ENV === 'production' && 
-    window.location.hostname.includes('vercel.app')
-
-  // 강제 로그 출력
-  if (typeof window !== 'undefined') {
-    console.log(`🛡️ [AUTHGUARD-ALWAYS] AUTH GUARD EXECUTED:`, {
+  // 개발 환경에서만 로깅 (Vercel 429 에러 방지)
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    console.log(`🛡️ [AUTHGUARD] AUTH GUARD EXECUTED:`, {
       timestamp: new Date().toISOString(),
       currentPath: window.location.pathname,
-      isVercel,
       initialized,
       loading,
       isChecking,
@@ -101,7 +95,9 @@ export function AuthGuard({
     if (requireAuth && isAuthenticated) {
       // 3. 세션 유효성 검사
       if (!isSessionValid()) {
-        console.warn('🚨 만료된 세션으로 접근')
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🚨 만료된 세션으로 접근')
+        }
         clearSensitiveData()
         router.push(`${redirectTo}?reason=session-expired`)
         return
@@ -109,7 +105,9 @@ export function AuthGuard({
 
       // 4. 계정 활성 상태 검사
       if (!isActive) {
-        console.warn('🚨 비활성 계정 접근:', profile?.status)
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🚨 비활성 계정 접근:', profile?.status)
+        }
         setAuthError('계정이 비활성화되었습니다. 관리자에게 문의하세요.')
         router.push('/auth/login?error=account-inactive')
         return
@@ -125,10 +123,12 @@ export function AuthGuard({
 
       // 6. 역할 기반 접근 제어
       if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
-        console.warn('🚨 권한 없는 역할로 접근:', { 
-          userRole: profile?.role, 
-          allowedRoles 
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🚨 권한 없는 역할로 접근:', { 
+            userRole: profile?.role, 
+            allowedRoles 
+          })
+        }
         setAuthError('이 페이지에 접근할 권한이 없습니다.')
         router.push('/unauthorized')
         return
@@ -136,10 +136,12 @@ export function AuthGuard({
 
       // 7. 테넌트 접근 권한 검사
       if (requireTenantAccess && !canAccessTenant(requireTenantAccess)) {
-        console.warn('🚨 테넌트 접근 권한 없음:', { 
-          requiredTenant: requireTenantAccess,
-          userTenant: profile?.tenant_id
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🚨 테넌트 접근 권한 없음:', { 
+            requiredTenant: requireTenantAccess,
+            userTenant: profile?.tenant_id
+          })
+        }
         setAuthError('해당 학원에 접근할 권한이 없습니다.')
         router.push('/unauthorized')
         return

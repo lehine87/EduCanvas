@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import React from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
@@ -25,44 +26,56 @@ export default function SystemAdminPage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // 개발 환경에서만 로그 출력
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log(`🏛️ [SYSTEM-ADMIN] PAGE LOADED:`, {
-      timestamp: new Date().toISOString(),
-      currentPath: window.location.pathname,
-      isLoading
-    })
-  }
+  // 개발 환경에서만 로그 출력 (프로덕션 429 에러 방지)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🏛️ [SYSTEM-ADMIN] PAGE LOADED:`, {
+        timestamp: new Date().toISOString(),
+        currentPath: window.location.pathname,
+        isLoading
+      })
+    }
+  }, []) // 빈 의존성 배열로 한 번만 실행
 
   useEffect(() => {
     async function checkSystemAdmin() {
       try {
-        console.log(`🔍 [SYSTEM-ADMIN-CHECK] CHECKING SYSTEM ADMIN PERMISSIONS`)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 [SYSTEM-ADMIN-CHECK] CHECKING SYSTEM ADMIN PERMISSIONS`)
+        }
         
         const currentUser = await authClient.getCurrentUser()
         
-        console.log(`👤 [SYSTEM-ADMIN-CHECK] CURRENT USER:`, {
-          hasUser: !!currentUser,
-          userEmail: currentUser?.email
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`👤 [SYSTEM-ADMIN-CHECK] CURRENT USER:`, {
+            hasUser: !!currentUser,
+            userEmail: currentUser?.email
+          })
+        }
         
         if (!currentUser) {
-          console.log(`❌ [SYSTEM-ADMIN-CHECK] NO USER - REDIRECT TO LOGIN`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`❌ [SYSTEM-ADMIN-CHECK] NO USER - REDIRECT TO LOGIN`)
+          }
           router.push('/auth/login')
           return
         }
 
         const profile = await authClient.getUserProfile()
         
-        console.log(`👤 [SYSTEM-ADMIN-CHECK] USER PROFILE:`, {
-          hasProfile: !!profile,
-          profileRole: profile?.role,
-          profileEmail: profile?.email,
-          profileStatus: profile?.status
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`👤 [SYSTEM-ADMIN-CHECK] USER PROFILE:`, {
+            hasProfile: !!profile,
+            profileRole: profile?.role,
+            profileEmail: profile?.email,
+            profileStatus: profile?.status
+          })
+        }
         
         if (!profile) {
-          console.log(`❌ [SYSTEM-ADMIN-CHECK] NO PROFILE - REDIRECT TO LOGIN`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`❌ [SYSTEM-ADMIN-CHECK] NO PROFILE - REDIRECT TO LOGIN`)
+          }
           router.push('/auth/login')
           return
         }
@@ -71,16 +84,20 @@ export default function SystemAdminPage() {
         const isSystemAdmin = profile.role === 'system_admin' || 
             ['admin@test.com', 'sjlee87@kakao.com'].includes(profile.email)
         
-        console.log(`🔐 [SYSTEM-ADMIN-CHECK] PERMISSION CHECK:`, {
-          profileRole: profile.role,
-          profileEmail: profile.email,
-          isSystemAdmin,
-          willRedirect: !isSystemAdmin
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔐 [SYSTEM-ADMIN-CHECK] PERMISSION CHECK:`, {
+            profileRole: profile.role,
+            profileEmail: profile.email,
+            isSystemAdmin,
+            willRedirect: !isSystemAdmin
+          })
+        }
         
         if (!isSystemAdmin) {
-          console.error(`🚨 [SYSTEM-ADMIN-ACCESS] NOT SYSTEM ADMIN - SHOWING ERROR PAGE`)
-          console.warn(`⚠️ [SYSTEM-ADMIN-ACCESS] NO REDIRECT TO PREVENT LOOP`)
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`🚨 [SYSTEM-ADMIN-ACCESS] NOT SYSTEM ADMIN - SHOWING ERROR PAGE`)
+            console.warn(`⚠️ [SYSTEM-ADMIN-ACCESS] NO REDIRECT TO PREVENT LOOP`)
+          }
           
           // 리다이렉트 대신 에러 상태로 설정하여 권한 없음 UI 표시
           setIsLoading(false)
@@ -104,28 +121,36 @@ export default function SystemAdminPage() {
   const loadTenants = async () => {
     setIsLoadingTenants(true)
     try {
-      console.log('시스템 관리자 - 테넌트 목록 로드 중...')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('시스템 관리자 - 테넌트 목록 로드 중...')
+      }
       
       // API Route를 통해 서버 사이드에서 데이터 가져오기
       const response = await fetch('/api/system-admin/tenants')
       
       if (!response.ok) {
-        console.error('시스템 관리자 - API 호출 실패:', response.status)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('시스템 관리자 - API 호출 실패:', response.status)
+        }
         return
       }
       
       const data: TenantWithUserCount[] = await response.json()
 
-      console.log('✅ 시스템 관리자 - 테넌트 목록 로드 성공:', data?.length || 0, '개')
-      console.log('📊 로드된 테넌트 데이터:', data)
-      data?.forEach((tenant: TenantWithUserCount) => {
-        const count = tenant.user_count?.[0]?.count || 0
-        console.log(`   ${tenant.name}: ${count}명`)
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 시스템 관리자 - 테넌트 목록 로드 성공:', data?.length || 0, '개')
+        console.log('📊 로드된 테넌트 데이터:', data)
+        data?.forEach((tenant: TenantWithUserCount) => {
+          const count = tenant.user_count?.[0]?.count || 0
+          console.log(`   ${tenant.name}: ${count}명`)
+        })
+      }
       setTenants(data || [])
       
     } catch (error) {
-      console.error('시스템 관리자 - 테넌트 목록 로드 예외:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('시스템 관리자 - 테넌트 목록 로드 예외:', error)
+      }
     } finally {
       setIsLoadingTenants(false)
     }

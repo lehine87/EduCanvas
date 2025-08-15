@@ -225,14 +225,11 @@ export const useAuth = () => {
     isSessionValid 
   } = useAuthStore()
   
-  // Vercel 환경에서 useAuth 호출 상태 로깅
+  // Vercel 프로덕션 환경에서는 로깅 비활성화 (429 에러 방지)
   React.useEffect(() => {
-    const isVercel = typeof window !== 'undefined' && 
-      process.env.NODE_ENV === 'production' && 
-      window.location.hostname.includes('vercel.app')
-    
-    if (isVercel) {
-      console.log(`🔐 [VERCEL-AUTH] useAuth STATE:`, {
+    // 개발 환경에서만 로깅
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 [AUTH] useAuth STATE:`, {
         hasUser: !!user,
         hasProfile: !!profile,
         loading,
