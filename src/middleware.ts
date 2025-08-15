@@ -262,95 +262,107 @@ export async function middleware(request: NextRequest) {
       const userProfileData = await getUserProfile(supabase, requestId)
       
       if (!userProfileData) {
-        // 프로필이 없는 경우 에러 페이지로 리다이렉트
-        const errorUrl = new URL('/auth/login', request.url)
-        errorUrl.searchParams.set('error', 'profile-error')
-        errorUrl.searchParams.set('message', 'User profile not found')
-        
-        if (isVercel) {
-          console.warn(`⚠️ [VERCEL-${requestId}] PROFILE NOT FOUND:`, {
-            path: url.pathname,
-            redirect: errorUrl.toString()
-          })
+        // 프로필이 없는 경우 onboarding으로 리다이렉트 (에러가 아닌 정상적인 흐름)
+        if (url.pathname.startsWith('/onboarding')) {
+          // 이미 onboarding 페이지라면 통과
+          if (isVercel) {
+            console.log(`✅ [VERCEL-${requestId}] ONBOARDING ACCESS WITHOUT PROFILE:`, {
+              path: url.pathname
+            })
+          }
+        } else {
+          // onboarding으로 리다이렉트
+          const onboardingUrl = new URL('/onboarding', request.url)
+          
+          if (isVercel) {
+            console.log(`🔄 [VERCEL-${requestId}] REDIRECT TO ONBOARDING:`, {
+              path: url.pathname,
+              reason: 'Profile not found - normal onboarding flow',
+              redirect: onboardingUrl.toString()
+            })
+          }
+          
+          return Response.redirect(onboardingUrl.toString())
         }
-        
-        return Response.redirect(errorUrl.toString())
       }
 
-      const profile = userProfileData
-      const { data: { user } } = await supabase.auth.getUser()
+      // 프로필이 있는 경우에만 권한 검사 진행
+      if (userProfileData) {
+        const profile = userProfileData
+        const { data: { user } } = await supabase.auth.getUser()
 
-      // 계정 상태 확인
-      if (profile.status === 'suspended' || profile.status === 'inactive') {
-        const errorUrl = new URL('/auth/login', request.url)
-        errorUrl.searchParams.set('error', 'account-suspended')
-        errorUrl.searchParams.set('message', 'Account is suspended or inactive')
-        
-        if (isVercel) {
-          console.warn(`🚨 [VERCEL-${requestId}] ACCOUNT SUSPENDED:`, {
-            userId: profile.id,
-            status: profile.status,
-            path: url.pathname
-          })
+        // 계정 상태 확인
+        if (profile.status === 'suspended' || profile.status === 'inactive') {
+          const errorUrl = new URL('/auth/login', request.url)
+          errorUrl.searchParams.set('error', 'account-suspended')
+          errorUrl.searchParams.set('message', 'Account is suspended or inactive')
+          
+          if (isVercel) {
+            console.warn(`🚨 [VERCEL-${requestId}] ACCOUNT SUSPENDED:`, {
+              userId: profile.id,
+              status: profile.status,
+              path: url.pathname
+            })
+          }
+          
+          return Response.redirect(errorUrl.toString())
         }
-        
-        return Response.redirect(errorUrl.toString())
-      }
 
-      // 이메일 인증 확인 (필요한 경로에 대해)
-      const requireEmailVerification = ['/admin', '/onboarding']
-      const needsVerification = requireEmailVerification.some(path => url.pathname.startsWith(path))
-      
-      if (needsVerification && !profile.email_verified) {
-        const errorUrl = new URL('/auth/login', request.url)
-        errorUrl.searchParams.set('error', 'email-not-verified')
-        errorUrl.searchParams.set('message', 'Please verify your email address')
+        // 이메일 인증 확인 (system_admin은 제외)
+        const requireEmailVerification = ['/admin', '/onboarding']
+        const needsVerification = requireEmailVerification.some(path => url.pathname.startsWith(path))
+        const isSystemAdmin = profile.role === 'system_admin'
         
-        if (isVercel) {
-          console.warn(`📧 [VERCEL-${requestId}] EMAIL NOT VERIFIED:`, {
-            userId: user?.id,
-            email: user?.email,
-            path: url.pathname
-          })
+        if (needsVerification && !profile.email_verified && !isSystemAdmin) {
+          // 이메일 인증이 안된 경우 경고만 표시하고 접근은 허용
+          if (isVercel) {
+            console.warn(`📧 [VERCEL-${requestId}] EMAIL NOT VERIFIED (WARNING ONLY):`, {
+              userId: user?.id,
+              email: user?.email,
+              path: url.pathname,
+              role: profile.role
+            })
+          }
+          
+          // 접근은 허용하되, 추후 UI에서 경고 메시지 표시
+          // return Response.redirect(errorUrl.toString()) // 주석 처리
         }
-        
-        return Response.redirect(errorUrl.toString())
-      }
 
-      // 라우트별 권한 체크
-      const permissionCheck = await checkRoutePermissions(
-        url.pathname,
-        profile,
-        supabase,
-        requestId
-      )
+        // 라우트별 권한 체크
+        const permissionCheck = await checkRoutePermissions(
+          url.pathname,
+          profile,
+          supabase,
+          requestId
+        )
 
-      if (!permissionCheck.hasAccess) {
-        const unauthorizedUrl = new URL('/unauthorized', request.url)
-        unauthorizedUrl.searchParams.set('reason', permissionCheck.reason || 'access_denied')
-        unauthorizedUrl.searchParams.set('path', url.pathname)
-        
+        if (!permissionCheck.hasAccess) {
+          const unauthorizedUrl = new URL('/unauthorized', request.url)
+          unauthorizedUrl.searchParams.set('reason', permissionCheck.reason || 'access_denied')
+          unauthorizedUrl.searchParams.set('path', url.pathname)
+          
+          if (isVercel) {
+            console.warn(`🚫 [VERCEL-${requestId}] ACCESS DENIED:`, {
+              userId: user?.id,
+              role: profile.role,
+              path: url.pathname,
+              reason: permissionCheck.reason
+            })
+          }
+          
+          return Response.redirect(unauthorizedUrl.toString())
+        }
+
+        // 권한 체크 통과 로깅
         if (isVercel) {
-          console.warn(`🚫 [VERCEL-${requestId}] ACCESS DENIED:`, {
-            userId: user?.id,
+          console.log(`✅ [VERCEL-${requestId}] ACCESS GRANTED:`, {
+            userId: user?.id || 'unknown',
             role: profile.role,
             path: url.pathname,
-            reason: permissionCheck.reason
+            tenantId: profile.tenant_id
           })
         }
-        
-        return Response.redirect(unauthorizedUrl.toString())
-      }
-
-      // 권한 체크 통과 로깅
-      if (isVercel) {
-        console.log(`✅ [VERCEL-${requestId}] ACCESS GRANTED:`, {
-          userId: user?.id || 'unknown',
-          role: profile.role,
-          path: url.pathname,
-          tenantId: profile.tenant_id
-        })
-      }
+      } // userProfileData가 있는 경우 끝
 
     } catch (error) {
       console.error(`❌ [${requestId}] Permission check error:`, error)

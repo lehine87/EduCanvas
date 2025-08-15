@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth, useAuthStore, useSessionAutoRefresh } from '@/store/useAuthStore'
+import { useAuthStore, useSessionAutoRefresh } from '@/store/useAuthStore'
 import { Loading } from '@/components/ui'
 
 interface AuthGuardProps {
@@ -27,13 +27,24 @@ export function AuthGuard({
     profile, 
     loading, 
     initialized, 
-    isAuthenticated,
     isSessionValid,
-    hasRole,
-    canAccessTenant,
-    isActive,
     clearSensitiveData
-  } = useAuth()
+  } = useAuthStore()
+  
+  // 인증 및 권한 검사 헬퍼 함수들
+  const isAuthenticated = !!user && isSessionValid()
+  const isActive = profile?.status === 'active'
+  
+  const hasRole = (roles: string | string[]) => {
+    if (!profile?.role) return false
+    const roleArray = Array.isArray(roles) ? roles : [roles]
+    return roleArray.includes(profile.role)
+  }
+  
+  const canAccessTenant = (tenantId: string) => {
+    if (profile?.role === 'system_admin') return true
+    return profile?.tenant_id === tenantId
+  }
   
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)

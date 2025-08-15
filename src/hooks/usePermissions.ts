@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useMemo, useCallback, useEffect, useState } from 'react'
 import type { 
   UserRole,
@@ -111,14 +111,30 @@ export interface ResourcePermissions {
 // ================================================================
 
 export function usePermissions() {
-  const { user, hasPermission: legacyHasPermission, isOwner, isAdmin, isInstructor } = useAuth()
+  const { user, profile } = useAuthStore()
+  
+  // 기존 인터페이스와 호환을 위한 computed values
+  const isOwner = profile?.role === 'admin' && profile?.status === 'active'
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'system_admin'
+  const isInstructor = profile?.role === 'instructor'
+  
+  // Legacy hasPermission 함수 (호환성)
+  const legacyHasPermission = useCallback((resource: string, action: string) => {
+    if (!profile) return false
+    // 간단한 권한 체크 로직
+    const role = profile.role
+    if (role === 'system_admin' || role === 'admin') return true
+    if (role === 'instructor' && (resource === 'classes' || resource === 'students')) return true
+    if (role === 'staff' && resource === 'students') return true
+    return false
+  }, [profile])
   
   // 새로운 RBAC 시스템의 권한 체크 함수
   const hasNewPermission = useCallback((
     resource: string,
     action: string
   ): boolean => {
-    if (!user) return false
+    if (!profile) return false
     
     // 리소스와 액션을 새로운 타입으로 매핑
     const resourceMap: Record<string, Resource> = {
@@ -142,12 +158,12 @@ export function usePermissions() {
     const mappedResource = resourceMap[resource] || resource as Resource
     const mappedAction = actionMap[action] || action as Action
     
-    if (!user?.id) return false
-    return canPerform(user as unknown as UserProfile, mappedResource, mappedAction, {
-      userId: user.id,
-      tenantId: user.tenant_id || ''
+    if (!profile?.id) return false
+    return canPerform(profile, mappedResource, mappedAction, {
+      userId: profile.id,
+      tenantId: profile.tenant_id || ''
     })
-  }, [user])
+  }, [profile])
   
   // 기존 인터페이스와의 호환성을 위한 래퍼
   const hasPermission = useCallback((resource: string, action: string): boolean => {
@@ -170,17 +186,17 @@ export function usePermissions() {
   
   // RoleCheck 인터페이스 구현
   const roleCheck: RoleCheck = useMemo(() => {
-    const role = user?.role
+    const role = profile?.role || undefined // null을 undefined로 변환
     return {
-      isOwner: isOwner() || role === 'system_admin',
-      isAdmin: isAdmin() || role === 'admin' || role === 'system_admin',
-      isInstructor: isInstructor() || role === 'instructor',
+      isOwner: isOwner || role === 'system_admin',
+      isAdmin: isAdmin || role === 'admin' || role === 'system_admin',
+      isInstructor: isInstructor || role === 'instructor',
       isStaff: role === 'staff',
       isViewer: role === 'viewer',
       role,
       roleLevel: getRoleLevel(role)
     }
-  }, [user?.role, isOwner, isAdmin, isInstructor])
+  }, [profile?.role, isOwner, isAdmin, isInstructor])
   
   // ResourcePermissions 인터페이스 구현
   const resourcePermissions: ResourcePermissions = useMemo(() => ({
@@ -384,7 +400,7 @@ export function useResourcePermissions(
   resource: Resource,
   resourceId?: string
 ) {
-  const { user } = useAuth()
+  const { user, profile } = useAuthStore()
   const [permissions, setPermissions] = useState({
     canRead: false,
     canCreate: false,
@@ -437,7 +453,7 @@ export function useResourcePermissions(
  * 강사의 담당 학생/클래스 확인 훅
  */
 export function useInstructorResources() {
-  const { user } = useAuth()
+  const { user, profile } = useAuthStore()
   
   const checkIfMyStudent = useCallback(async (studentId: string): Promise<boolean> => {
     if (!user || user?.role !== 'instructor') return false
@@ -463,7 +479,7 @@ export function useFilteredResources<T extends { id: string }>(
   items: T[],
   action: Action = 'read'
 ) {
-  const { user } = useAuth()
+  const { user, profile } = useAuthStore()
   const [filteredItems, setFilteredItems] = useState<T[]>([])
   const [loading, setLoading] = useState(true)
   
@@ -499,18 +515,18 @@ export function useConditionalRender(
   permission: PermissionString | Permission,
   context?: PermissionContext
 ) {
-  const { user } = useAuth()
+  const { user, profile } = useAuthStore()
   
   const shouldRender = useMemo(() => {
-    if (!user) return false
+    if (!profile) return false
     
     const ctx = context || {
-      userId: user?.id || '',
-      tenantId: user.tenant_id
+      userId: profile?.id || '',
+      tenantId: profile.tenant_id || undefined
     }
     
-    return checkPermission(user as unknown as UserProfile, permission, ctx)
-  }, [user, permission, context])
+    return checkPermission(profile, permission, ctx)
+  }, [profile, permission, context])
   
   return shouldRender
 }

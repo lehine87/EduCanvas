@@ -6,8 +6,10 @@ import { authClient } from '@/lib/auth/authClient'
 import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
 import { TenantCreateModal } from '@/components/admin/TenantCreateModal'
 import { TenantListTable } from '@/components/admin/TenantListTable'
+import { MainLayout } from '@/components/layout'
 import type { User } from '@supabase/supabase-js'
 import type { Tenant } from '@/types/auth.types'
+import type { BreadcrumbItem } from '@/components/layout/types'
 
 // 시스템 관리자 API에서 반환되는 확장된 테넌트 타입
 interface TenantWithUserCount extends Tenant, Record<string, unknown> {
@@ -23,16 +25,13 @@ export default function SystemAdminPage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // 강제 로그 출력
-  if (typeof window !== 'undefined') {
-    console.log(`🏛️ [SYSTEM-ADMIN-ALWAYS] SYSTEM ADMIN PAGE CREATED:`, {
+  // 개발 환경에서만 로그 출력
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log(`🏛️ [SYSTEM-ADMIN] PAGE LOADED:`, {
       timestamp: new Date().toISOString(),
       currentPath: window.location.pathname,
-      isLoading,
-      userAgent: navigator.userAgent.substring(0, 50)
+      isLoading
     })
-    
-    console.error(`🚨 [FORCE-LOG] SYSTEM ADMIN COMPONENT LOADED`)
   }
 
   useEffect(() => {
@@ -185,38 +184,29 @@ export default function SystemAdminPage() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                EduCanvas 시스템 관리자
-              </h1>
-              <p className="text-gray-600">
-                테넌트 생성 및 관리
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">
-                System Administrator ({user?.email})
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => authClient.signOut().then(() => router.push('/auth/login'))}
-              >
-                로그아웃
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+  // 브레드크럼 설정
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: '시스템 관리', href: '/system-admin', current: true }
+  ]
 
-      {/* 메인 컨텐츠 */}
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  // 헤더 액션 버튼
+  const headerActions = (
+    <Button
+      onClick={() => setShowCreateModal(true)}
+      className="bg-blue-600 hover:bg-blue-700"
+    >
+      + 새 테넌트 생성
+    </Button>
+  )
+
+  return (
+    <MainLayout
+      title="시스템 관리자"
+      breadcrumbs={breadcrumbs}
+      actions={headerActions}
+      allowedRoles={['system_admin']}
+    >
+      <div className="space-y-8">
         {/* 요약 카드들 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
@@ -281,15 +271,7 @@ export default function SystemAdminPage() {
         {/* 테넌트 관리 섹션 */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>테넌트 관리</CardTitle>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                + 새 테넌트 생성
-              </Button>
-            </div>
+            <CardTitle>테넌트 관리</CardTitle>
           </CardHeader>
           <CardBody>
             <TenantListTable 
@@ -308,6 +290,6 @@ export default function SystemAdminPage() {
         onClose={() => setShowCreateModal(false)}
         onTenantCreated={handleTenantCreated}
       />
-    </div>
+    </MainLayout>
   )
 }

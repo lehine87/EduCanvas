@@ -1,4 +1,6 @@
-import { AuthGuard } from '@/components/auth/AuthGuard'
+'use client'
+
+import { AdminLayout as LegacyAdminLayout } from '@/components/layout/AdminLayout'
 
 export default function AdminLayout({
   children,
@@ -6,11 +8,8 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthGuard 
-      requireAuth={true}
-      allowedRoles={['system_admin', 'admin', 'instructor', 'staff', 'viewer']}
-    >
+    <LegacyAdminLayout>
       {children}
-    </AuthGuard>
+    </LegacyAdminLayout>
   )
 }
