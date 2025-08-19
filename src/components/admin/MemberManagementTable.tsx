@@ -7,11 +7,12 @@ import type { UserProfile } from '@/types/auth.types'
 
 interface MemberManagementTableProps {
   tenantId: string
+  members?: UserProfile[]  // 외부에서 전달받는 데이터 (중복 API 호출 방지)
   onMemberChange: () => void
 }
 
-export function MemberManagementTable({ tenantId, onMemberChange }: MemberManagementTableProps) {
-  const [members, setMembers] = useState<UserProfile[]>([])
+export function MemberManagementTable({ tenantId, members: externalMembers, onMemberChange }: MemberManagementTableProps) {
+  const [members, setMembers] = useState<UserProfile[]>(externalMembers || [])
   const [filteredMembers, setFilteredMembers] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -21,10 +22,23 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
 
   const supabase = createClient()
 
+  // 외부에서 전달받은 데이터가 변경될 때 내부 상태 업데이트
+  useEffect(() => {
+    if (externalMembers) {
+      setMembers(externalMembers)
+    }
+  }, [externalMembers])
+
   const loadMembers = useCallback(async () => {
+    // 외부에서 데이터를 전달받는 경우 API 호출 생략
+    if (externalMembers) {
+      return
+    }
     setIsLoading(true)
     try {
-      console.log('👥 활성 회원 목록 로드 중...', tenantId)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('👥 활성 회원 목록 로드 중...', tenantId)
+      }
       
       const response = await fetch(`/api/tenant-admin/members?tenantId=${tenantId}&status=active`)
       
@@ -34,7 +48,9 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
       
       const result = await response.json()
       
-      console.log('✅ 활성 회원 목록 로드 성공:', result.members?.length || 0, '명')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 활성 회원 목록 로드 성공:', result.members?.length || 0, '명')
+      }
       setMembers(result.members || [])
       
     } catch (error) {
@@ -43,7 +59,7 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
     } finally {
       setIsLoading(false)
     }
-  }, [tenantId])
+  }, [tenantId, externalMembers])
 
   const filterMembers = useCallback(() => {
     let filtered = members
@@ -71,10 +87,11 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
   }, [members, searchQuery, filterRole, filterStatus])
 
   useEffect(() => {
-    if (tenantId) {
+    // 외부 데이터가 없고 tenantId가 있을 때만 API 호출
+    if (tenantId && !externalMembers) {
       loadMembers()
     }
-  }, [tenantId, loadMembers])
+  }, [tenantId, loadMembers, externalMembers])
 
   useEffect(() => {
     filterMembers()
@@ -292,7 +309,9 @@ export function MemberManagementTable({ tenantId, onMemberChange }: MemberManage
       render: (value: unknown, member: UserProfile) => {
         if (!member || !member.id) return <div>-</div>;
         
-        console.log('작업 컬럼 렌더링:', { id: member.id, role: member.role, status: member.status });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('작업 컬럼 렌더링:', { id: member.id, role: member.role, status: member.status });
+        }
         
         return (
           <div className="space-y-1">

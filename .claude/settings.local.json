@@ -29,9 +29,14 @@
       "Bash(npm audit:*)",
       "Bash(npm run start:*)",
       "WebSearch",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(touch:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\c\\Users\\Carl\\OneDrive"
+    ]
   }
 }

@@ -143,6 +143,11 @@ export class AuthClient {
   async signOut() {
     const { error } = await this.supabase.auth.signOut()
     if (error) throw error
+    
+    // 로그아웃 후 로그인 페이지로 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login'
+    }
   }
 
   async resetPassword(email: string) {
@@ -198,6 +203,14 @@ export class AuthClient {
 
   async getCurrentSession() {
     try {
+      // getUser()로 먼저 사용자 확인 (보안상 더 안전)
+      const { data: { user }, error: userError } = await this.supabase.auth.getUser()
+      if (userError || !user) {
+        console.warn('🔍 [AUTH-CLIENT] 사용자 인증 실패:', userError?.message)
+        return null
+      }
+
+      // 세션 정보가 필요한 경우 추가로 조회
       const { data: { session }, error } = await this.supabase.auth.getSession()
       if (error) {
         console.warn('🔍 [AUTH-CLIENT] 세션 조회 에러:', error.message)

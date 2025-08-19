@@ -3,6 +3,7 @@ import type { Database } from './database'
 
 /**
  * 학생 상태 타입 (통일된 정의)
+ * 데이터베이스 enum과 일치: active, inactive, graduated, withdrawn, suspended
  */
 export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended'
 

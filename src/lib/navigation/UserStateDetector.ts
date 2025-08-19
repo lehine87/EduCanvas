@@ -37,7 +37,8 @@ export async function getUserNavigationStateFromRequest(
 ): Promise<NavigationContext> {
   const requestId = Math.random().toString(36).substring(7)
   
-  if (NAVIGATION_CONFIG.debugMode) {
+  const debugMode = process.env.NAVIGATION_DEBUG === 'true'
+  if (debugMode) {
     console.log(`🕵️ [USER-STATE-DETECTOR] Starting detection for request: ${requestId}`)
   }
 
@@ -46,13 +47,13 @@ export async function getUserNavigationStateFromRequest(
     const hasAuthCookie = hasValidSupabaseCookie(request)
     
     if (!hasAuthCookie) {
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (debugMode) {
         console.log(`🍪 [USER-STATE-DETECTOR-${requestId}] No valid auth cookies found`)
       }
       return createAnonymousContext()
     }
 
-    if (NAVIGATION_CONFIG.debugMode) {
+    if (debugMode) {
       console.log(`✅ [USER-STATE-DETECTOR-${requestId}] Valid auth cookies detected`)
     }
 
@@ -62,13 +63,13 @@ export async function getUserNavigationStateFromRequest(
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (debugMode) {
         console.log(`👤 [USER-STATE-DETECTOR-${requestId}] No valid user session:`, userError?.message)
       }
       return createAnonymousContext()
     }
 
-    if (NAVIGATION_CONFIG.debugMode) {
+    if (debugMode) {
       console.log(`👤 [USER-STATE-DETECTOR-${requestId}] User session found:`, {
         userId: user.id,
         email: user.email
@@ -79,7 +80,7 @@ export async function getUserNavigationStateFromRequest(
     const profile = await getUserProfile(supabase, user.id, requestId)
     
     if (!profile) {
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (debugMode) {
         console.log(`👤 [USER-STATE-DETECTOR-${requestId}] No profile found - authenticated state`)
       }
       return createAuthenticatedContext(user.email || '')
@@ -88,7 +89,7 @@ export async function getUserNavigationStateFromRequest(
     // 4. 프로필 기반 컨텍스트 생성
     const context = createContextFromProfile(profile, user.email || '')
     
-    if (NAVIGATION_CONFIG.debugMode) {
+    if (debugMode) {
       console.log(`✅ [USER-STATE-DETECTOR-${requestId}] Context created:`, {
         userState: context.userState,
         role: context.role,
@@ -111,7 +112,8 @@ export async function getUserNavigationStateFromRequest(
  * 클라이언트 사이드에서 사용자 네비게이션 상태 감지
  */
 export async function getUserNavigationStateFromClient(): Promise<NavigationContext> {
-  if (NAVIGATION_CONFIG.debugMode) {
+  const debugMode = process.env.NAVIGATION_DEBUG === 'true'
+  if (debugMode) {
     console.log(`🖥️ [USER-STATE-DETECTOR] Getting client-side navigation state`)
   }
 
@@ -186,7 +188,8 @@ async function getUserProfile(
       .single()
 
     if (error) {
-      if (NAVIGATION_CONFIG.debugMode) {
+      const debugMode = process.env.NAVIGATION_DEBUG === 'true'
+      if (debugMode) {
         console.warn(`⚠️ [USER-STATE-DETECTOR-${requestId}] Profile query error:`, error.message)
       }
       return null

@@ -414,19 +414,20 @@ export class AuthManager {
    */
   async restoreSession(): Promise<{ user: AuthUser | null; error: string | null }> {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession()
+      // getUser()로 먼저 사용자 확인 (보안상 더 안전)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (error || !session) {
-        return { user: null, error: '세션이 없습니다.' }
+      if (userError || !user) {
+        return { user: null, error: '사용자 인증이 필요합니다.' }
       }
 
       // 세션이 있으면 사용자 테넌트 정보 복원
-      const userTenants = await this.getUserTenants(session.user.id)
+      const userTenants = await this.getUserTenants(user.id)
       if (!userTenants || userTenants.length === 0) {
         return { user: null, error: '접근 가능한 테넌트가 없습니다.' }
       }
 
-      const isDeveloper = this.checkDeveloperAccess(session.user.email!, userTenants)
+      const isDeveloper = this.checkDeveloperAccess(user.email!, userTenants)
       let availableTenants = userTenants
       
       if (isDeveloper) {
@@ -441,7 +442,7 @@ export class AuthManager {
       }
 
       const authUser: AuthUser = {
-        ...session.user,
+        ...user,
         tenant_id: selectedTenant.id,
         role: isDeveloper ? 'developer' : selectedTenant.role,
         permissions: this.getPermissions(isDeveloper ? 'developer' : selectedTenant.role, selectedTenant.permission_overrides || null),
@@ -504,19 +505,19 @@ export class AuthManager {
         return { user: null, error: '현재 사용자가 없습니다' }
       }
 
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (sessionError || !session) {
-        return { user: null, error: '세션을 찾을 수 없습니다' }
+      if (userError || !user) {
+        return { user: null, error: '사용자 인증이 필요합니다' }
       }
 
       // 사용자 정보 재조회
-      const userTenants = await this.getUserTenants(session.user.id)
+      const userTenants = await this.getUserTenants(user.id)
       if (!userTenants || userTenants.length === 0) {
         return { user: null, error: '접근 가능한 테넌트가 없습니다' }
       }
 
-      const isDeveloper = this.checkDeveloperAccess(session.user.email!, userTenants)
+      const isDeveloper = this.checkDeveloperAccess(user.email!, userTenants)
       let availableTenants = userTenants
       
       if (isDeveloper) {
@@ -532,7 +533,7 @@ export class AuthManager {
       }
 
       const authUser: AuthUser = {
-        ...session.user,
+        ...user,
         tenant_id: currentTenant.id,
         role: currentTenant.role,
         permissions: isDeveloper ? DEVELOPER_PERMISSIONS : (this.getPermissions(currentTenant.role, currentTenant.permission_overrides) || {}),

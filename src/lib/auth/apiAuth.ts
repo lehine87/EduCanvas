@@ -75,10 +75,10 @@ export function withApiAuth(
     try {
       const supabase = await createClient()
       
-      // 1. Authentication check
-      const { data: { session }, error: authError } = await supabase.auth.getSession()
+      // 1. Authentication check (getUser가 더 안전)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (authError || !session) {
+      if (userError || !user) {
         return new Response(
           JSON.stringify({ 
             error: 'Authentication required',
@@ -119,7 +119,7 @@ export function withApiAuth(
             base_permissions
           )
         `)
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('tenant_id', tenantId)
         .eq('status', 'active')
         .single()
@@ -219,8 +219,8 @@ export function withApiAuth(
       // 6. Create authenticated request object
       const authenticatedReq = req as AuthenticatedRequest
       authenticatedReq.user = {
-        id: session.user.id,
-        email: session.user.email!,
+        id: user.id,
+        email: user.email!,
         tenant_id: tenantId,
         role,
         role_level: roleLevel,
@@ -233,7 +233,7 @@ export function withApiAuth(
         .update({ 
           last_login_at: new Date().toISOString()
         })
-        .eq('id', session.user.id)
+        .eq('id', user.id)
 
       return await handler(authenticatedReq)
     } catch (error) {

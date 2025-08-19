@@ -47,7 +47,7 @@ export class NavigationStateMachine {
    * 주어진 경로와 사용자 컨텍스트에 대한 리디렉션 필요성 판단
    */
   shouldRedirect(currentPath: string, context: NavigationContext): RedirectionResult {
-    if (NAVIGATION_CONFIG.debugMode) {
+    if (process.env.NAVIGATION_DEBUG === 'true') {
       console.log(`🧭 [NAV-STATE-MACHINE] Checking redirect for:`, {
         currentPath,
         userState: context.userState,
@@ -61,7 +61,7 @@ export class NavigationStateMachine {
     const cacheKey = this.generateCacheKey(currentPath, context)
     const cachedResult = this.getCachedResult(cacheKey)
     if (cachedResult) {
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (process.env.NAVIGATION_DEBUG === 'true') {
         console.log(`💾 [NAV-STATE-MACHINE] Using cached result:`, cachedResult)
       }
       return cachedResult
@@ -111,9 +111,10 @@ export class NavigationStateMachine {
 
   /**
    * 라우트 매칭 (정적 + 동적)
+   * 🎯 UX 테스트: 더 구체적인 경로를 우선 매칭하도록 수정
    */
   private matchRoute(path: string): RouteMatchResult {
-    // 1. 정적 라우트 우선 매칭
+    // 1. 정확한 정적 라우트 매칭 (최우선)
     if (ROUTE_DEFINITIONS[path]) {
       return {
         matches: true,
@@ -143,7 +144,23 @@ export class NavigationStateMachine {
       }
     }
 
-    // 3. 매칭 실패
+    // 3. 더 구체적인 경로 우선 매칭을 위한 추가 로직
+    // /admin/students -> /admin 보다 우선
+    const sortedRoutes = Object.keys(ROUTE_DEFINITIONS)
+      .filter(route => path.startsWith(route))
+      .sort((a, b) => b.length - a.length) // 더 긴 경로 우선
+
+    if (sortedRoutes.length > 0) {
+      const bestMatch = sortedRoutes[0]
+      return {
+        matches: true,
+        params: {},
+        config: ROUTE_DEFINITIONS[bestMatch],
+        score: 95
+      }
+    }
+
+    // 4. 매칭 실패
     return {
       matches: false,
       params: {},
@@ -180,7 +197,7 @@ export class NavigationStateMachine {
     // 3. 이메일 인증 검증
     if (routeConfig.requiresEmailVerification && !context.isEmailVerified) {
       // 이메일 인증 필요하지만 인증되지 않은 경우 - 경고만 로그
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (process.env.NAVIGATION_DEBUG === 'true') {
         console.warn(`📧 [NAV-STATE-MACHINE] Email verification required but not verified for route: ${routeConfig.path}`)
       }
       // 현재는 접근 허용 (UI에서 경고 표시)
@@ -204,6 +221,7 @@ export class NavigationStateMachine {
 
   /**
    * 컨텍스트 기반 기본 경로 결정
+   * 🎯 UX 개선: 첫 로그인시에만 기본 대시보드로 안내
    */
   private getDefaultPathForContext(context: NavigationContext): string {
     switch (context.userState) {
@@ -220,7 +238,10 @@ export class NavigationStateMachine {
         return NAVIGATION_CONFIG.pendingApprovalPath
 
       case 'active':
-        // 역할별 기본 경로
+        // 🎯 개선: 매칭되지 않는 라우트에서만 기본 경로로 안내
+        // 직접 접근한 경우에는 강제 리다이렉트 하지 않음
+        
+        // 역할별 기본 경로 (404 또는 매칭 실패시에만 사용)
         if (context.role === 'system_admin' || 
             context.specialPermissions?.includes('system_admin')) {
           return '/system-admin'
@@ -337,7 +358,7 @@ export class NavigationStateMachine {
    */
   public clearCache(): void {
     this.cache.clear()
-    if (NAVIGATION_CONFIG.debugMode) {
+    if (process.env.NAVIGATION_DEBUG === 'true') {
       console.log(`🧹 [NAV-STATE-MACHINE] Cache cleared`)
     }
   }

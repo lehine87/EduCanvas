@@ -41,59 +41,76 @@ export async function GET(
     request,
     async ({ request, userProfile, supabase }) => {
       const params = await context.params
+      console.log('🔍 [DEBUG] 학생 상세 API 시작:', {
+        studentId: params.id,
+        userId: userProfile?.id,
+        userRole: userProfile?.role,
+        userTenantId: userProfile?.tenant_id,
+        url: request.url
+      })
+      
       logApiStart('get-student', { userId: userProfile!.id, studentId: params.id })
 
       // URL 파라미터에서 tenantId 추출
       const { searchParams } = new URL(request.url)
       const tenantId = searchParams.get('tenantId')
+      
+      console.log('🔍 [DEBUG] 요청 파라미터:', {
+        tenantId,
+        userRole: userProfile?.role,
+        userTenantId: userProfile?.tenant_id
+      })
 
-      if (!tenantId) {
-        throw new Error('tenantId 파라미터가 필요합니다.')
+      // 시스템 관리자가 아닌 경우 tenantId 필수
+      if (!userProfile!.role || userProfile!.role !== 'system_admin') {
+        if (!tenantId) {
+          console.log('❌ [DEBUG] tenantId 파라미터 누락')
+          throw new Error('tenantId 파라미터가 필요합니다.')
+        }
       }
 
-      // 테넌트 권한 검증
-      if (!validateTenantAccess(userProfile!, tenantId)) {
+      // 테넌트 권한 검증 (시스템 관리자는 자동 통과)
+      const hasAccess = validateTenantAccess(userProfile!, tenantId)
+      console.log('🔍 [DEBUG] 권한 검증 결과:', {
+        hasAccess,
+        userRole: userProfile?.role,
+        userTenantId: userProfile?.tenant_id,
+        requestedTenantId: tenantId
+      })
+      
+      if (!hasAccess) {
+        console.log('❌ [DEBUG] 권한 검증 실패')
         throw new Error('해당 테넌트의 학생 정보에 접근할 권한이 없습니다.')
       }
 
-      // 학생 정보 조회
-      const { data: student, error } = await supabase
+      console.log('🔍 [DEBUG] 데이터베이스 쿼리 시작')
+      
+      // 학생 정보 조회 - 복잡한 조인 제거하고 단순화
+      let query = supabase
         .from('students')
-        .select(`
-          *,
-          classes:class_id (
-            id,
-            name,
-            grade,
-            course,
-            instructor:instructor_id (
-              name
-            )
-          ),
-          student_enrollments (
-            id,
-            status,
-            enrolled_at,
-            end_date,
-            course_packages (
-              id,
-              name,
-              billing_type,
-              price,
-              duration_months
-            ),
-            payments (
-              id,
-              amount,
-              status,
-              due_date,
-              payment_date
-            )
-          )
-        `)
+        .select('*')
         .eq('id', params.id)
-        .eq('tenant_id', tenantId)
-        .single()
+      
+      // 시스템 관리자가 아닌 경우에만 tenant_id 조건 추가
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+      
+      console.log('🔍 [DEBUG] 쿼리 실행 중...')
+      
+      // 타임아웃 설정 (10초)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('데이터베이스 쿼리 타임아웃')), 10000)
+      })
+      
+      const queryPromise = query.single()
+      
+      const { data: student, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any
+      
+      console.log('🔍 [DEBUG] 쿼리 완료:', { hasStudent: !!student, error: error?.message })
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -129,22 +146,41 @@ export async function PUT(
 
       // 입력 검증
       const body: unknown = await request.json()
+      console.log('🔍 [DEBUG] 수신된 요청 본문:', body)
+
       const validationResult = validateRequestBody(body, (data) => 
         updateStudentSchema.parse(data)
       )
 
       if (validationResult instanceof Response) {
+        console.log('❌ [DEBUG] 유효성 검증 실패:', validationResult)
         return validationResult
       }
 
       const updateData: UpdateStudentData = validationResult
+      console.log('✅ [DEBUG] 유효성 검증 성공:', updateData)
 
-      // 테넌트 권한 검증
-      if (!validateTenantAccess(userProfile!, updateData.tenantId)) {
+      // 테넌트 권한 검증 (시스템 관리자는 자동 통과)
+      console.log('🔍 [DEBUG] 권한 검증 시작:', {
+        userRole: userProfile!.role,
+        userTenantId: userProfile!.tenant_id,
+        requestTenantId: updateData.tenantId
+      })
+
+      const hasAccess = validateTenantAccess(userProfile!, updateData.tenantId)
+      console.log('🔍 [DEBUG] 권한 검증 결과:', hasAccess)
+
+      if (!hasAccess) {
+        console.log('❌ [DEBUG] 권한 검증 실패')
         throw new Error('해당 테넌트의 학생 정보를 수정할 권한이 없습니다.')
       }
 
       // 기존 학생 존재 확인
+      console.log('🔍 [DEBUG] 학생 조회 시작:', {
+        studentId: params.id,
+        tenantId: updateData.tenantId
+      })
+
       const { data: existingStudent, error: fetchError } = await supabase
         .from('students')
         .select('id, student_number, tenant_id')
@@ -152,10 +188,18 @@ export async function PUT(
         .eq('tenant_id', updateData.tenantId)
         .single()
 
+      console.log('🔍 [DEBUG] 학생 조회 결과:', {
+        hasStudent: !!existingStudent,
+        error: fetchError?.message,
+        errorCode: fetchError?.code
+      })
+
       if (fetchError) {
         if (fetchError.code === 'PGRST116') {
+          console.log('❌ [DEBUG] 학생을 찾을 수 없음')
           throw new Error('수정할 학생을 찾을 수 없습니다.')
         }
+        console.error('❌ [DEBUG] 학생 조회 실패:', fetchError)
         throw new Error(`학생 조회 실패: ${fetchError.message}`)
       }
 
@@ -177,6 +221,12 @@ export async function PUT(
       // tenantId 제거 (업데이트 대상이 아님)
       const { tenantId: _, ...updateFields } = updateData
 
+      console.log('🔍 [DEBUG] 학생 업데이트 시작:', {
+        studentId: params.id,
+        tenantId: updateData.tenantId,
+        updateFields
+      })
+
       // 학생 정보 업데이트
       const { data: updatedStudent, error } = await supabase
         .from('students')
@@ -189,8 +239,14 @@ export async function PUT(
         .select('*')
         .single()
 
+      console.log('🔍 [DEBUG] 학생 업데이트 결과:', {
+        hasStudent: !!updatedStudent,
+        error: error?.message,
+        errorCode: error?.code
+      })
+
       if (error) {
-        console.error('❌ 학생 수정 실패:', error)
+        console.error('❌ [DEBUG] 학생 수정 실패:', error)
         throw new Error(`학생 수정 실패: ${error.message}`)
       }
 
@@ -233,7 +289,7 @@ export async function DELETE(
         throw new Error('tenantId 파라미터가 필요합니다.')
       }
 
-      // 테넌트 권한 검증
+      // 테넌트 권한 검증 (시스템 관리자는 자동 통과)
       if (!validateTenantAccess(userProfile!, tenantId)) {
         throw new Error('해당 테넌트의 학생을 삭제할 권한이 없습니다.')
       }

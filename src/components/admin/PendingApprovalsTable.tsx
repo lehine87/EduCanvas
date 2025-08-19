@@ -7,11 +7,12 @@ import type { UserProfile } from '@/types/auth.types'
 
 interface PendingApprovalsTableProps {
   tenantId: string
+  pendingUsers?: UserProfile[]  // 외부에서 전달받는 데이터 (중복 API 호출 방지)
   onApprovalChange: () => void
 }
 
-export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApprovalsTableProps) {
-  const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([])
+export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingUsers, onApprovalChange }: PendingApprovalsTableProps) {
+  const [pendingUsers, setPendingUsers] = useState<UserProfile[]>(externalPendingUsers || [])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -19,10 +20,23 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
 
   const supabase = createClient()
 
+  // 외부에서 전달받은 데이터가 변경될 때 내부 상태 업데이트
+  useEffect(() => {
+    if (externalPendingUsers) {
+      setPendingUsers(externalPendingUsers)
+    }
+  }, [externalPendingUsers])
+
   const loadPendingUsers = useCallback(async () => {
+    // 외부에서 데이터를 전달받는 경우 API 호출 생략
+    if (externalPendingUsers) {
+      return
+    }
     setIsLoading(true)
     try {
-      console.log('🕐 승인 대기 사용자 목록 로드 중...', tenantId)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🕐 승인 대기 사용자 목록 로드 중...', tenantId)
+      }
       
       const response = await fetch(`/api/tenant-admin/members?tenantId=${tenantId}&status=pending`)
       
@@ -32,7 +46,9 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
       
       const result = await response.json()
       
-      console.log('✅ 승인 대기 사용자 조회 성공:', result.members?.length || 0, '명')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 승인 대기 사용자 조회 성공:', result.members?.length || 0, '명')
+      }
       setPendingUsers(result.members || [])
 
     } catch (error) {
@@ -41,18 +57,21 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
     } finally {
       setIsLoading(false)
     }
-  }, [tenantId])
+  }, [tenantId, externalPendingUsers])
 
   useEffect(() => {
-    if (tenantId) {
+    // 외부 데이터가 없고 tenantId가 있을 때만 API 호출
+    if (tenantId && !externalPendingUsers) {
       loadPendingUsers()
     }
-  }, [tenantId, loadPendingUsers])
+  }, [tenantId, loadPendingUsers, externalPendingUsers])
 
   const handleApproveUser = async (userId: string, approved: boolean) => {
     setActionLoading(userId)
     try {
-      console.log(`🔄 사용자 ${approved ? '승인' : '거부'} 처리 시작:`, userId)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 사용자 ${approved ? '승인' : '거부'} 처리 시작:`, userId)
+      }
 
       // 승인/거부 API 호출
       const response = await fetch('/api/tenant-admin/approve-member', {
@@ -75,7 +94,9 @@ export function PendingApprovalsTable({ tenantId, onApprovalChange }: PendingApp
         return
       }
 
-      console.log('✅ 사용자 승인 처리 성공:', approved ? '승인' : '거부')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 사용자 승인 처리 성공:', approved ? '승인' : '거부')
+      }
 
       // 로컬 상태에서 제거
       setPendingUsers(prev => prev.filter(user => user.id !== userId))

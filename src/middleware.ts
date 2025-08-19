@@ -16,6 +16,7 @@ import type { NavigationContext } from '@/types/navigation.types'
 const MIDDLEWARE_EXCLUDE_PATTERNS = [
   '/_next',
   '/api',
+  '/monitoring',
   '/test-',
   '/debug-',
   '/seed-',
@@ -106,9 +107,9 @@ export async function middleware(request: NextRequest) {
   const currentPath = request.nextUrl.pathname
   const requestId = Math.random().toString(36).substring(7)
   
-  // 디버깅 모드 확인
+  // 디버깅 모드 확인 (환경변수로 명시적 활성화 시에만)
   const isProduction = process.env.NODE_ENV === 'production'
-  const debugMode = !isProduction || process.env.NAVIGATION_DEBUG === 'true'
+  const debugMode = process.env.NAVIGATION_DEBUG === 'true'
   
   if (debugMode) {
     console.log(`🛡️ [MIDDLEWARE-${requestId}] Request:`, {

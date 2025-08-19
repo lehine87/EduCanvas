@@ -35,9 +35,17 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
     try {
       console.log(`🔄 테넌트 상태 변경 중: ${currentStatus ? '비활성화' : '활성화'}`)
       
-      // 현재 세션의 access_token 가져오기
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // 현재 사용자 및 세션 확인
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
+      if (userError || !user) {
+        console.error('❌ 사용자 인증 실패:', userError?.message)
+        alert('로그인이 필요합니다. 다시 로그인해주세요.')
+        return
+      }
+
+      // 세션 토큰이 필요한 경우 추가로 가져오기
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError || !session?.access_token) {
         console.error('❌ 세션 토큰 가져오기 실패:', sessionError?.message)
         alert('인증 토큰을 가져올 수 없습니다. 다시 로그인해주세요.')

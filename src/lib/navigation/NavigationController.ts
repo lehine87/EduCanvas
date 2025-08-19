@@ -48,7 +48,8 @@ export class NavigationController {
     const currentPath = request.nextUrl.pathname
     const requestId = Math.random().toString(36).substring(7)
 
-    if (NAVIGATION_CONFIG.debugMode) {
+    const debugMode = process.env.NAVIGATION_DEBUG === 'true'
+    if (debugMode) {
       console.log(`🎯 [NAV-CONTROLLER-${requestId}] Processing request:`, {
         path: currentPath,
         method: request.method,
@@ -60,7 +61,7 @@ export class NavigationController {
       // 1. 사용자 컨텍스트 감지
       const context = await getUserNavigationStateFromRequest(request)
       
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (debugMode) {
         console.log(`👤 [NAV-CONTROLLER-${requestId}] User context:`, {
           userState: context.userState,
           role: context.role,
@@ -77,7 +78,7 @@ export class NavigationController {
       // 4. 히스토리 업데이트
       this.updateNavigationHistory(currentPath, context, redirectionResult.shouldRedirect, redirectionResult.reason)
 
-      if (NAVIGATION_CONFIG.debugMode) {
+      if (debugMode) {
         console.log(`📊 [NAV-CONTROLLER-${requestId}] Result:`, {
           shouldRedirect: redirectionResult.shouldRedirect,
           targetPath: redirectionResult.targetPath,

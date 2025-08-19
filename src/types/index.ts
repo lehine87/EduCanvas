@@ -12,6 +12,35 @@ export type { Database, Json } from './database.types'
 // ================================================================
 // 2. 도메인별 핵심 타입들
 // ================================================================
+// 에러 처리 타입 시스템 (v1.0 - 표준화된 에러 처리)
+export type {
+  ErrorSeverity,
+  ErrorCategory,
+  AppError,
+  ApiError,
+  ValidationError,
+  BusinessError,
+  StudentNotFoundError,
+  StudentValidationError,
+  DuplicateStudentNumberError,
+  NetworkError,
+  AuthenticationError,
+  AuthorizationError
+} from './error.types'
+
+export {
+  AppErrorBase,
+  createStudentError,
+  createApiError,
+  isAppError,
+  isValidationError,
+  isNetworkError,
+  isAuthError,
+  getErrorMessage,
+  getErrorSeverity,
+  shouldRetryError,
+  logError
+} from './error.types'
 // Database table types - Student 타입은 student.types.ts에서 가져옴
 // 다른 기본 타입들은 여기서 정의
 export type {

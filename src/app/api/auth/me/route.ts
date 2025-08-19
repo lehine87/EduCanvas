@@ -1,72 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
+import { 
+  withApiHandler, 
+  createSuccessResponse,
+  logApiStart,
+  logApiSuccess 
+} from '@/lib/api/utils'
 
 export async function GET(request: NextRequest) {
-  try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
-    })
+  return withApiHandler(
+    request,
+    async ({ userProfile, supabase }) => {
+      logApiStart('get-me', { userId: userProfile!.id })
 
-    // 현재 사용자 확인
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      return NextResponse.json({ 
-        error: '인증되지 않은 사용자입니다.',
-        authenticated: false 
-      }, { status: 401 })
-    }
+      // 현재 사용자 확인
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        throw new Error('인증되지 않은 사용자입니다.')
+      }
 
-    // 프로필 정보 조회
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select(`
-        id,
-        role,
-        tenant_id,
-        status,
-        email_verified,
-        name,
-        email,
-        tenants (
+      // 프로필 정보 조회 (userProfile은 이미 검증됨)
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select(`
           id,
+          role,
+          tenant_id,
+          status,
+          email_verified,
           name,
-          slug
-        )
-      `)
-      .eq('id', user.id)
-      .single()
+          email,
+          tenants (
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('id', userProfile!.id)
+        .single()
 
-    console.log('🔍 [AUTH-ME] User info:', {
-      userId: user.id,
-      email: user.email,
-      profile: profile ? {
-        role: profile.role,
-        tenant_id: profile.tenant_id,
-        status: profile.status,
-        email_verified: profile.email_verified
-      } : 'No profile found',
-      profileError: profileError?.message
-    })
+      console.log('🔍 [AUTH-ME] User info:', {
+        userId: userProfile!.id,
+        email: userProfile!.email,
+        profile: profile ? {
+          role: profile.role,
+          tenant_id: profile.tenant_id,
+          status: profile.status,
+          email_verified: profile.email_verified
+        } : 'No profile found',
+        profileError: profileError?.message
+      })
 
-    return NextResponse.json({
-      authenticated: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        emailConfirmed: user.email_confirmed_at ? true : false
-      },
-      profile: profile || null,
-      profileError: profileError?.message || null
-    })
+      logApiSuccess('get-me', { userId: userProfile!.id })
 
-  } catch (error) {
-    console.error('❌ [AUTH-ME] Error:', error)
-    return NextResponse.json({
-      error: '서버 오류가 발생했습니다.',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
-  }
+      return createSuccessResponse({
+        authenticated: true,
+        user: {
+          id: userProfile!.id,
+          email: userProfile!.email,
+          emailConfirmed: user?.email_confirmed_at ? true : false
+        },
+        profile: profile || null,
+        profileError: profileError?.message || null
+      })
+    },
+    {
+      requireAuth: true
+    }
+  )
 }

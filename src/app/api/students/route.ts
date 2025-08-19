@@ -11,12 +11,12 @@ import {
 
 // 학생 조회 파라미터 스키마
 const getStudentsSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  classId: z.string().uuid().optional(),
+  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다').optional().nullable(), // 🔧 시스템 관리자는 tenantId 없이 전체 조회 가능
+  classId: z.string().uuid().optional().nullable(),
   status: z.enum(['active', 'inactive', 'graduated', 'all']).default('all'),
   limit: z.number().min(1).max(1000).default(100),
   offset: z.number().min(0).default(0),
-  search: z.string().optional()
+  search: z.string().optional().nullable() // 🔧 null 값도 허용
 })
 
 // 학생 생성 스키마
@@ -59,6 +59,9 @@ export async function GET(request: NextRequest) {
         offset: parseInt(searchParams.get('offset') || '0'),
         search: searchParams.get('search')
       }
+      
+      // 🔧 디버깅: 파라미터 로그
+      console.log('📋 API 파라미터:', rawParams)
 
       // 파라미터 검증
       const validationResult = validateRequestBody(rawParams, (data) => 
@@ -71,34 +74,21 @@ export async function GET(request: NextRequest) {
 
       const params: GetStudentsParams = validationResult
 
-      // 테넌트 권한 검증
-      if (!validateTenantAccess(userProfile!, params.tenantId)) {
+      // 테넌트 권한 검증 (시스템 관리자는 전체 접근 가능)
+      const isSystemAdmin = userProfile!.role === 'system_admin'
+      if (!isSystemAdmin && !validateTenantAccess(userProfile!, params.tenantId)) {
         throw new Error('해당 테넌트의 학생 정보에 접근할 권한이 없습니다.')
       }
 
-      // 기본 쿼리 구성
+      // 🔧 임시 수정: 단순한 쿼리로 시작 (복잡한 조인 제거)
       let query = supabase
         .from('students')
-        .select(`
-          *,
-          classes:class_id (
-            id,
-            name,
-            grade,
-            course
-          ),
-          student_enrollments!inner (
-            id,
-            status,
-            enrolled_at,
-            course_packages (
-              id,
-              name,
-              duration_months
-            )
-          )
-        `)
-        .eq('tenant_id', params.tenantId)
+        .select('*')
+
+      // 시스템 관리자가 아닌 경우에만 테넌트 필터링
+      if (!isSystemAdmin && params.tenantId) {
+        query = query.eq('tenant_id', params.tenantId)
+      }
 
       // 클래스 필터링
       if (params.classId) {

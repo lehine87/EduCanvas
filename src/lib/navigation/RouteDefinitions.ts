@@ -18,7 +18,7 @@ import type { UserRole } from '@/types/auth.types'
  */
 export const NAVIGATION_CONFIG: NavigationConfig = {
   defaultLoginPath: '/auth/login',
-  defaultDashboardPath: '/admin',
+  defaultDashboardPath: '/main',  // 기본 대시보드를 main으로 변경
   onboardingPath: '/onboarding',
   pendingApprovalPath: '/pending-approval',
   accessDeniedPath: '/unauthorized',
@@ -32,11 +32,11 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
  * 역할별 기본 대시보드 경로
  */
 const ROLE_DEFAULT_PATHS: Record<UserRole, string> = {
-  system_admin: '/system-admin',
-  admin: '/tenant-admin',
-  instructor: '/admin',
-  staff: '/admin',
-  viewer: '/admin'
+  system_admin: '/main',  // 시스템 관리자도 메인 대시보드에서 시작
+  admin: '/main',         // 테넌트 관리자도 메인 대시보드에서 시작  
+  instructor: '/main',    // 강사는 메인 대시보드만
+  staff: '/main',         // 스태프는 메인 대시보드만
+  viewer: '/main'         // 뷰어는 메인 대시보드만
 }
 
 /**
@@ -63,11 +63,8 @@ function getDefaultPath(context: NavigationContext): string {
 
     case 'active':
       if (context.role) {
-        // 시스템 관리자 특별 처리
-        if (context.role === 'system_admin' || 
-            context.specialPermissions?.includes('system_admin')) {
-          return ROLE_DEFAULT_PATHS.system_admin
-        }
+        // 모든 역할이 메인 대시보드에서 시작
+        // 시스템 관리자나 테넌트 관리자는 메인에서 관리 기능으로 이동 가능
         return ROLE_DEFAULT_PATHS[context.role] || NAVIGATION_CONFIG.defaultDashboardPath
       }
       return NAVIGATION_CONFIG.defaultDashboardPath
@@ -215,85 +212,115 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   },
 
   // ============================================================================
-  // 시스템 관리자 라우트
+  // 관리 기능은 /main 페이지 내 동적 섹션으로 통합됨
+  // 별도 라우트 불필요
   // ============================================================================
-
-  '/system-admin': {
-    path: '/system-admin',
-    allowedStates: ['active'],
-    allowedRoles: ['system_admin'],
-    redirectTo: (context: NavigationContext) => {
-      // 시스템 관리자 권한이 없으면 일반 관리자 페이지로
-      if (!isSystemAdmin(context)) {
-        return '/admin'
-      }
-      return null
-    },
-    fallbackRoute: '/admin',
-    metadata: {
-      title: '시스템 관리',
-      description: '전체 시스템 관리자 대시보드',
-      isProtected: true
-    }
-  },
-
-  // ============================================================================
-  // 테넌트 관리자 라우트
-  // ============================================================================
-
-  '/tenant-admin': {
-    path: '/tenant-admin',
-    allowedStates: ['active'],
-    allowedRoles: ['admin', 'instructor', 'staff'],
-    requiresEmailVerification: false, // 이메일 인증 선택적
-    redirectTo: (context: NavigationContext) => {
-      // 시스템 관리자는 시스템 관리 페이지로
-      if (isSystemAdmin(context)) {
-        return '/system-admin'
-      }
-      // 테넌트가 없으면 온보딩으로
-      if (!context.tenantId) {
-        return NAVIGATION_CONFIG.onboardingPath
-      }
-      return null
-    },
-    metadata: {
-      title: '테넌트 관리',
-      description: '학원 관리자 대시보드',
-      isProtected: true
-    }
-  },
 
   // ============================================================================
   // 일반 관리자 라우트
   // ============================================================================
 
+  '/main': {
+    path: '/main',
+    allowedStates: ['active'],
+    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    requiresEmailVerification: false,
+    redirectTo: () => {
+      // 모든 역할이 메인 대시보드에 접근 가능
+      // 역할별 관리 기능은 메뉴를 통해 별도 접근
+      return null
+    },
+    metadata: {
+      title: '메인 대시보드',
+      description: '학원 관리 메인 대시보드',
+      isProtected: true
+    }
+  },
+
+  // ============================================================================
+  // 기존 경로 호환성 (리다이렉트) - 모든 관리 기능을 /main으로 통합
+  // ============================================================================
+  
   '/admin': {
     path: '/admin',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
-    requiresEmailVerification: false,
-    redirectTo: (context: NavigationContext) => {
-      // 시스템 관리자는 시스템 관리 페이지로 (단방향)
-      if (isSystemAdmin(context)) {
-        return '/system-admin'
-      }
-      
-      // 테넌트 관리자는 테넌트 관리 페이지로 (단방향)
-      if (context.role === 'admin' && context.tenantId) {
-        return '/tenant-admin'
-      }
-
-      // 일반 직원/강사도 테넌트 관리 페이지로 (단방향)
-      if (['instructor', 'staff'].includes(context.role || '') && context.tenantId) {
-        return '/tenant-admin'
-      }
-
-      return null // viewer는 여기서 머물기
-    },
+    redirectTo: () => '/main', // 기존 admin 접근을 main으로 리다이렉트
     metadata: {
-      title: '관리자 대시보드',
-      description: '일반 관리자 대시보드',
+      title: '관리자 대시보드 (리다이렉트)',
+      description: '기존 경로 호환성을 위한 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/admin/students': {
+    path: '/admin/students',
+    allowedStates: ['active'],
+    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    redirectTo: () => '/main/students', // 기존 admin/students 접근을 main/students로 리다이렉트
+    metadata: {
+      title: '학생 관리 (리다이렉트)',
+      description: '기존 경로 호환성을 위한 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/admin/system-admin': {
+    path: '/admin/system-admin',
+    allowedStates: ['active'],
+    allowedRoles: ['system_admin'],
+    redirectTo: () => '/main', // 시스템 관리 기능도 main으로 통합됨
+    metadata: {
+      title: '시스템 관리 (리다이렉트)',
+      description: 'main 페이지 내 시스템 관리 섹션으로 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/admin/tenant-admin': {
+    path: '/admin/tenant-admin',
+    allowedStates: ['active'],
+    allowedRoles: ['admin'],
+    redirectTo: () => '/main', // 학원 관리 기능도 main으로 통합됨
+    metadata: {
+      title: '학원 관리 (리다이렉트)',
+      description: 'main 페이지 내 학원 관리 섹션으로 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/system-admin': {
+    path: '/system-admin',
+    allowedStates: ['active'],
+    allowedRoles: ['system_admin'],
+    redirectTo: () => '/main', // 기존 system-admin 접근을 main으로 리다이렉트
+    metadata: {
+      title: '시스템 관리 (리다이렉트)',
+      description: '기존 경로 호환성을 위한 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/tenant-admin': {
+    path: '/tenant-admin',
+    allowedStates: ['active'],
+    allowedRoles: ['admin'],
+    redirectTo: () => '/main', // 기존 tenant-admin 접근을 main으로 리다이렉트
+    metadata: {
+      title: '학원 관리 (리다이렉트)',
+      description: '기존 경로 호환성을 위한 리다이렉트',
+      isProtected: true
+    }
+  },
+
+  '/router': {
+    path: '/router',
+    allowedStates: ['active'],
+    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    redirectTo: () => '/main', // router 페이지도 main으로 리다이렉트
+    metadata: {
+      title: '라우터 (리다이렉트)',
+      description: '더 이상 필요하지 않은 라우터 페이지 리다이렉트',
       isProtected: true
     }
   },
@@ -302,8 +329,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   // 학생 관리 라우트
   // ============================================================================
 
-  '/admin/students': {
-    path: '/admin/students',
+  '/main/students': {
+    path: '/main/students',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
     metadata: {
@@ -313,8 +340,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
     }
   },
 
-  '/admin/students/new': {
-    path: '/admin/students/new',
+  '/main/students/new': {
+    path: '/main/students/new',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'staff'],
     metadata: {
@@ -324,8 +351,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
     }
   },
 
-  '/admin/students/dashboard': {
-    path: '/admin/students/dashboard',
+  '/main/students/dashboard': {
+    path: '/main/students/dashboard',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'instructor', 'staff'],
     metadata: {
@@ -335,8 +362,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
     }
   },
 
-  '/admin/students/smart': {
-    path: '/admin/students/smart',
+  '/main/students/smart': {
+    path: '/main/students/smart',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'staff'],
     metadata: {
@@ -347,8 +374,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   },
 
   // 동적 라우트들
-  '/admin/students/[id]': {
-    path: '/admin/students/[id]',
+  '/main/students/[id]': {
+    path: '/main/students/[id]',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
     metadata: {
@@ -358,8 +385,8 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
     }
   },
 
-  '/admin/students/[id]/edit': {
-    path: '/admin/students/[id]/edit',
+  '/main/students/[id]/edit': {
+    path: '/main/students/[id]/edit',
     allowedStates: ['active'],
     allowedRoles: ['system_admin', 'admin', 'staff'],
     metadata: {
@@ -394,14 +421,14 @@ export const DYNAMIC_ROUTE_PATTERNS: Array<{
   config: RouteConfig
 }> = [
   {
-    pattern: '/admin/students/[id]',
-    regex: /^\/admin\/students\/([^\/]+)$/,
-    config: ROUTE_DEFINITIONS['/admin/students/[id]'] as RouteConfig
+    pattern: '/main/students/[id]',
+    regex: /^\/main\/students\/([^\/]+)$/,
+    config: ROUTE_DEFINITIONS['/main/students/[id]'] as RouteConfig
   },
   {
-    pattern: '/admin/students/[id]/edit',
-    regex: /^\/admin\/students\/([^\/]+)\/edit$/,
-    config: ROUTE_DEFINITIONS['/admin/students/[id]/edit'] as RouteConfig
+    pattern: '/main/students/[id]/edit',
+    regex: /^\/main\/students\/([^\/]+)\/edit$/,
+    config: ROUTE_DEFINITIONS['/main/students/[id]/edit'] as RouteConfig
   }
 ]
 

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth/authClient'
 
 // 아이콘 임포트 (Heroicons 사용)
 import {
@@ -424,13 +425,15 @@ export function TenantAdminSidebar({
               <HomeIcon className="h-4 w-4 mr-2" />
               일반 관리자 모드로
             </Link>
-            <Link
-              href="/auth/login"
-              className="flex items-center px-3 py-2 text-sm text-red-600 rounded-md hover:bg-red-50 transition-colors"
+            <button
+              onClick={async () => {
+                await authClient.signOut()
+              }}
+              className="w-full flex items-center px-3 py-2 text-sm text-red-600 rounded-md hover:bg-red-50 transition-colors"
             >
               <XCircleIcon className="h-4 w-4 mr-2" />
               로그아웃
-            </Link>
+            </button>
           </div>
         </div>
       )}

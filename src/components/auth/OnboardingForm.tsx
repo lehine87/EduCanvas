@@ -124,7 +124,16 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
         position: data.position
       })
 
-      // 현재 세션의 access_token 가져오기
+      // 현재 사용자 및 세션 확인
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        console.error('❌ 사용자 인증 실패:', authError?.message)
+        setError('로그인이 필요합니다. 다시 로그인해주세요.')
+        return
+      }
+
+      // 세션 토큰 가져오기
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !session?.access_token) {

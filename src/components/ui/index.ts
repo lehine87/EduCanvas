@@ -20,6 +20,18 @@ export type { ButtonProps } from './Button';
 export { Input } from './Input';
 export type { InputProps } from './Input';
 
+// Textarea Components
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
+
+// Select Components
+export { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './Select';
+export type { SelectProps, SelectTriggerProps, SelectContentProps, SelectItemProps, SelectValueProps } from './Select';
+
+// Label Components
+export { Label } from './Label';
+export type { LabelProps } from './Label';
+
 // Card Components
 export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from './Card';
 export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps } from './Card';
@@ -148,6 +160,9 @@ export const COMPONENT_REGISTRY = {
   basic: [
     'Button',
     'Input',
+    'Textarea',
+    'Select',
+    'Label',
     'Card',
     'Modal',
     'Table',

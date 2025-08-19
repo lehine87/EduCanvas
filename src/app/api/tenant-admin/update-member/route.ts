@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
 
     // 현재 로그인한 사용자 확인
     const { supabase: middlewareClient } = createMiddlewareClient(request)
-    const { data: { session }, error: sessionError } = await middlewareClient.auth.getSession()
+    const { data: { user }, error: userError } = await middlewareClient.auth.getUser()
     
-    if (sessionError || !session?.user) {
-      console.error('❌ 인증 실패:', sessionError?.message)
+    if (userError || !user) {
+      console.error('❌ 인증 실패:', userError?.message)
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { data: currentUserProfile, error: profileError } = await supabaseServiceRole
       .from('user_profiles')
       .select('tenant_id, role, status')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     if (profileError || !currentUserProfile || currentUserProfile.status !== 'active') {
