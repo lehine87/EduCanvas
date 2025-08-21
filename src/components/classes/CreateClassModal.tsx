@@ -2,10 +2,13 @@
 
 import React, { memo, useCallback, useEffect, useState } from 'react'
 import { Modal } from '@/components/ui'
+import { DialogTitle } from '@/components/ui/dialog'
 import { ClassForm, ClassFormData, SelectOption } from './ClassForm'
 import { useClassesStore } from '@/store/classesStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { AcademicCapIcon } from '@heroicons/react/24/outline'
+import { createBrowserClient } from '@supabase/ssr'
+import { Database } from '@/types/database.types'
 
 /**
  * CreateClassModal Props
@@ -16,7 +19,7 @@ export interface CreateClassModalProps {
   /** 모달 닫기 핸들러 */
   onClose: () => void
   /** 생성 성공 콜백 */
-  onSuccess?: (classData: any) => void
+  onSuccess?: (classData: ClassFormData) => void
   /** 추가 CSS 클래스 */
   className?: string
 }
@@ -70,27 +73,48 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
   // 테넌트 ID 가져오기
   const tenantId = userProfile?.tenant_id
 
+  // Supabase 클라이언트
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   // 강사 목록 로드
   const loadInstructors = useCallback(async () => {
     if (!tenantId) return
 
     try {
+      // Supabase 세션에서 토큰 가져오기
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.error('인증 토큰이 없습니다')
+        return
+      }
+
       const response = await fetch(`/api/instructors?tenantId=${tenantId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       })
 
       if (response.ok) {
         const result = await response.json()
+        console.log('강사 목록 응답:', result) // 디버깅용
         if (result.success && result.data.instructors) {
-          const instructorOptions = result.data.instructors.map((instructor: any) => ({
+          const instructorOptions = result.data.instructors.map((instructor: { id: string; name: string; email: string; status: string }) => ({
             value: instructor.id,
-            label: `${instructor.name} (${instructor.email || 'No email'})`,
+            label: instructor.name,
             disabled: instructor.status !== 'active'
           }))
           setInstructors(instructorOptions)
+          console.log('강사 옵션 설정:', instructorOptions) // 디버깅용
+        } else {
+          console.log('강사 목록이 비어있거나 응답 구조가 다릅니다:', result)
         }
+      } else {
+        const error = await response.text()
+        console.error('강사 목록 API 오류:', response.status, error)
       }
     } catch (error) {
       console.error('강사 목록 로드 실패:', error)
@@ -102,19 +126,26 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
     if (!tenantId) return
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.error('인증 토큰이 없습니다')
+        return
+      }
+
       const response = await fetch(`/api/tenant-subjects?tenantId=${tenantId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       })
 
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.data.subjects) {
-          const subjectOptions = result.data.subjects.map((subject: any) => ({
+          const subjectOptions = result.data.subjects.map((subject: { id: string; name: string }) => ({
             value: subject.name,
             label: subject.name,
-            disabled: !subject.is_active
+            disabled: false // subject.is_active not available in this context
           }))
           setSubjects(subjectOptions)
         }
@@ -129,19 +160,26 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
     if (!tenantId) return
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.error('인증 토큰이 없습니다')
+        return
+      }
+
       const response = await fetch(`/api/tenant-courses?tenantId=${tenantId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       })
 
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.data.courses) {
-          const courseOptions = result.data.courses.map((course: any) => ({
+          const courseOptions = result.data.courses.map((course: { id: string; name: string }) => ({
             value: course.name,
             label: course.name,
-            disabled: !course.is_active
+            disabled: false // course.is_active not available in this context
           }))
           setCourses(courseOptions)
         }
@@ -203,7 +241,7 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
       const newClass = await createClass(cleanedData, tenantId)
       
       if (newClass) {
-        onSuccess?.(newClass)
+        onSuccess?.(newClass as any)
         onClose()
       }
     } catch (error) {
@@ -239,9 +277,9 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
               새 클래스 만들기
-            </h3>
+            </DialogTitle>
             <p className="text-sm text-gray-500">
               새로운 클래스의 기본 정보를 입력해주세요
             </p>
@@ -299,6 +337,17 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
           subjectOptions={subjects}
           courseOptions={courses}
         />
+
+        {/* 디버깅 정보 (개발 환경에서만) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
+            <div>강사 옵션 수: {instructors.length}</div>
+            <div>과목 옵션 수: {subjects.length}</div>
+            <div>과정 옵션 수: {courses.length}</div>
+            <div>테넌트 ID: {tenantId}</div>
+            <div>로딩 중: {loadingOptions ? '예' : '아니오'}</div>
+          </div>
+        )}
       </div>
     </Modal>
   )

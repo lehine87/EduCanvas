@@ -62,9 +62,9 @@ export async function GET(request: NextRequest) {
         throw new Error('해당 테넌트의 과정 정보에 접근할 권한이 없습니다.')
       }
 
-      // 과정 목록 조회
+      // 과정 목록 조회 (course_packages 테이블 사용)
       let query = supabase
-        .from('tenant_courses')
+        .from('course_packages')
         .select('*')
         .eq('tenant_id', params.tenantId)
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
       // 과정명 중복 확인
       const { data: existingCourse } = await supabase
-        .from('tenant_courses')
+        .from('course_packages')
         .select('id')
         .eq('tenant_id', courseData.tenantId)
         .eq('name', courseData.name)
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       // 과정 코드 중복 확인 (코드가 제공된 경우)
       if (courseData.code) {
         const { data: existingCode } = await supabase
-          .from('tenant_courses')
+          .from('course_packages')
           .select('id')
           .eq('tenant_id', courseData.tenantId)
           .eq('code', courseData.code)
@@ -151,12 +151,13 @@ export async function POST(request: NextRequest) {
       // 과정 생성
       const { tenantId, displayOrder, isActive, ...restData } = courseData
       const { data: newCourse, error } = await supabase
-        .from('tenant_courses')
+        .from('course_packages')
         .insert({
           ...restData,
           tenant_id: tenantId,
-          display_order: displayOrder,
           is_active: isActive,
+          billing_type: 'package' as const,
+          price: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

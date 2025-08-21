@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
+import { Loader2 } from 'lucide-react'
 import { authClient } from '@/lib/auth/authClient'
 
 const updatePasswordSchema = z.object({
@@ -94,7 +95,7 @@ export function UpdatePasswordForm() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="text-center space-y-4">
                 <div className="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +114,7 @@ export function UpdatePasswordForm() {
                 
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -125,7 +126,7 @@ export function UpdatePasswordForm() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="text-center space-y-4">
                 <div className="w-12 h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +159,7 @@ export function UpdatePasswordForm() {
                   </Button>
                 </div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -181,7 +182,7 @@ export function UpdatePasswordForm() {
           <CardHeader>
             <CardTitle>새 비밀번호 설정</CardTitle>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {error && (
                 <div 
@@ -203,32 +204,36 @@ export function UpdatePasswordForm() {
                 </ul>
               </div>
 
-              <Input
-                label="새 비밀번호"
-                type="password"
-                {...register('password')}
-                error={errors.password?.message}
-                placeholder="새 비밀번호를 입력하세요"
-                disabled={isLoading}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">새 비밀번호</label>
+                <Input
+                  type="password"
+                  {...register('password')}
+                  // error will be shown below
+                  placeholder="새 비밀번호를 입력하세요"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
-              <Input
-                label="비밀번호 확인"
-                type="password"
-                {...register('confirmPassword')}
-                error={errors.confirmPassword?.message}
-                placeholder="비밀번호를 다시 입력하세요"
-                disabled={isLoading}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인</label>
+                <Input
+                  type="password"
+                  {...register('confirmPassword')}
+                  // error will be shown below
+                  placeholder="비밀번호를 다시 입력하세요"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
               <Button
                 type="submit"
                 className="w-full"
-                loading={isLoading}
                 disabled={isLoading || !hasSession}
               >
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 비밀번호 변경
               </Button>
 
@@ -243,7 +248,7 @@ export function UpdatePasswordForm() {
                 </Button>
               </div>
             </form>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </div>

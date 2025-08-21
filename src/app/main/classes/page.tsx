@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Button, Input, Select, Badge, Card, CardBody } from '@/components/ui'
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Badge, Card, CardContent } from '@/components/ui'
 import { ClassTable } from '@/components/classes/ClassTable'
 import { ClassCard } from '@/components/classes/ClassCard'
-import { CreateClassModal } from '@/components/classes/CreateClassModal'
-import { EditClassModal } from '@/components/classes/EditClassModal'
+import { CreateClassSheet } from '@/components/classes/CreateClassSheet'
+import { ClassDetailSheet } from '@/components/classes/ClassDetailSheet'
+import { GroupedClassView } from '@/components/classes/GroupedClassView'
 import { useClassesStore, ClassWithRelations } from '@/store/classesStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
@@ -18,8 +19,10 @@ import {
   AdjustmentsHorizontalIcon,
   TrashIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  CheckCircleIcon as CheckCircleOutline
 } from '@heroicons/react/24/outline'
+import { Loader2 } from 'lucide-react'
 import { 
   AcademicCapIcon,
   UserGroupIcon,
@@ -46,22 +49,35 @@ export default function ClassesPage() {
     loading,
     error,
     view,
+    groupBy,
+    subGroupBy,
+    groupViewMode,
     filters,
     sort,
     stats,
     selectedClasses,
+    selectionMode,
     modals,
+    detailSheet,
     fetchClasses,
     setView,
+    setGroupBy,
+    setSubGroupBy,
+    setGroupViewMode,
     setFilters,
     setSort,
     setSelectedClass,
     toggleClassSelection,
     selectAllClasses,
     clearSelection,
+    toggleSelectionMode,
+    setSelectionMode,
     openModal,
     closeModal,
-    deleteClass
+    deleteClass,
+    updateClass,
+    openDetailSheet,
+    closeDetailSheet
   } = useClassesStore()
 
   const { profile: userProfile } = useAuthStore()
@@ -96,7 +112,7 @@ export default function ClassesPage() {
         cls.description?.toLowerCase().includes(term) ||
         cls.grade?.toLowerCase().includes(term) ||
         cls.course?.toLowerCase().includes(term) ||
-        cls.instructor?.name.toLowerCase().includes(term)
+        cls.instructor?.name?.toLowerCase().includes(term)
       )
     }
 
@@ -126,10 +142,25 @@ export default function ClassesPage() {
     openModal('create')
   }, [openModal])
 
-  const handleEditClass = useCallback((classData: ClassWithRelations) => {
-    setSelectedClass(classData)
-    openModal('edit')
-  }, [setSelectedClass, openModal])
+  
+  // 클래스 클릭 핸들러 (상세보기)
+  const handleClassClick = useCallback((classData: ClassWithRelations) => {
+    openDetailSheet(classData.id)
+  }, [openDetailSheet])
+  
+  // Sheet에서 업데이트 핸들러
+  const handleUpdateFromSheet = useCallback(async (id: string, data: Partial<ClassWithRelations>) => {
+    if (tenantId) {
+      await updateClass(id, data, tenantId)
+    }
+  }, [tenantId, updateClass])
+  
+  // Sheet에서 삭제 핸들러
+  const handleDeleteFromSheet = useCallback(async (id: string) => {
+    if (tenantId) {
+      await deleteClass(id, tenantId, false)
+    }
+  }, [tenantId, deleteClass])
 
   const handleDeleteClass = useCallback((classData: ClassWithRelations) => {
     setDeleteConfirmClass(classData)
@@ -222,24 +253,78 @@ export default function ClassesPage() {
               </div>
             )}
 
-            {/* 뷰 전환 */}
-            <div className="flex rounded-lg border border-gray-300 bg-white">
-              <Button
-                variant={view === 'table' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setView('table')}
-                className="rounded-r-none border-0"
+            {/* 선택 모드 토글 */}
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
+              onClick={toggleSelectionMode}
+              className={cn(
+                "transition-all flex-shrink-0 z-10",
+                selectionMode 
+                  ? "bg-brand-600 hover:bg-brand-700 text-white border-brand-600" 
+                  : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
+              )}
+              title={selectionMode ? "상세보기 모드로 전환" : "선택 모드로 전환"}
+            >
+              <CheckCircleOutline className="w-4 h-4 mr-1" />
+              {selectionMode ? "선택 모드" : "선택"}
+            </Button>
+
+            {/* 그룹 뷰 옵션 */}
+            <div className="flex items-center gap-2">
+              <Select
+                value={groupBy}
+                onValueChange={(value: 'instructor' | 'subject' | 'grade') => setGroupBy(value)}
               >
-                <ListBulletIcon className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={view === 'cards' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setView('cards')}
-                className="rounded-l-none border-l border-gray-300"
-              >
-                <Squares2X2Icon className="w-4 h-4" />
-              </Button>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="instructor">강사별</SelectItem>
+                  <SelectItem value="subject">과목별</SelectItem>
+                  <SelectItem value="grade">학년별</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* 서브그룹 선택 */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500">→</span>
+                <Select
+                  value={subGroupBy}
+                  onValueChange={(value: 'none' | 'instructor' | 'subject' | 'grade') => setSubGroupBy(value)}
+                >
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">없음</SelectItem>
+                    {groupBy !== 'instructor' && <SelectItem value="instructor">강사별</SelectItem>}
+                    {groupBy !== 'subject' && <SelectItem value="subject">과목별</SelectItem>}
+                    {groupBy !== 'grade' && <SelectItem value="grade">학년별</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex rounded-lg border border-gray-300 bg-white">
+                <Button
+                  variant={groupViewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setGroupViewMode('list')}
+                  className="rounded-r-none border-0"
+                  title="리스트"
+                >
+                  <ListBulletIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant={groupViewMode === 'cards' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setGroupViewMode('cards')}
+                  className="rounded-l-none border-l border-gray-300"
+                  title="카드"
+                >
+                  <Squares2X2Icon className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
 
             {/* 새 클래스 생성 */}
@@ -269,7 +354,7 @@ export default function ClassesPage() {
         {/* 통계 대시보드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <CardBody className="flex items-center space-x-3">
+            <CardContent className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-brand-100 rounded-lg flex items-center justify-center">
                   <AcademicCapIcon className="w-6 h-6 text-brand-600" />
@@ -279,11 +364,11 @@ export default function ClassesPage() {
                 <p className="text-sm font-medium text-gray-500">전체 클래스</p>
                 <p className="text-2xl font-bold text-gray-900">{computedStats.totalClasses}</p>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody className="flex items-center space-x-3">
+            <CardContent className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center">
                   <CheckCircleIcon className="w-6 h-6 text-success-600" />
@@ -293,11 +378,11 @@ export default function ClassesPage() {
                 <p className="text-sm font-medium text-gray-500">활성 클래스</p>
                 <p className="text-2xl font-bold text-gray-900">{computedStats.activeClasses}</p>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody className="flex items-center space-x-3">
+            <CardContent className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                   <XCircleIcon className="w-6 h-6 text-gray-600" />
@@ -307,11 +392,11 @@ export default function ClassesPage() {
                 <p className="text-sm font-medium text-gray-500">비활성 클래스</p>
                 <p className="text-2xl font-bold text-gray-900">{computedStats.inactiveClasses}</p>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
           <Card>
-            <CardBody className="flex items-center space-x-3">
+            <CardContent className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center">
                   <UserGroupIcon className="w-6 h-6 text-warning-600" />
@@ -321,13 +406,13 @@ export default function ClassesPage() {
                 <p className="text-sm font-medium text-gray-500">총 학생 수</p>
                 <p className="text-2xl font-bold text-gray-900">{computedStats.totalStudents}</p>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 
         {/* 검색 및 필터 */}
         <Card>
-          <CardBody>
+          <CardContent>
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
               {/* 검색 */}
               <div className="flex-1 max-w-lg">
@@ -344,6 +429,33 @@ export default function ClassesPage() {
 
               {/* 필터 버튼 */}
               <div className="flex items-center space-x-3">
+                {/* 그룹 내 정렬 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">정렬:</span>
+                  <Select
+                    value={`${sort.sortBy}-${sort.sortOrder}`}
+                    onValueChange={(value: string) => {
+                      const [sortBy, sortOrder] = value.split('-')
+                      setSort({ 
+                        sortBy: sortBy as 'name' | 'created_at' | 'student_count', 
+                        sortOrder: sortOrder as 'asc' | 'desc' 
+                      })
+                    }}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name-asc">이름순</SelectItem>
+                      <SelectItem value="name-desc">이름 역순</SelectItem>
+                      <SelectItem value="created_at-desc">최신순</SelectItem>
+                      <SelectItem value="created_at-asc">오래된순</SelectItem>
+                      <SelectItem value="student_count-desc">학생 많은순</SelectItem>
+                      <SelectItem value="student_count-asc">학생 적은순</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <Button
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}
@@ -376,13 +488,17 @@ export default function ClassesPage() {
                     </label>
                     <Select
                       value={filters.status}
-                      onChange={(value) => setFilters({ status: value as any })}
-                      options={[
-                        { value: 'all', label: '전체' },
-                        { value: 'active', label: '활성' },
-                        { value: 'inactive', label: '비활성' }
-                      ]}
-                    />
+                      onValueChange={(value: string) => setFilters({ status: value as 'all' | 'active' | 'inactive' })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">전체</SelectItem>
+                        <SelectItem value="active">활성</SelectItem>
+                        <SelectItem value="inactive">비활성</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -390,24 +506,28 @@ export default function ClassesPage() {
                       학년
                     </label>
                     <Select
-                      value={filters.grade || ''}
-                      onChange={(value) => setFilters({ grade: value || undefined })}
-                      options={[
-                        { value: '', label: '전체 학년' },
-                        { value: '초1', label: '초등학교 1학년' },
-                        { value: '초2', label: '초등학교 2학년' },
-                        { value: '초3', label: '초등학교 3학년' },
-                        { value: '초4', label: '초등학교 4학년' },
-                        { value: '초5', label: '초등학교 5학년' },
-                        { value: '초6', label: '초등학교 6학년' },
-                        { value: '중1', label: '중학교 1학년' },
-                        { value: '중2', label: '중학교 2학년' },
-                        { value: '중3', label: '중학교 3학년' },
-                        { value: '고1', label: '고등학교 1학년' },
-                        { value: '고2', label: '고등학교 2학년' },
-                        { value: '고3', label: '고등학교 3학년' }
-                      ]}
-                    />
+                      value={filters.grade || 'all'}
+                      onValueChange={(value: string) => setFilters({ grade: value === 'all' ? undefined : value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">전체 학년</SelectItem>
+                        <SelectItem value="초1">초등학교 1학년</SelectItem>
+                        <SelectItem value="초2">초등학교 2학년</SelectItem>
+                        <SelectItem value="초3">초등학교 3학년</SelectItem>
+                        <SelectItem value="초4">초등학교 4학년</SelectItem>
+                        <SelectItem value="초5">초등학교 5학년</SelectItem>
+                        <SelectItem value="초6">초등학교 6학년</SelectItem>
+                        <SelectItem value="중1">중학교 1학년</SelectItem>
+                        <SelectItem value="중2">중학교 2학년</SelectItem>
+                        <SelectItem value="중3">중학교 3학년</SelectItem>
+                        <SelectItem value="고1">고등학교 1학년</SelectItem>
+                        <SelectItem value="고2">고등학교 2학년</SelectItem>
+                        <SelectItem value="고3">고등학교 3학년</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -416,90 +536,50 @@ export default function ClassesPage() {
                     </label>
                     <Select
                       value={`${sort.sortBy}-${sort.sortOrder}`}
-                      onChange={(value) => {
+                      onValueChange={(value: string) => {
                         const [sortBy, sortOrder] = value.split('-')
-                        setSort({ sortBy: sortBy as any, sortOrder: sortOrder as any })
+                        setSort({ 
+                          sortBy: sortBy as 'name' | 'created_at' | 'student_count', 
+                          sortOrder: sortOrder as 'asc' | 'desc' 
+                        })
                       }}
-                      options={[
-                        { value: 'name-asc', label: '이름 (가나다순)' },
-                        { value: 'name-desc', label: '이름 (역순)' },
-                        { value: 'created_at-desc', label: '최신순' },
-                        { value: 'created_at-asc', label: '오래된순' },
-                        { value: 'student_count-desc', label: '학생 수 (많은순)' },
-                        { value: 'student_count-asc', label: '학생 수 (적은순)' }
-                      ]}
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name-asc">이름 (가나다순)</SelectItem>
+                        <SelectItem value="name-desc">이름 (역순)</SelectItem>
+                        <SelectItem value="created_at-desc">최신순</SelectItem>
+                        <SelectItem value="created_at-asc">오래된순</SelectItem>
+                        <SelectItem value="student_count-desc">학생 수 (많은순)</SelectItem>
+                        <SelectItem value="student_count-asc">학생 수 (적은순)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
             )}
-          </CardBody>
+          </CardContent>
         </Card>
 
-        {/* 클래스 목록 */}
-        {view === 'table' ? (
-          <ClassTable
-            tenantId={tenantId}
-            selectable={true}
-            showActions={true}
-            virtualized={filteredClasses.length > 100}
-            height={600}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {loading ? (
-              // 로딩 스켈레톤
-              Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="bg-white border rounded-xl p-4 animate-pulse">
-                  <div className="flex items-start space-x-3 mb-3">
-                    <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-2 mb-3">
-                    <div className="h-3 bg-gray-200 rounded"></div>
-                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                  </div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              ))
-            ) : filteredClasses.length > 0 ? (
-              filteredClasses.map((classData) => (
-                <ClassCard
-                  key={classData.id}
-                  classData={classData}
-                  onEdit={handleEditClass}
-                  onDelete={handleDeleteClass}
-                  showActions={true}
-                  showSelection={true}
-                  isSelected={selectedClasses.includes(classData.id)}
-                  onSelect={toggleClassSelection}
-                />
-              ))
-            ) : (
-              // 빈 상태
-              <div className="col-span-full text-center py-12">
-                <AcademicCapIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  등록된 클래스가 없습니다
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  첫 번째 클래스를 만들어 학생들을 관리해보세요
-                </p>
-                <Button onClick={handleCreateClass}>
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  새 클래스 만들기
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 클래스 목록 - 그룹 뷰만 사용 */}
+        <GroupedClassView
+          classes={filteredClasses}
+          groupBy={groupBy}
+          subGroupBy={subGroupBy}
+          viewMode={groupViewMode}
+          selectionMode={selectionMode}
+          onClassClick={handleClassClick}
+          onClassSelect={toggleClassSelection}
+          selectedClasses={selectedClasses}
+          loading={loading}
+          onCreateClass={handleCreateClass}
+        />
       </div>
 
-      {/* 모달들 */}
-      <CreateClassModal
+      {/* Sheet들 */}
+      <CreateClassSheet
         isOpen={modals.create}
         onClose={() => closeModal('create')}
         onSuccess={() => {
@@ -510,16 +590,6 @@ export default function ClassesPage() {
         }}
       />
 
-      <EditClassModal
-        isOpen={modals.edit}
-        onClose={() => closeModal('edit')}
-        onSuccess={() => {
-          // 성공 시 목록 새로고침
-          if (tenantId) {
-            fetchClasses(tenantId, { ...filters, ...sort, search: searchTerm })
-          }
-        }}
-      />
 
       {/* 삭제 확인 모달 */}
       {deleteConfirmClass && (
@@ -553,16 +623,26 @@ export default function ClassesPage() {
                 취소
               </Button>
               <Button
-                variant="error"
+                variant="destructive"
                 onClick={() => handleConfirmDelete(false)}
-                loading={loading}
+                disabled={loading}
               >
+                {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 삭제
               </Button>
             </div>
           </div>
         </div>
       )}
+      
+      {/* 클래스 상세보기 Sheet */}
+      <ClassDetailSheet
+        classData={detailSheet.classId ? filteredClasses.find(c => c.id === detailSheet.classId) || null : null}
+        isOpen={detailSheet.isOpen}
+        onClose={closeDetailSheet}
+        onUpdate={handleUpdateFromSheet}
+        onDelete={handleDeleteFromSheet}
+      />
       </div>
     </div>
   )

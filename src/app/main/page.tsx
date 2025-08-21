@@ -3,7 +3,10 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/store/useAuthStore'
-import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SystemAdminSection } from '@/components/main/SystemAdminSection'
 import { TenantAdminSection } from '@/components/main/TenantAdminSection'
 import Link from 'next/link'
@@ -17,19 +20,33 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function MainDashboard() {
-  const { user, profile, isLoading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && (!user || !profile)) {
+    if (!loading && (!user || !profile)) {
       router.push('/auth/login')
     }
-  }, [user, profile, isLoading, router])
+  }, [user, profile, loading, router])
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-48" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -42,7 +59,7 @@ export default function MainDashboard() {
   // 시스템 관리자 및 테넌트 관리자 확인
   const isSystemAdmin = profile?.role === 'system_admin' || 
     ['admin@test.com', 'sjlee87@kakao.com'].includes(profile?.email || '')
-  const isTenantAdmin = profile?.role === 'admin'
+  const isTenantAdmin = profile?.role === 'tenant_admin'
 
   const mainFeatures = [
     {
@@ -175,7 +192,7 @@ export default function MainDashboard() {
           {mainFeatures.map((feature, index) => (
             <Link key={index} href={feature.href}>
               <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardBody className="p-6">
+                <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <div className={`${feature.color} rounded-lg p-3`}>
                       <feature.icon className="h-6 w-6 text-white" />
@@ -185,7 +202,7 @@ export default function MainDashboard() {
                       <p className="text-gray-600 text-sm">{feature.description}</p>
                     </div>
                   </div>
-                </CardBody>
+                </CardContent>
               </Card>
             </Link>
           ))}
@@ -195,7 +212,7 @@ export default function MainDashboard() {
           <CardHeader>
             <CardTitle>최근 활동</CardTitle>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2 border-b">
                 <div>
@@ -219,7 +236,7 @@ export default function MainDashboard() {
                 <span className="text-sm text-gray-400">2시간 전</span>
               </div>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
 
           {/* 동적 관리 섹션들 - 역할에 따라 표시 */}

@@ -54,7 +54,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     name: '대시보드',
     href: '/admin',
     icon: HomeIcon,
-    requiredRoles: ['system_admin', 'admin', 'instructor', 'staff'],
+    requiredRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff'],
     description: '전체 현황 보기'
   },
   
@@ -63,49 +63,49 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     name: '직원 관리',
     href: '/admin/staff',
     icon: UserGroupIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '직원 정보 및 관리'
   },
   {
     name: '직원 급여 관리',
     href: '/admin/payroll',
     icon: CreditCardIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '직원 급여 및 수당 관리'
   },
   {
     name: '권한 관리',
     href: '/admin/permissions',
     icon: ShieldCheckIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '역할 및 권한 설정'
   },
   {
     name: '통계 및 분석',
     href: '/admin/analytics',
     icon: ChartBarIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '통계 및 분석 데이터'
   },
   {
     name: '알림 관리',
     href: '/admin/notifications',
     icon: BellIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '시스템 알림 관리'
   },
   {
     name: '감사 로그',
     href: '/admin/audit-logs',
     icon: DocumentTextIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '시스템 활동 로그'
   },
   {
     name: '학원 설정',
     href: '/admin/academy-settings',
     icon: BuildingOfficeIcon,
-    requiredRoles: ['system_admin', 'admin'],
+    requiredRoles: ['system_admin', 'tenant_admin'],
     description: '학원 기본 설정'
   },
   
@@ -191,7 +191,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     name: '설정',
     href: '/admin/settings',
     icon: Cog6ToothIcon,
-    requiredRoles: ['system_admin', 'admin', 'staff', 'instructor'],
+    requiredRoles: ['system_admin', 'tenant_admin', 'staff', 'instructor'],
     description: '개인 및 시스템 설정'
   },
   

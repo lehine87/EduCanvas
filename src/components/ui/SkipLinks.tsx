@@ -149,7 +149,7 @@ interface SkipTargetProps {
   /** 자식 요소 */
   children: React.ReactNode
   /** HTML 태그 타입 */
-  as?: keyof JSX.IntrinsicElements
+  as?: React.ElementType
   /** 추가 props */
   [key: string]: any
 }

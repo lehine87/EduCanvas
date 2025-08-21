@@ -23,15 +23,15 @@ export async function POST(request: NextRequest) {
     // 검색 쿼리 빌드
     let query = supabase
       .from('tenants')
-      .select('id, name, slug, tenant_code, contact_phone, address')
+      .select('id, name, slug, contact_phone, address')
       .eq('is_active', true)
 
     if (searchType === 'code') {
-      // 고객번호로 정확 검색
-      if (!/^\d{6}$/.test(searchQuery.trim())) {
-        return createErrorResponse('고객번호는 6자리 숫자여야 합니다.', 400)
+      // slug를 code로 사용 (tenant_code 컬럼 없음)
+      if (!/^[a-zA-Z0-9_-]+$/.test(searchQuery.trim())) {
+        return createErrorResponse('코드는 영문, 숫자, 하이픈, 언더스코어만 사용 가능합니다.', 400)
       }
-      query = query.eq('tenant_code', searchQuery.trim())
+      query = query.eq('slug', searchQuery.trim())
     } else if (searchType === 'name') {
       // 학원명으로 유사 검색
       query = query.ilike('name', `%${searchQuery.trim()}%`)

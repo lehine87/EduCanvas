@@ -8,7 +8,7 @@ export async function register() {
     if (process.env.NODE_ENV === 'development') {
       process.on('uncaughtException', (error) => {
         // EPIPE 에러는 로그만 남기고 무시 (앱 종료 방지)
-        if (error.code === 'EPIPE' || error.message?.includes('broken pipe')) {
+        if ('code' in error && error.code === 'EPIPE' || error.message?.includes('broken pipe')) {
           console.warn('⚠️ EPIPE 에러 감지됨 (무시됨):', error.message);
           return; // 앱을 종료하지 않음
         }

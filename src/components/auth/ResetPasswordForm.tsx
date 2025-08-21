@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
+import { Loader2 } from 'lucide-react'
 import { authClient } from '@/lib/auth/authClient'
 import { resetPasswordSchema, type ResetPasswordFormData } from '@/lib/auth/authValidation'
 
@@ -75,7 +76,7 @@ export function ResetPasswordForm() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
-            <CardBody>
+            <CardContent>
               <div className="text-center space-y-4">
                 <div className="w-12 h-12 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +112,7 @@ export function ResetPasswordForm() {
                   </Link>
                 </div>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -134,7 +135,7 @@ export function ResetPasswordForm() {
           <CardHeader>
             <CardTitle>비밀번호 재설정</CardTitle>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {error && (
                 <div 
@@ -153,22 +154,24 @@ export function ResetPasswordForm() {
                 </p>
               </div>
 
-              <Input
-                label="이메일"
-                type="email"
-                {...register('email')}
-                error={errors.email?.message}
-                placeholder="example@academy.com"
-                disabled={isLoading}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+                <Input
+                  type="email"
+                  {...register('email')}
+                  // error will be shown below
+                  placeholder="example@academy.com"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
               <Button
                 type="submit"
                 className="w-full"
-                loading={isLoading}
                 disabled={isLoading}
               >
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 재설정 링크 보내기
               </Button>
 
@@ -181,7 +184,7 @@ export function ResetPasswordForm() {
                 </Link>
               </div>
             </form>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </div>

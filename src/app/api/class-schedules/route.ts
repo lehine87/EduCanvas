@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import type { Database } from '@/types/database'
 import { 
   withApiHandler, 
   createSuccessResponse, 
@@ -8,6 +9,10 @@ import {
   logApiStart,
   logApiSuccess 
 } from '@/lib/api/utils'
+
+// 타입 정의
+type ClassSchedule = Database['public']['Tables']['class_classroom_schedules']['Row']
+type TemporaryScheduleChange = Database['public']['Tables']['temporary_classroom_changes']['Row']
 
 // 클래스 스케줄 조회 파라미터 스키마
 const getClassSchedulesSchema = z.object({
@@ -133,7 +138,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 2. 임시 변경 스케줄 조회 (요청된 경우)
-      let temporarySchedules: unknown[] = []
+      let temporarySchedules: TemporaryScheduleChange[] = []
       
       if (params.includeTemporary) {
         let tempQuery = supabase
@@ -184,13 +189,15 @@ export async function GET(request: NextRequest) {
         }
 
         // 클래스 필터링
-        if (params.classId) {
-          tempQuery = tempQuery.eq('class_id', params.classId)
-        }
+        // Note: temporary_classroom_changes 테이블에는 class_id가 없어 schedule_id로 간접 연결 필요
+        // TODO: Join을 통해 class_id 필터링 구현
+        // if (params.classId) {
+        //   tempQuery = tempQuery.eq('class_id', params.classId)
+        // }
 
-        // 교실 필터링 (임시 교실 기준)
+        // 교실 필터링 (새로운 교실 기준)
         if (params.classroomId) {
-          tempQuery = tempQuery.eq('temporary_classroom_id', params.classroomId)
+          tempQuery = tempQuery.eq('new_classroom_id', params.classroomId)
         }
 
         // 날짜 필터링
@@ -210,13 +217,14 @@ export async function GET(request: NextRequest) {
 
         if (tempError) {
           console.error('❌ 임시 변경 조회 실패:', tempError)
+          temporarySchedules = [] // 에러 시 빈 배열로 초기화
         } else {
-          temporarySchedules = tempData || []
+          temporarySchedules = (tempData as unknown || []) as TemporaryScheduleChange[]
         }
       }
 
       // 3. 날짜별 스케줄 계산 (요청된 날짜가 있는 경우)
-      let dateSpecificSchedules: unknown[] = []
+      let dateSpecificSchedules: any[] = []
       
       if (params.date) {
         const requestDate = new Date(params.date)
@@ -237,33 +245,37 @@ export async function GET(request: NextRequest) {
         
         for (const tempChange of tempChangesForDate) {
           dateSpecificSchedules = dateSpecificSchedules.filter(
-            schedule => !(schedule.class_id === tempChange.class_id && 
+            schedule => !(schedule.id === tempChange.original_schedule_id && 
                          schedule.classroom_id === tempChange.original_classroom_id)
           )
         }
       }
 
       // 4. 교실 사용률 통계
-      const classroomUsageStats = {}
+      const classroomUsageStats: Record<string, any> = {}
       
       if (regularSchedules) {
         for (const schedule of regularSchedules) {
           const roomId = schedule.classroom_id
-          if (!classroomUsageStats[roomId]) {
+          if (roomId && !classroomUsageStats[roomId]) {
             classroomUsageStats[roomId] = {
               classroom_name: schedule.classrooms?.name || 'Unknown',
               regular_sessions: 0,
               total_hours_per_week: 0
             }
           }
-          classroomUsageStats[roomId].regular_sessions++
+          if (roomId) {
+            classroomUsageStats[roomId].regular_sessions++
+          }
           
           // 주간 시간 계산 (대략적)
-          if (schedule.time_slots?.start_time && schedule.time_slots?.end_time) {
+          if (roomId && schedule.time_slots?.start_time && schedule.time_slots?.end_time) {
             const start = schedule.time_slots.start_time.split(':')
             const end = schedule.time_slots.end_time.split(':')
-            const hours = (parseInt(end[0]) * 60 + parseInt(end[1])) - (parseInt(start[0]) * 60 + parseInt(start[1]))
-            classroomUsageStats[roomId].total_hours_per_week += hours / 60
+            if (start.length >= 2 && end.length >= 2 && start[0] && start[1] && end[0] && end[1]) {
+              const hours = (parseInt(end[0]) * 60 + parseInt(end[1])) - (parseInt(start[0]) * 60 + parseInt(start[1]))
+              classroomUsageStats[roomId].total_hours_per_week += hours / 60
+            }
           }
         }
       }

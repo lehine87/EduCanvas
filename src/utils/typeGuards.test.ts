@@ -17,7 +17,7 @@ import {
   isStudentStatus,
   isBillingType,
   isVideoStatus,
-  isVideoQuality,
+  // isVideoQuality, // 제거됨
   
   // Validation Functions
   validateStudent,
@@ -75,7 +75,7 @@ type Video = Tables['videos']['Row']
 type VideoWatchSession = Tables['video_watch_sessions']['Row']
 type CoursePackage = Tables['course_packages']['Row']
 type VideoStatus = Enums['video_status']
-type VideoQuality = Enums['video_quality']
+// type VideoQuality = Enums['video_quality'] // 제거 - YouTube 자동 품질 관리
 type PermissionAction = 'read' | 'write' | 'delete' | 'admin'
 
 // ================================================================
@@ -90,7 +90,7 @@ const validStudent: Student = {
   tenant_id: validUUID,
   student_number: 'STU001',
   name: 'Test Student',
-  name_english: 'Test Student EN',
+  name_english: null,
   phone: '010-1234-5678',
   email: 'test@example.com',
   parent_name: 'Test Parent',
@@ -98,15 +98,15 @@ const validStudent: Student = {
   parent_phone_2: null,
   address: '서울시 강남구',
   birth_date: '2005-01-01',
-  gender: 'M',
+  gender: 'male',
   grade_level: '고2',
   school_name: 'Test High School',
   status: 'active',
   enrollment_date: '2024-01-01',
   emergency_contact: null,
+  notes: 'Test memo',
   custom_fields: null,
   tags: null,
-  notes: 'Test memo',
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
   created_by: validUUID
@@ -119,7 +119,8 @@ const validStudentInsert: StudentInsert = {
   parent_phone_1: '010-1111-2222',
   phone: '010-3333-4444',
   grade_level: '중1',
-  status: 'active'
+  status: 'active',
+  created_by: validUUID
 }
 
 const validClass: Class = {
@@ -135,10 +136,13 @@ const validClass: Class = {
   min_students: 5,
   instructor_id: validUUID,
   classroom_id: validUUID,
+  default_classroom_id: validUUID,
   color: '#FF6B6B',
   is_active: true,
   start_date: '2024-01-01',
   end_date: '2024-12-31',
+  main_textbook: 'Advanced Math Textbook',
+  supplementary_textbook: 'Math Workbook',
   schedule_config: null,
   custom_fields: null,
   created_at: '2024-01-01T00:00:00Z',
@@ -148,21 +152,21 @@ const validClass: Class = {
 
 const validVideo: Video = {
   id: validUUID,
-  tenant_id: validUUID,
-  youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  youtube_video_id: 'dQw4w9WgXcQ',
+  tenant_id: null,
   title: 'Test Video',
   description: 'A test video for mathematics',
   duration_seconds: 300,
   thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-  tags: ['math', 'education', 'tutorial'],
   learning_objectives: ['understand basic concepts'],
   prerequisites: ['basic math knowledge'],
   instructor_id: validUUID,
   class_id: validUUID,
   video_type: 'lecture',
   status: 'published',
-  quality: '1080p',
+  quality: '720p',
+  tags: ['math', 'education'],
+  youtube_url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
+  youtube_video_id: 'dQw4w9WgXcQ',
   view_count: 1000,
   like_count: 50,
   comment_count: 10,
@@ -184,16 +188,20 @@ const validVideoWatchSessionData: VideoWatchSession = {
   tenant_id: validUUID,
   student_id: validUUID,
   video_id: validUUID,
-  enrollment_id: validUUID,
+  // enrollment_id 제거 - 실제 스키마에 없음
   session_start_time: '2024-01-01T11:00:00Z',
-  last_position_time: '2024-01-01T12:00:00Z',
-  progress_seconds: 150,
-  total_watch_time: 150,
-  completion_percentage: 50,
-  watch_status: 'in_progress',
-  playback_quality: '720p',
+  enrollment_id: null,
+  watch_status: null,
+  completion_percentage: null,
   device_type: 'desktop',
-  user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  last_position_time: '2024-01-01T11:02:30Z',
+  total_watch_time: 150,
+  playback_quality: '720p',
+  progress_seconds: 0,
+  user_agent: 'test-agent',
+  // watch_percentage: 50, // 데이터베이스 스키마에서 제거됨
+  // playback_quality 제거 - YouTube에서 자동 관리
+  // device_info: { type: 'desktop' }, // 데이터베이스 스키마에서 제거됨
   ip_address: '192.168.1.1',
   play_count: 1,
   is_liked: null,
@@ -261,15 +269,15 @@ describe('Enum Type Guards', () => {
     expect(isVideoStatus('invalid')).toBe(false)
   })
 
-  test('should validate video quality', () => {
-    expect(isVideoQuality('240p')).toBe(true)
-    expect(isVideoQuality('360p')).toBe(true)
-    expect(isVideoQuality('720p')).toBe(true)
-    expect(isVideoQuality('1080p')).toBe(true)
-    expect(isVideoQuality('1440p')).toBe(true)
-    expect(isVideoQuality('2160p')).toBe(true)
-    expect(isVideoQuality('4K')).toBe(false)
-  })
+  // test('should validate video quality', () => {
+  //   expect(isVideoQuality('240p')).toBe(true)
+  //   expect(isVideoQuality('360p')).toBe(true)
+  //   expect(isVideoQuality('720p')).toBe(true)
+  //   expect(isVideoQuality('1080p')).toBe(true)
+  //   expect(isVideoQuality('1440p')).toBe(true)
+  //   expect(isVideoQuality('2160p')).toBe(true)
+  //   expect(isVideoQuality('4K')).toBe(false)
+  // })
 })
 
 describe('Entity Type Guards', () => {
@@ -329,7 +337,7 @@ describe('Entity Validation Functions', () => {
   })
 
   test('should return validation errors for invalid student data', () => {
-    const invalidStudent = { ...validStudent, name: '', parent_phone: 'invalid' }
+    const invalidStudent = { ...validStudent, name: '', parent_phone_1: 'invalid' }
     const result = validateStudent(invalidStudent)
     expect(result.success).toBe(false)
     if (!result.success) {

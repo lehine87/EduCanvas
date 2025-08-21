@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import type { Database } from '@/types/database.types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     // 테넌트 존재 확인
     const { data: tenantData, error: tenantError } = await supabaseServiceRole
       .from('tenants')
-      .select('id, name, tenant_code')
+      .select('id, name, slug')
       .eq('id', tenant_id)
       .eq('is_active', true)
       .single()
@@ -83,18 +84,18 @@ export async function POST(request: NextRequest) {
     interface ProfileUpdateData {
       name: string
       phone: string
-      role: string
+      role: string | null
       tenant_id: string
-      status: 'active' | 'inactive' | 'suspended' | 'pending_approval'
+      status: Database['public']['Enums']['user_status']
       updated_at: string
     }
     
     const profileData: ProfileUpdateData = {
       name,
       phone,
-      role: position, // position을 role로 매핑
+      role: position as string, // position을 role로 매핑
       tenant_id,
-      status: 'pending_approval', // 승인 대기 상태로 설정
+      status: 'pending' as Database['public']['Enums']['user_status'], // 승인 대기 상태로 설정
       updated_at: new Date().toISOString()
     }
 

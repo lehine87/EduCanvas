@@ -42,8 +42,9 @@ export type TenantUpdate = Database['public']['Tables']['tenants']['Update']
 
 /**
  * 사용자 역할 타입 (v4.1 ENUM 기반)
+ * 데이터베이스 enum과 정확히 일치
  */
-export type UserRole = 'system_admin' | 'admin' | 'instructor' | 'staff' | 'viewer'
+export type UserRole = 'system_admin' | 'tenant_admin' | 'instructor' | 'staff' | 'viewer'
 
 /**
  * 사용자 상태 타입 

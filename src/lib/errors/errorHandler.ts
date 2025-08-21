@@ -10,7 +10,7 @@ export function withErrorHandling<T extends unknown[]>(
   handler: (...args: T) => Promise<NextResponse>
 ) {
   return async (...args: T): Promise<NextResponse> => {
-    const [request] = args as [NextRequest]
+    const [request] = args as unknown as [NextRequest]
     
     try {
       // 핸들러 실행

@@ -64,12 +64,12 @@ export function registerDebugInterfaces(): void {
     hasAllPermissions: hasAllPermissions as any,
     canPerformAction: canPerformAction as any,
     checkPermissionDetails: checkPermissionDetails as any,
-    getUserPermissions: getUserPermissions as any,
-    getUserPermissionStrings: getUserPermissionStrings as any,
+    getUserPermissions: getUserPermissions,
+    getUserPermissionStrings: getUserPermissionStrings,
     invalidateCache: invalidatePermissionCache,
     getCacheStats: getPermissionCacheStats,
-    ROLE_PERMISSIONS: ROLE_PERMISSIONS as any,
-    ROLE_PERMISSION_STRINGS: ROLE_PERMISSION_STRINGS as any
+    ROLE_PERMISSIONS: ROLE_PERMISSIONS,
+    ROLE_PERMISSION_STRINGS: ROLE_PERMISSION_STRINGS
   }
 
   // Resource Access Debug Interface

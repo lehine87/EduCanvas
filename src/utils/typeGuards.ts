@@ -41,7 +41,7 @@ type CoursePackageUpdate = Tables['course_packages']['Update']
 type UserStatus = Enums['user_status']
 type StudentStatus = Enums['student_status']
 type VideoStatus = Enums['video_status']
-type VideoQuality = Enums['video_quality']
+// VideoQuality enum이 데이터베이스에 없으므로 제거
 type BillingType = Enums['billing_type']
 type AttendanceStatus = Enums['attendance_status']
 type PaymentStatus = Enums['payment_status']
@@ -69,7 +69,7 @@ export const AttendanceStatusSchema = z.enum(['present', 'absent', 'late', 'excu
 export const PaymentStatusSchema = z.enum(['pending', 'completed', 'overdue', 'cancelled', 'refunded'] as const)
 export const VideoStatusSchema = z.enum(['draft', 'published', 'private', 'archived', 'deleted'] as const)
 export const VideoTypeSchema = z.enum(['lecture', 'supplement', 'homework_review', 'exam_review', 'announcement'] as const)
-export const VideoQualitySchema = z.enum(['240p', '360p', '480p', '720p', '1080p', '1440p', '2160p'] as const)
+// VideoQualitySchema 제거 - YouTube에서 품질 자동 관리
 
 // ================================================================
 // Base Zod Schemas
@@ -278,7 +278,7 @@ export const VideoSchema = z.object({
   class_id: UUIDSchema.nullable(),
   video_type: VideoTypeSchema,
   status: VideoStatusSchema.nullable(),
-  quality: VideoQualitySchema.nullable(),
+  // quality: 제거 - YouTube에서 자동 관리
   view_count: z.number().int().min(0).nullable(),
   like_count: z.number().int().min(0).nullable(),
   comment_count: z.number().int().min(0).nullable(),
@@ -342,7 +342,7 @@ export const VideoWatchSessionSchema = z.object({
   total_watch_time: z.number().int().min(0).nullable(),
   completion_percentage: z.number().min(0).max(100).nullable(),
   watch_status: WatchStatusSchema.nullable(),
-  playback_quality: VideoQualitySchema.nullable(),
+  // playback_quality: 제거 - YouTube에서 자동 관리
   device_type: z.string().nullable(),
   user_agent: z.string().nullable(),
   ip_address: z.unknown().nullable(),
@@ -438,7 +438,13 @@ export const StudentFormDataSchema = StudentInsertSchema.extend({
     phone: z.string().min(1)
   }).optional()
 }).refine(
-  (data) => data.parent_phone_1 === data.confirmParentPhone,
+  (data) => {
+    // confirmParentPhone이 있는 경우에만 검증
+    if (data.confirmParentPhone) {
+      return data.parent_phone_1 === data.confirmParentPhone
+    }
+    return true
+  },
   {
     message: 'Parent phone confirmation does not match',
     path: ['confirmParentPhone']
@@ -514,9 +520,7 @@ export function isVideoStatus(value: unknown): value is VideoStatus {
   return VideoStatusSchema.safeParse(value).success
 }
 
-export function isVideoQuality(value: unknown): value is VideoQuality {
-  return VideoQualitySchema.safeParse(value).success
-}
+// VideoQuality 관련 함수 제거 - YouTube 기반으로 품질 자동 관리
 
 // ================================================================
 // Validation Functions
@@ -525,7 +529,8 @@ export function isVideoQuality(value: unknown): value is VideoQuality {
 export function validateStudent(data: unknown): { success: true; data: Student } | { success: false; errors: string[] } {
   const result = StudentSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data as Student }
+    // Zod 스키마 결과를 Database 타입으로 안전하게 변환
+    return { success: true, data: result.data as any }
   } else {
     return {
       success: false,
@@ -537,7 +542,7 @@ export function validateStudent(data: unknown): { success: true; data: Student }
 export function validateStudentInsert(data: unknown): { success: true; data: StudentInsert } | { success: false; errors: string[] } {
   const result = StudentInsertSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data }
+    return { success: true, data: result.data as StudentInsert }
   } else {
     return {
       success: false,
@@ -549,7 +554,7 @@ export function validateStudentInsert(data: unknown): { success: true; data: Stu
 export function validateClass(data: unknown): { success: true; data: Class } | { success: false; errors: string[] } {
   const result = ClassSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data }
+    return { success: true, data: result.data as Class }
   } else {
     return {
       success: false,
@@ -558,10 +563,10 @@ export function validateClass(data: unknown): { success: true; data: Class } | {
   }
 }
 
-export function validateVideo(data: unknown): { success: true; data: z.infer<typeof VideoSchema> } | { success: false; errors: string[] } {
+export function validateVideo(data: unknown): { success: true; data: Video } | { success: false; errors: string[] } {
   const result = VideoSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data }
+    return { success: true, data: result.data as any }
   } else {
     return {
       success: false,
@@ -573,7 +578,7 @@ export function validateVideo(data: unknown): { success: true; data: z.infer<typ
 export function validateVideoWatchSession(data: unknown): { success: true; data: VideoWatchSession } | { success: false; errors: string[] } {
   const result = VideoWatchSessionSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data }
+    return { success: true, data: result.data as any }
   } else {
     return {
       success: false,

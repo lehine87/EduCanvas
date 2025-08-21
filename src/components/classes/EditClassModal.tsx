@@ -2,6 +2,7 @@
 
 import React, { memo, useCallback, useEffect, useState } from 'react'
 import { Modal } from '@/components/ui'
+import { DialogTitle } from '@/components/ui/dialog'
 import { ClassForm, ClassFormData, SelectOption } from './ClassForm'
 import { useClassesStore, ClassWithRelations } from '@/store/classesStore'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -91,7 +92,7 @@ export const EditClassModal = memo<EditClassModalProps>(({
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.data.instructors) {
-          const instructorOptions = result.data.instructors.map((instructor: any) => ({
+          const instructorOptions = result.data.instructors.map((instructor: { id: string; full_name: string; email: string; is_active: boolean }) => ({
             value: instructor.id,
             label: `${instructor.full_name} (${instructor.email})`,
             disabled: !instructor.is_active
@@ -118,7 +119,7 @@ export const EditClassModal = memo<EditClassModalProps>(({
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.data.classrooms) {
-          const classroomOptions = result.data.classrooms.map((classroom: any) => ({
+          const classroomOptions = result.data.classrooms.map((classroom: { id: string; name: string; building?: string; is_active: boolean }) => ({
             value: classroom.id,
             label: `${classroom.name} (${classroom.building || '건물 미지정'})`,
             disabled: !classroom.is_active
@@ -246,9 +247,9 @@ export const EditClassModal = memo<EditClassModalProps>(({
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
               클래스 수정
-            </h3>
+            </DialogTitle>
             <p className="text-sm text-gray-500">
               {currentClassData?.name ? (
                 <>"{currentClassData.name}" 클래스 정보를 수정합니다</>
@@ -305,7 +306,7 @@ export const EditClassModal = memo<EditClassModalProps>(({
         {currentClassData && !loadingClassData && (
           <ClassForm
             mode="edit"
-            initialData={currentClassData}
+            initialData={currentClassData as any}
             onSubmit={handleSubmit}
             onCancel={handleClose}
             loading={loading}

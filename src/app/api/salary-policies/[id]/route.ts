@@ -13,14 +13,16 @@ import {
 const updateSalaryPolicySchema = z.object({
   tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
   name: z.string().min(1, '정책 이름은 필수입니다').optional(),
-  policy_type: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based', 'hybrid', 'guaranteed_minimum']).optional(),
+  policy_type: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based']).optional(),
   instructor_id: z.string().uuid().optional(),
-  base_amount: z.number().min(0).optional(),
-  commission_rate: z.number().min(0).max(100).optional(),
   effective_from: z.string().optional(),
   effective_until: z.string().optional(),
-  conditions: z.record(z.any()).optional(),
-  tier_config: z.record(z.any()).optional(),
+  base_amount: z.number().min(0).optional(),
+  commission_rate: z.number().min(0).optional(),
+  conditions: z.any().optional(),
+  tier_config: z.any().optional(),
+  deduction_policy: z.record(z.string(), z.any()).optional(),
+  description: z.string().optional(),
   is_active: z.boolean().optional()
 })
 
@@ -194,13 +196,10 @@ export async function PUT(
         }
       }
 
-      // 정책 타입별 필수 필드 검증 (타입이 변경되는 경우)
+      // 급여 타입별 필수 필드 검증 (타입이 변경되는 경우)
       const finalPolicyType = updateData.policy_type || existingPolicy.policy_type
       switch (finalPolicyType) {
         case 'fixed_monthly':
-        case 'fixed_hourly':
-        case 'student_based':
-        case 'guaranteed_minimum':
           if (updateData.base_amount === undefined) {
             // 기존 데이터 확인 필요
             const { data: currentPolicy } = await supabase
@@ -210,12 +209,26 @@ export async function PUT(
               .single()
             
             if (!currentPolicy?.base_amount && updateData.base_amount === undefined) {
-              throw new Error(`${finalPolicyType} 타입에는 기본 금액이 필요합니다.`)
+              throw new Error('월급제에는 월급액이 필요합니다.')
+            }
+          }
+          break
+        case 'fixed_hourly':
+          // base_amount를 시급으로 사용
+          if (updateData.base_amount === undefined) {
+            const { data: currentPolicy } = await supabase
+              .from('salary_policies')
+              .select('base_amount')
+              .eq('id', params.id)
+              .single()
+            
+            if (!currentPolicy?.base_amount) {
+              throw new Error('시급제에는 기본 금액이 필요합니다.')
             }
           }
           break
         case 'commission':
-        case 'tiered_commission':
+          // commission_rate를 수수료 비율로 사용
           if (updateData.commission_rate === undefined) {
             const { data: currentPolicy } = await supabase
               .from('salary_policies')
@@ -224,12 +237,13 @@ export async function PUT(
               .single()
             
             if (!currentPolicy?.commission_rate) {
-              throw new Error('수수료 타입에는 수수료율이 필요합니다.')
+              throw new Error('수수료제에는 수수료율이 필요합니다.')
             }
           }
           break
-        case 'hybrid':
-          // 하이브리드는 기본 금액 또는 수수료율 중 하나만 있으면 됨
+        case 'tiered_commission':
+        case 'student_based':
+          // 기본 검증은 스키마에서 처리
           break
       }
 

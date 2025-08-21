@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Modal, Button, Input } from '@/components/ui'
+import { Modal, Button, Input, Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui'
+import { Loader2 } from 'lucide-react'
 import type { Tenant } from '@/types'
 
 const tenantSchema = z.object({
@@ -31,13 +32,17 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
   const [step, setStep] = useState<'tenant' | 'success'>('tenant')
   const [createdData, setCreatedData] = useState<{tenant: Tenant, admin: {email: string, name: string, tempPassword: string}} | null>(null)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset
-  } = useForm<TenantFormData>({
-    resolver: zodResolver(tenantSchema)
+  const form = useForm<TenantFormData>({
+    resolver: zodResolver(tenantSchema),
+    defaultValues: {
+      name: '',
+      contact_email: '',
+      contact_phone: '',
+      address: '',
+      business_registration: '',
+      admin_name: '',
+      admin_email: ''
+    }
   })
 
 
@@ -90,7 +95,7 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
     setStep('tenant')
     setCreatedData(null)
     setError(null)
-    reset()
+    form.reset()
     onClose()
   }
 
@@ -108,7 +113,8 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
       size="lg"
     >
       {step === 'tenant' ? (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
               {error}
@@ -119,50 +125,100 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">학원 정보</h3>
             
-            <Input
-              label="학원명"
-              {...register('name')}
-              error={errors.name?.message}
-              placeholder="ABC 영어학원"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>학원명</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="ABC 영어학원"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <Input
-              label="대표 이메일"
-              type="email"
-              {...register('contact_email')}
-              error={errors.contact_email?.message}
-              placeholder="contact@abc-academy.com"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="contact_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>대표 이메일</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="contact@abc-academy.com"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <Input
-              label="대표 전화번호"
-              type="tel"
-              {...register('contact_phone')}
-              error={errors.contact_phone?.message}
-              placeholder="02-1234-5678"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="contact_phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>대표 전화번호</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="tel"
+                      placeholder="02-1234-5678"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <Input
-              label="주소"
-              {...register('address')}
-              error={errors.address?.message}
-              placeholder="서울시 강남구 테헤란로 123"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>주소</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="서울시 강남구 테헤란로 123"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <Input
-              label="사업자등록번호 (선택사항)"
-              {...register('business_registration')}
-              error={errors.business_registration?.message}
-              placeholder="123-45-67890"
-              disabled={isLoading}
+            <FormField
+              control={form.control}
+              name="business_registration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>사업자등록번호 (선택사항)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="123-45-67890"
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
@@ -172,23 +228,43 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">관리자 계정</h3>
             
-            <Input
-              label="관리자 이름"
-              {...register('admin_name')}
-              error={errors.admin_name?.message}
-              placeholder="홍길동 원장"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="admin_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>관리자 이름</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="홍길동 원장"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <Input
-              label="관리자 이메일"
-              type="email"
-              {...register('admin_email')}
-              error={errors.admin_email?.message}
-              placeholder="admin@abc-academy.com"
-              disabled={isLoading}
-              required
+            <FormField
+              control={form.control}
+              name="admin_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>관리자 이메일</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="admin@abc-academy.com"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-700">
@@ -207,13 +283,14 @@ export function TenantCreateModal({ isOpen, onClose, onTenantCreated }: TenantCr
             </Button>
             <Button
               type="submit"
-              loading={isLoading}
               disabled={isLoading}
             >
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               학원 생성
             </Button>
           </div>
-        </form>
+          </form>
+        </Form>
       ) : (
         <div className="space-y-6">
           <div className="text-center">

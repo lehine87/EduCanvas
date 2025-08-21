@@ -360,29 +360,29 @@ export class SmartStudentSearch {
   }
 
   private calculateLevenshteinSimilarity(a: string, b: string): number {
-    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null))
+    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(0))
 
     for (let i = 0; i <= a.length; i += 1) {
-      matrix[0][i] = i
+      matrix[0]![i] = i
     }
 
     for (let j = 0; j <= b.length; j += 1) {
-      matrix[j][0] = j
+      matrix[j]![0] = j
     }
 
     for (let j = 1; j <= b.length; j += 1) {
       for (let i = 1; i <= a.length; i += 1) {
         const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1
-        matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1, // deletion
-          matrix[j - 1][i] + 1, // insertion
-          matrix[j - 1][i - 1] + substitutionCost // substitution
+        matrix[j]![i] = Math.min(
+          matrix[j]![i - 1]! + 1, // deletion
+          matrix[j - 1]![i]! + 1, // insertion
+          matrix[j - 1]![i - 1]! + substitutionCost // substitution
         )
       }
     }
 
     const maxLength = Math.max(a.length, b.length)
-    return maxLength > 0 ? 1 - matrix[b.length][a.length] / maxLength : 1
+    return maxLength > 0 ? 1 - matrix[b.length]![a.length]! / maxLength : 1
   }
 
   private getMatchField(student: Student, query: string): string {
@@ -399,7 +399,7 @@ export class SmartStudentSearch {
       student.student_number,
       student.parent_phone_1,
       student.parent_phone_2,
-      student.school_name
+      student.email
     ].filter(Boolean).map(field => field!.toLowerCase())
 
     return searchFields.some(field => field.includes(query.toLowerCase()))

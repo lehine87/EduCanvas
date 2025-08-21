@@ -2,10 +2,20 @@
 
 import React, { memo, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Table, Button, Badge } from '@/components/ui'
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow,
+  Button, 
+  Badge 
+} from '@/components/ui'
 import { ClassWithRelations, useClassesStore } from '@/store/classesStore'
 import { PencilIcon, TrashIcon, EyeIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { Loader2 } from 'lucide-react'
 
 /**
  * ClassTable Props
@@ -33,7 +43,7 @@ export interface ClassTableProps {
  * 클래스 상태별 배지 컴포넌트
  */
 const ClassStatusBadge = memo<{ isActive?: boolean }>(({ isActive }) => (
-  <Badge variant={isActive ? 'success' : 'error'} size="sm">
+  <Badge variant={isActive ? 'default' : 'destructive'} className={`text-xs px-2 py-1 ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
     {isActive ? (
       <>
         <CheckCircleIcon className="w-3 h-3 mr-1" />
@@ -231,7 +241,7 @@ export const ClassTable = memo<ClassTableProps>(({
         header: '강사',
         sortable: false,
         width: 150,
-        render: (value: any, row: ClassWithRelations) => (
+        render: (value: unknown, row: ClassWithRelations) => (
           <div className="text-sm">
             {row.instructor ? (
               <div>
@@ -257,7 +267,7 @@ export const ClassTable = memo<ClassTableProps>(({
         render: (value: number, row: ClassWithRelations) => (
           <ClassCapacity 
             current={value || 0} 
-            max={row.max_students} 
+            max={row.max_students ?? undefined} 
           />
         )
       },
@@ -276,7 +286,7 @@ export const ClassTable = memo<ClassTableProps>(({
         header: '교재',
         sortable: false,
         width: 150,
-        render: (value: any, row: ClassWithRelations) => (
+        render: (value: unknown, row: ClassWithRelations) => (
           <div className="text-sm">
             {(row as any).main_textbook || (row as any).supplementary_textbook ? (
               <div className="space-y-1">
@@ -312,12 +322,12 @@ export const ClassTable = memo<ClassTableProps>(({
 
     if (showActions) {
       baseColumns.push({
-        key: 'actions' as const,
+        key: 'actions' as any,
         header: '작업',
         sortable: false,
         width: 120,
         align: 'center' as const,
-        render: (value: any, row: ClassWithRelations) => (
+        render: (value: unknown, row: ClassWithRelations) => (
           <ClassActions
             classData={row}
             onView={handleViewClass}
@@ -406,25 +416,83 @@ export const ClassTable = memo<ClassTableProps>(({
     )
   }, [sortedData, selectedClasses])
 
+  if (loading) {
+    return (
+      <div className={cn('bg-white rounded-lg shadow-sm border', className)}>
+        <div className="flex items-center justify-center p-8 space-x-3">
+          <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+          <span className="text-gray-500">클래스 목록을 불러오는 중...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (sortedData.length === 0) {
+    return (
+      <div className={cn('bg-white rounded-lg shadow-sm border', className)}>
+        <div className="flex items-center justify-center p-8">
+          <span className="text-gray-500">{emptyMessage}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('bg-white rounded-lg shadow-sm border', className)}>
-      <Table
-        data={sortedData}
-        columns={columns}
-        loading={loading}
-        emptyMessage={emptyMessage}
-        virtualized={virtualized}
-        height={virtualized ? height : undefined}
-        rowHeight={virtualized ? rowHeight : undefined}
-        selectable={selectable}
-        selectedRows={selectedRowIndices}
-        onSelectionChange={handleSelectionChange}
-        onRowClick={handleRowClick}
-        sortBy={sort.sortBy}
-        sortOrder={sort.sortOrder}
-        onSort={handleSort}
-        className="border-0"
-      />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead 
+                key={column.key}
+                className={cn(
+                  column.sortable && 'cursor-pointer hover:bg-gray-50',
+                  column.align === 'center' && 'text-center',
+                  column.align === 'right' && 'text-right'
+                )}
+                onClick={column.sortable ? () => handleSort(column.key) : undefined}
+                style={{ width: column.width ? `${column.width}px` : undefined }}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>{column.header}</span>
+                  {column.sortable && sort.sortBy === column.key && (
+                    <span className="text-xs">
+                      {sort.sortOrder === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedData.map((row, index) => (
+            <TableRow 
+              key={row.id}
+              className={cn(
+                'cursor-pointer hover:bg-gray-50',
+                selectedClasses.includes(row.id) && 'bg-blue-50'
+              )}
+              onClick={() => handleRowClick(row, index)}
+            >
+              {columns.map((column) => (
+                <TableCell 
+                  key={column.key}
+                  className={cn(
+                    column.align === 'center' && 'text-center',
+                    column.align === 'right' && 'text-right'
+                  )}
+                >
+                  {column.render ? 
+                    column.render(row[column.key as keyof ClassWithRelations] as any, row) : 
+                    String(row[column.key as keyof ClassWithRelations] || '-')
+                  }
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 })

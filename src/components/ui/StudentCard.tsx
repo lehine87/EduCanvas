@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Badge } from './Badge'
+import { Badge } from './badge'
 import { STUDENT_STATUS_COLORS, STUDENT_STATUS_TEXT, getStudentStatusStyles } from '@/constants/studentConstants'
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor'
 import { useARIAAttributes } from '@/hooks/useAccessibility'
@@ -337,9 +337,8 @@ export const StudentCard = memo<StudentCardProps>(({
         </div>
         <div className="mt-1">
           <Badge 
-            variant="outline" 
-            size="xs" 
-            className={computedValues.statusStyles.colors}
+            variant="outline"
+            className={cn(computedValues.statusStyles.colors, "text-xs")}
           >
             {computedValues.statusStyles.text}
           </Badge>
@@ -420,12 +419,12 @@ export const StudentCard = memo<StudentCardProps>(({
       {student.tags && student.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
           {student.tags.slice(0, 3).map((tag, index) => (
-            <Badge key={index} variant="secondary" size="xs">
+            <Badge key={index} variant="secondary" className="text-xs">
               {tag}
             </Badge>
           ))}
           {student.tags.length > 3 && (
-            <Badge variant="ghost" size="xs">
+            <Badge variant="outline" className="text-xs">
               +{student.tags.length - 3}
             </Badge>
           )}

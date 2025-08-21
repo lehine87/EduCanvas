@@ -53,7 +53,10 @@ export interface ClassesState {
   // UI 상태
   loading: boolean
   error: string | null
-  view: 'table' | 'cards' | 'classflow'
+  view: 'grouped'
+  groupBy: 'instructor' | 'subject' | 'grade'
+  subGroupBy: 'none' | 'instructor' | 'subject' | 'grade'
+  groupViewMode: 'list' | 'cards'
   
   // 필터링 및 정렬
   filters: ClassFilters
@@ -65,12 +68,21 @@ export interface ClassesState {
   // 선택된 클래스들 (일괄 작업용)
   selectedClasses: string[]
   
-  // 모달 상태
+  // 선택 모드 (체크박스 표시 vs 상세보기 클릭)
+  selectionMode: boolean
+  
+  // 모달 및 패널 상태
   modals: {
     create: boolean
     edit: boolean
     delete: boolean
     bulkActions: boolean
+  }
+  
+  // Sheet 상태 (상세보기)
+  detailSheet: {
+    isOpen: boolean
+    classId: string | null
   }
 }
 
@@ -79,7 +91,7 @@ export interface ClassesActions {
   // 데이터 관리
   fetchClasses: (tenantId: string, options?: Partial<ClassFilters & ClassSortOptions>) => Promise<void>
   fetchClassById: (classId: string, tenantId: string, includeStudents?: boolean) => Promise<void>
-  createClass: (classData: any, tenantId: string) => Promise<ClassWithRelations | null>
+  createClass: (classData: any, tenantId: string, accessToken?: string) => Promise<ClassWithRelations | null>
   updateClass: (classId: string, classData: any, tenantId: string) => Promise<ClassWithRelations | null>
   deleteClass: (classId: string, tenantId: string, forceDelete?: boolean) => Promise<boolean>
   
@@ -88,14 +100,25 @@ export interface ClassesActions {
   
   // UI 상태 관리
   setView: (view: ClassesState['view']) => void
+  setGroupBy: (groupBy: ClassesState['groupBy']) => void
+  setSubGroupBy: (subGroupBy: ClassesState['subGroupBy']) => void
+  setGroupViewMode: (mode: ClassesState['groupViewMode']) => void
   setFilters: (filters: Partial<ClassFilters>) => void
   setSort: (sort: Partial<ClassSortOptions>) => void
   setSelectedClass: (classData: ClassWithRelations | null) => void
+  
+  // Sheet 관리
+  openDetailSheet: (classId: string) => void
+  closeDetailSheet: () => void
   
   // 선택 관리
   toggleClassSelection: (classId: string) => void
   selectAllClasses: () => void
   clearSelection: () => void
+  
+  // 선택 모드 관리
+  toggleSelectionMode: () => void
+  setSelectionMode: (enabled: boolean) => void
   
   // 모달 관리
   openModal: (modal: keyof ClassesState['modals']) => void
@@ -119,7 +142,10 @@ const initialState: ClassesState = {
   selectedClass: null,
   loading: false,
   error: null,
-  view: 'table',
+  view: 'grouped',
+  groupBy: 'instructor',
+  subGroupBy: 'none',
+  groupViewMode: 'cards',
   filters: {
     status: 'all'
   },
@@ -129,11 +155,16 @@ const initialState: ClassesState = {
   },
   stats: null,
   selectedClasses: [],
+  selectionMode: false,
   modals: {
     create: false,
     edit: false,
     delete: false,
     bulkActions: false
+  },
+  detailSheet: {
+    isOpen: false,
+    classId: null
   }
 }
 
@@ -211,21 +242,39 @@ const fetchClassByIdAPI = async (
   return result.data.class
 }
 
-const createClassAPI = async (classData: any, tenantId: string): Promise<ClassWithRelations> => {
+const createClassAPI = async (classData: any, tenantId: string, accessToken: string): Promise<ClassWithRelations> => {
+  console.log('🚀 클래스 생성 API 호출:', { classData, tenantId, hasToken: !!accessToken })
+  
   const response = await fetch('/api/classes', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      'Authorization': `Bearer ${accessToken}`
     } as HeadersInit,
     body: JSON.stringify({ ...classData, tenantId })
   })
 
+  console.log('📡 클래스 생성 응답 상태:', response.status, response.statusText)
+
   if (!response.ok) {
-    throw new Error(`클래스 생성 실패: ${response.statusText}`)
+    const errorData = await response.json()
+    console.error('❌ 클래스 생성 API 오류:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorData
+    })
+    
+    // Zod 검증 오류인 경우 상세 정보 출력
+    if (errorData.details) {
+      console.error('🔍 Zod 검증 오류 상세:', errorData.details)
+    }
+    
+    throw new Error(`클래스 생성 실패: ${response.status} ${response.statusText} - ${errorData.error || '알 수 없는 오류'}`)
   }
 
   const result = await response.json()
+  console.log('✅ 클래스 생성 성공 응답:', result)
+  
   if (!result.success) {
     throw new Error(result.error || '클래스 생성 실패')
   }
@@ -362,11 +411,22 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
       }
     },
 
-    createClass: async (classData: any, tenantId: string) => {
+    createClass: async (classData: any, tenantId: string, accessToken?: string) => {
       set({ loading: true, error: null })
       
       try {
-        const newClass = await createClassAPI(classData, tenantId)
+        // accessToken이 제공되지 않으면 localStorage에서 가져오기 (fallback)
+        const token = accessToken || localStorage.getItem('access_token') || ''
+        
+        if (!token) {
+          throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.')
+        }
+        
+        console.log('🎯 createClass 시작:', { classData, tenantId, hasToken: !!token })
+        
+        const newClass = await createClassAPI(classData, tenantId, token)
+        
+        console.log('🎉 클래스 생성 성공:', newClass)
         
         set(produce((draft) => {
           draft.classes.unshift(newClass)
@@ -377,11 +437,16 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
         
         return newClass
       } catch (error) {
+        console.error('💥 createClass 에러:', error)
+        const errorMessage = error instanceof Error ? error.message : '클래스 생성 실패'
+        
         set({ 
-          error: error instanceof Error ? error.message : '클래스 생성 실패',
+          error: errorMessage,
           loading: false 
         })
-        return null
+        
+        // 에러를 다시 throw해서 UI 컴포넌트에서 처리할 수 있도록 함
+        throw error
       }
     },
 
@@ -480,6 +545,12 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
 
     // UI 상태 관리
     setView: (view) => set({ view }),
+    
+    setGroupBy: (groupBy) => set({ groupBy }),
+    
+    setSubGroupBy: (subGroupBy) => set({ subGroupBy }),
+    
+    setGroupViewMode: (mode) => set({ groupViewMode: mode }),
 
     setFilters: (filters) => set(produce((draft) => {
       draft.filters = { ...draft.filters, ...filters }
@@ -490,6 +561,21 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
     })),
 
     setSelectedClass: (classData) => set({ selectedClass: classData }),
+    
+    // Sheet 관리
+    openDetailSheet: (classId) => set(produce((draft) => {
+      draft.detailSheet.isOpen = true
+      draft.detailSheet.classId = classId
+      const selectedClass = draft.classes.find((cls: ClassWithRelations) => cls.id === classId)
+      if (selectedClass) {
+        draft.selectedClass = selectedClass
+      }
+    })),
+    
+    closeDetailSheet: () => set(produce((draft) => {
+      draft.detailSheet.isOpen = false
+      draft.detailSheet.classId = null
+    })),
 
     // 선택 관리
     toggleClassSelection: (classId) => set(produce((draft) => {
@@ -507,6 +593,23 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
 
     clearSelection: () => set(produce((draft) => {
       draft.selectedClasses = []
+    })),
+
+    // 선택 모드 관리
+    toggleSelectionMode: () => set(produce((draft) => {
+      draft.selectionMode = !draft.selectionMode
+      // 선택 모드 비활성화 시 선택된 클래스들 초기화
+      if (!draft.selectionMode) {
+        draft.selectedClasses = []
+      }
+    })),
+
+    setSelectionMode: (enabled) => set(produce((draft) => {
+      draft.selectionMode = enabled
+      // 선택 모드 비활성화 시 선택된 클래스들 초기화
+      if (!enabled) {
+        draft.selectedClasses = []
+      }
     })),
 
     // 모달 관리

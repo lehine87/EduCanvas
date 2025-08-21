@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Table, Button, Badge, Loading, Modal } from '@/components/ui'
+import { Button, Badge, Loading, Modal, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile } from '@/types/auth.types'
 
@@ -163,94 +163,6 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
     )
   }
 
-  const columns = [
-    {
-      key: 'user_info',
-      header: '신청자 정보',
-      render: (value: unknown, user: UserProfile) => {
-        if (!user) return <div>-</div>;
-        return (
-          <div>
-            <div className="font-medium text-gray-900">{user.name}</div>
-            <div className="text-sm text-gray-500">{user.email}</div>
-            {user.phone && (
-              <div className="text-sm text-gray-500">{user.phone}</div>
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      key: 'role',
-      header: '희망 역할',
-      render: (value: unknown, user: UserProfile) => {
-        if (!user) return <div>-</div>;
-        return getRoleBadge(user.role || 'viewer');
-      }
-    },
-    {
-      key: 'created_at',
-      header: '신청 일시',
-      render: (value: unknown, user: UserProfile) => {
-        if (!user) return <div>-</div>;
-        return (
-          <div className="text-sm text-gray-500">
-            {user.created_at ? formatDate(user.created_at) : '없음'}
-          </div>
-        );
-      }
-    },
-    {
-      key: 'details',
-      header: '상세 정보',
-      render: (value: unknown, user: UserProfile) => {
-        if (!user || !user.id) return <div>-</div>;
-        return (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setSelectedUser(user)
-              setShowDetailModal(true)
-            }}
-          >
-            자세히 보기
-          </Button>
-        );
-      }
-    },
-    {
-      key: 'actions',
-      header: '승인 처리',
-      render: (value: unknown, user: UserProfile) => {
-        if (!user || !user.id) return <div>-</div>;
-        return (
-          <div className="flex space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 border-red-300 hover:bg-red-50"
-              onClick={() => handleApproveUser(user.id, false)}
-              disabled={actionLoading === user.id}
-              loading={actionLoading === user.id}
-            >
-              거부
-            </Button>
-            
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => handleApproveUser(user.id, true)}
-              disabled={actionLoading === user.id}
-              loading={actionLoading === user.id}
-            >
-              승인
-            </Button>
-          </div>
-        );
-      }
-    }
-  ]
 
   return (
     <>
@@ -268,11 +180,90 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
           </Button>
         </div>
 
-        <Table
-          columns={columns}
-          data={pendingUsers}
-          keyField="id"
-        />
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>신청자 정보</TableHead>
+              <TableHead>희망 역할</TableHead>
+              <TableHead>신청 일시</TableHead>
+              <TableHead>상세 정보</TableHead>
+              <TableHead>승인 처리</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pendingUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  {user ? (
+                    <div>
+                      <div className="font-medium text-gray-900">{user.name}</div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                      {user.phone && (
+                        <div className="text-sm text-gray-500">{user.phone}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {user ? getRoleBadge(user.role || 'viewer') : <div>-</div>}
+                </TableCell>
+                <TableCell>
+                  {user ? (
+                    <div className="text-sm text-gray-500">
+                      {user.created_at ? formatDate(user.created_at) : '없음'}
+                    </div>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {user && user.id ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user)
+                        setShowDetailModal(true)
+                      }}
+                    >
+                      자세히 보기
+                    </Button>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {user && user.id ? (
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        onClick={() => handleApproveUser(user.id, false)}
+                        disabled={actionLoading === user.id}
+                      >
+                        거부
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => handleApproveUser(user.id, true)}
+                        disabled={actionLoading === user.id}
+                      >
+                        승인
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {/* 상세 정보 모달 */}

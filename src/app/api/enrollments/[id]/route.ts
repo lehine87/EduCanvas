@@ -33,7 +33,7 @@ const updateEnrollmentSchema = z.object({
   average_grade: z.number().min(0).max(100).optional(),
   video_watch_count: z.number().min(0).optional(),
   notes: z.string().optional(),
-  custom_fields: z.record(z.any()).optional(),
+  custom_fields: z.any().optional(), // Json 타입과 호환성을 위해
   status: z.enum(['active', 'completed', 'suspended', 'cancelled']).optional()
 })
 
@@ -128,31 +128,39 @@ export async function GET(
         .eq('tenant_id', tenantId)
         .single()
 
-      if (error) {
-        if (error.code === 'PGRST116') {
+      if (error || !enrollment) {
+        if (error?.code === 'PGRST116') {
           throw new Error('수강 정보를 찾을 수 없습니다.')
         }
         console.error('❌ 수강 정보 조회 실패:', error)
-        throw new Error(`수강 정보 조회 실패: ${error.message}`)
+        throw new Error(`수강 정보 조회 실패: ${error?.message || '데이터를 찾을 수 없습니다'}`)
       }
 
-      // 진행률 및 통계 계산
-      const progressRate = enrollment.hours_total && enrollment.hours_used 
-        ? Math.round((enrollment.hours_used / enrollment.hours_total) * 100)
+      // 타입 안전성 보장
+      if (!enrollment) {
+        throw new Error('수강 정보 데이터를 찾을 수 없습니다.')
+      }
+
+      // 진행률 및 통계 계산 - 실제 필드명 사용 및 타입 안전성 보장
+      const progressRate = ('original_hours' in enrollment && 'actual_hours' in enrollment && 
+                           typeof enrollment.original_hours === 'number' && typeof enrollment.actual_hours === 'number' &&
+                           enrollment.original_hours > 0 && enrollment.actual_hours >= 0) 
+        ? Math.round((enrollment.actual_hours / enrollment.original_hours) * 100)
         : 0
 
-      const sessionProgressRate = enrollment.sessions_total && enrollment.sessions_used
-        ? Math.round((enrollment.sessions_used / enrollment.sessions_total) * 100)
+      const sessionProgressRate = ('original_sessions' in enrollment && 'sessions_remaining' in enrollment && 
+                                   typeof enrollment.original_sessions === 'number' && typeof enrollment.sessions_remaining === 'number' &&
+                                   enrollment.original_sessions > 0 && enrollment.sessions_remaining >= 0)
+        ? Math.round(((enrollment.original_sessions - enrollment.sessions_remaining) / enrollment.original_sessions) * 100)
         : 0
 
-      const result = {
-        ...enrollment,
+      const result = Object.assign({}, enrollment, {
         progress_rate: progressRate,
         session_progress_rate: sessionProgressRate,
-        payment_count: includePayments && enrollment.payments ? enrollment.payments.length : 0
-      }
+        payment_count: includePayments && 'payments' in enrollment && Array.isArray(enrollment.payments) ? enrollment.payments.length : 0
+      })
 
-      logApiSuccess('get-enrollment', { enrollmentId: enrollment.id })
+      logApiSuccess('get-enrollment', { enrollmentId: (enrollment as any).id })
 
       return createSuccessResponse({ enrollment: result })
     },
@@ -212,7 +220,7 @@ export async function PUT(
       if (updateData.class_id) {
         const { data: classData } = await supabase
           .from('classes')
-          .select('id, name, tenant_id, status')
+          .select('id, name, tenant_id, is_active')
           .eq('id', updateData.class_id)
           .eq('tenant_id', updateData.tenantId)
           .single()
@@ -221,7 +229,7 @@ export async function PUT(
           throw new Error('유효하지 않은 클래스입니다.')
         }
 
-        if (classData.status !== 'active') {
+        if (!classData.is_active) {
           throw new Error('비활성 상태의 클래스로는 변경할 수 없습니다.')
         }
       }

@@ -62,31 +62,41 @@ export async function GET(request: NextRequest) {
         throw new Error('해당 테넌트의 과목 정보에 접근할 권한이 없습니다.')
       }
 
-      // 과목 목록 조회
-      let query = supabase
-        .from('tenant_subjects')
-        .select('*')
+      // classes 테이블에서 과목 목록 조회 (distinct)
+      let query = (supabase as any)
+        .from('classes')
+        .select('subject')
         .eq('tenant_id', params.tenantId)
+        .not('subject', 'is', null)
 
-      // 비활성 과목 제외 (기본값)
+      // 활성 클래스만 조회 (기본값)
       if (!params.includeInactive) {
         query = query.eq('is_active', true)
       }
 
-      const { data: subjects, error } = await query.order('display_order', { ascending: true })
+      const { data: classSubjects, error } = await query
 
       if (error) {
         console.error('❌ 과목 목록 조회 실패:', error)
         throw new Error(`과목 목록 조회 실패: ${error.message}`)
       }
 
+      // 중복 제거된 과목 목록 생성
+      const uniqueSubjects = [...new Set(classSubjects?.map(c => c.subject).filter(Boolean))] || []
+      const subjects = uniqueSubjects.map((name, index) => ({
+        id: `${params.tenantId}-${name}`,
+        name,
+        display_order: index,
+        is_active: true
+      }))
+
       logApiSuccess('get-tenant-subjects', { 
-        count: subjects?.length || 0,
+        count: subjects.length,
         tenantId: params.tenantId
       })
 
       return createSuccessResponse({
-        subjects: subjects || []
+        subjects: subjects
       })
     },
     {
@@ -123,7 +133,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 과목명 중복 확인
-      const { data: existingSubject } = await supabase
+      const { data: existingSubject } = await (supabase as any)
         .from('tenant_subjects')
         .select('id')
         .eq('tenant_id', subjectData.tenantId)
@@ -136,7 +146,7 @@ export async function POST(request: NextRequest) {
 
       // 과목 코드 중복 확인 (코드가 제공된 경우)
       if (subjectData.code) {
-        const { data: existingCode } = await supabase
+        const { data: existingCode } = await (supabase as any)
           .from('tenant_subjects')
           .select('id')
           .eq('tenant_id', subjectData.tenantId)
@@ -150,7 +160,7 @@ export async function POST(request: NextRequest) {
 
       // 과목 생성
       const { tenantId, displayOrder, isActive, ...restData } = subjectData
-      const { data: newSubject, error } = await supabase
+      const { data: newSubject, error } = await (supabase as any)
         .from('tenant_subjects')
         .insert({
           ...restData,

@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         id: authData.user!.id,
         email: validatedData.admin_email,
         name: validatedData.admin_name,
-        role: 'admin',
+        role: 'tenant_admin',
         status: 'active',
         tenant_id: tenant.id
       })

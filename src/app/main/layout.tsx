@@ -16,6 +16,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex h-screen bg-gray-50">
+      
       {/* 사이드바 */}
       <MainSidebar />
       

@@ -85,7 +85,6 @@ export async function GET(request: NextRequest) {
       const inactiveStudents = students?.filter(s => s.status === 'inactive').length || 0
       const graduatedStudents = students?.filter(s => s.status === 'graduated').length || 0
       const withdrawnStudents = students?.filter(s => s.status === 'withdrawn').length || 0
-      const suspendedStudents = students?.filter(s => s.status === 'suspended').length || 0
 
       // 이번 달 신규 등록 계산
       const thisMonth = new Date()
@@ -120,7 +119,7 @@ export async function GET(request: NextRequest) {
         inactive_students: inactiveStudents,
         graduated_students: graduatedStudents,
         withdrawn_students: withdrawnStudents,
-        suspended_students: suspendedStudents,
+        suspended_students: students?.filter(s => s.status === 'suspended').length || 0,
         urgent_actions: 0, // TODO: 실제 긴급 사항 계산
         today_attendance: 0, // TODO: 오늘 출석 대상 학생 수
         unpaid_students: 0, // TODO: 미납금 학생 수

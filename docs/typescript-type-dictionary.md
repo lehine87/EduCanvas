@@ -1,7 +1,7 @@
 # EduCanvas TypeScript 타입 사전
 
 **버전**: v4.1  
-**최종 업데이트**: 2025-08-12  
+**최종 업데이트**: 2025-08-20  
 **관리자**: Claude Code  
 
 ## 📋 개요
@@ -110,6 +110,61 @@ interface ClassV41 {
 
 **중요**: `instructor_id`는 `instructors.id`가 아닌 `user_profiles.id`를 직접 참조합니다!  
 **사용처**: 클래스 관리, ClassFlow, 스케줄 관리
+
+#### 📚 TenantSubject (v4.1 NEW!)
+```typescript
+interface TenantSubject {
+  id: string                    // UUID, 기본키
+  tenant_id: string            // 테넌트 ID (필수)
+  name: string                 // 과목명 (필수, 예: "수학", "영어")
+  code?: string               // 과목 코드 (예: "MATH", "ENG")
+  description?: string        // 과목 설명
+  color?: string              // 과목 색상 (#RRGGBB 형식)
+  display_order: number       // 표시 순서 (0-9999)
+  is_active: boolean          // 활성화 상태
+  created_at?: string         // 생성일
+  updated_at?: string         // 수정일
+}
+```
+
+**신규 추가**: 2025-08-20 마이그레이션으로 추가됨  
+**용도**: 테넌트별 과목 관리, 클래스 생성 시 과목 선택  
+**제약조건**: `(tenant_id, name)` 유니크, `(tenant_id, code)` 유니크  
+**사용처**: 클래스 생성 폼, 과목 설정 관리
+
+#### 📦 CoursePackageV41 (v4.1 UPDATED!)
+```typescript
+interface CoursePackageV41 {
+  id: string                    // UUID, 기본키
+  tenant_id?: string           // 테넌트 ID
+  class_id?: string            // 연결된 클래스 ID
+  name: string                 // 패키지명 (필수)
+  description?: string         // 패키지 설명
+  billing_type: BillingType    // 과금 방식 (session/month/package/hour/fixed)
+  price: number                // 가격 (필수)
+  original_price?: number      // 원가격 (할인 표시용)
+  currency?: string            // 통화 (기본: KRW)
+  sessions?: number            // 수업 횟수 (session 타입용)
+  hours?: number               // 시간 수 (hour 타입용)
+  months?: number              // 개월 수 (month 타입용)
+  validity_days?: number       // 유효기간 (일수)
+  video_access_days?: number   // 동영상 접근 기간
+  offline_access?: boolean     // 오프라인 접근 허용
+  download_allowed?: boolean   // 다운로드 허용
+  is_active?: boolean          // 활성화 상태
+  is_featured?: boolean        // 추천 상품 여부
+  max_enrollments?: number     // 최대 등록 수
+  display_order: number        // 표시 순서 (v4.1 NEW!)
+  available_from?: string      // 판매 시작일
+  available_until?: string     // 판매 종료일
+  created_by?: string          // 생성자 ID
+  created_at?: string          // 생성일
+  updated_at?: string          // 수정일
+}
+```
+
+**v4.1 업데이트**: `display_order` 컬럼 추가됨 (2025-08-20)  
+**사용처**: 수강권 관리, 결제 시스템, 패키지 목록 표시
 
 #### 🏢 TenantV41
 ```typescript

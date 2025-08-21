@@ -85,25 +85,29 @@ export async function GET(
         .eq('tenant_id', tenantId)
         .single()
 
-      if (error) {
-        if (error.code === 'PGRST116') {
+      if (error || !classData) {
+        if (error?.code === 'PGRST116') {
           throw new Error('클래스를 찾을 수 없습니다.')
         }
         console.error('❌ 클래스 조회 실패:', error)
-        throw new Error(`클래스 조회 실패: ${error.message}`)
+        throw new Error(`클래스 조회 실패: ${error?.message || '데이터를 찾을 수 없습니다'}`)
+      }
+
+      // 타입 안전성 보장
+      if (!classData) {
+        throw new Error('클래스 데이터를 찾을 수 없습니다.')
       }
 
       // 학생 수 계산
-      const studentCount = includeStudents && classData.students 
+      const studentCount = includeStudents && 'students' in classData && Array.isArray(classData.students)
         ? classData.students.length 
         : 0
 
-      const result = {
-        ...classData,
+      const result = Object.assign({}, classData, {
         student_count: studentCount
-      }
+      })
 
-      logApiSuccess('get-class', { classId: classData.id })
+      logApiSuccess('get-class', { classId: (classData as any).id })
 
       return createSuccessResponse({ class: result })
     },

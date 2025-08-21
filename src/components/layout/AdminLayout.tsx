@@ -31,7 +31,7 @@ export function AdminLayout({
   return (
     <AuthGuard 
       requireAuth={true}
-      allowedRoles={['system_admin', 'admin', 'instructor', 'staff', 'viewer']}
+      allowedRoles={['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer']}
     >
       <div className="flex h-screen bg-gray-50">
         {/* 사이드바 */}

@@ -219,7 +219,10 @@ export function useOptimizedStudentData(options: UseOptimizedStudentDataOptions 
         
         // 오래된 항목부터 제거 (LRU 방식)
         for (let i = 0; i < entriesToRemove; i++) {
-          newCachedStudents.delete(keys[i])
+          const key = keys[i]
+          if (key !== undefined) {
+            newCachedStudents.delete(key)
+          }
         }
       }
 
@@ -258,7 +261,10 @@ export function useOptimizedStudentData(options: UseOptimizedStudentDataOptions 
         const keys = Array.from(newCachedStudents.keys())
         
         for (let i = 0; i < excess; i++) {
-          newCachedStudents.delete(keys[i])
+          const key = keys[i]
+          if (key !== undefined) {
+            newCachedStudents.delete(key)
+          }
         }
       }
 
@@ -331,6 +337,8 @@ export function useOptimizedStudentData(options: UseOptimizedStudentDataOptions 
         }
       }
     }
+    
+    return undefined
   }, [config.enableCache, performMemoryCleanup])
 
   /**
@@ -371,6 +379,8 @@ export function useOptimizedStudentData(options: UseOptimizedStudentDataOptions 
 
       return () => clearInterval(interval)
     }
+    
+    return undefined
   }, [state])
 
   // Public API
@@ -467,12 +477,12 @@ async function fetchStudentsFromAPI(
   options?: { limit?: number; tenantId: string }
 ): Promise<Student[]> {
   const params = new URLSearchParams({
-    search: searchTerm,
+    search: searchTerm || '',
     limit: (options?.limit || 100).toString(),
     tenantId: options?.tenantId || ''
   })
 
-  if (filters?.status) {
+  if (filters?.status && filters.status.length > 0 && filters.status[0]) {
     params.append('status', filters.status[0])
   }
 

@@ -253,8 +253,9 @@ export const useAuth = () => {
     clearSensitiveData,
     isSessionValid,
     isAuthenticated: !!user && isSessionValid(),
-    isAdmin: profile?.role === 'admin' || profile?.role === 'system_admin',
+    isAdmin: profile?.role === 'tenant_admin' || profile?.role === 'system_admin',
     isSystemAdmin: profile?.role === 'system_admin',
+    isTenantAdmin: profile?.role === 'tenant_admin',
     isInstructor: profile?.role === 'instructor',
     isStaff: profile?.role === 'staff',
     isViewer: profile?.role === 'viewer',
@@ -273,7 +274,7 @@ export const useAuth = () => {
     },
     
     // 관리 권한 검사
-    isManager: profile?.role === 'admin' || profile?.role === 'system_admin',
+    isManager: profile?.role === 'tenant_admin' || profile?.role === 'system_admin',
     
     // 활성 상태 검사
     isActive: profile?.status === 'active'

@@ -2,6 +2,7 @@
 
 import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * LoadingPlaceholder component props interface
@@ -23,31 +24,7 @@ export interface LoadingPlaceholderProps {
   direction?: 'horizontal' | 'vertical';
 }
 
-/**
- * Skeleton component for individual loading elements
- */
-interface SkeletonProps {
-  className?: string;
-  animation?: 'pulse' | 'shimmer' | 'wave';
-}
-
-const Skeleton = memo<SkeletonProps>(({ className, animation = 'pulse' }) => {
-  const animationStyles = {
-    pulse: 'animate-pulse-gentle',
-    shimmer: 'animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]',
-    wave: 'animate-pulse',
-  };
-
-  return (
-    <div 
-      className={cn('bg-gray-200 rounded', animationStyles[animation], className)}
-      role="status"
-      aria-label="Loading..."
-    />
-  );
-});
-
-Skeleton.displayName = 'Skeleton';
+// Using shadcn/ui Skeleton component - no need for custom implementation
 
 /**
  * LoadingPlaceholder component for ClassFlow loading states
@@ -77,60 +54,60 @@ export const LoadingPlaceholder = memo<LoadingPlaceholderProps>(({
   );
 
   const StudentCardSkeleton = () => (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-card p-4">
+    <div className="bg-card border border-border rounded-lg shadow-sm p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3 flex-1">
           {/* Avatar skeleton */}
-          <Skeleton className="w-10 h-10 rounded-full" animation={animation} />
+          <Skeleton className="w-10 h-10 rounded-full" />
           
           <div className="flex-1 space-y-2">
             {/* Name skeleton */}
-            <Skeleton className="h-4 w-24" animation={animation} />
+            <Skeleton className="h-4 w-24" />
             {/* Grade skeleton */}
-            <Skeleton className="h-3 w-16" animation={animation} />
+            <Skeleton className="h-3 w-16" />
           </div>
         </div>
         
         {/* Drag handle skeleton */}
-        <Skeleton className="w-5 h-5" animation={animation} />
+        <Skeleton className="w-5 h-5" />
       </div>
 
       {/* Contact info skeleton */}
       <div className="space-y-1 mb-3">
-        <Skeleton className="h-3 w-28" animation={animation} />
-        <Skeleton className="h-3 w-32" animation={animation} />
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-3 w-32" />
       </div>
 
       {/* Status and date skeleton */}
       <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-16 rounded-full" animation={animation} />
-        <Skeleton className="h-3 w-20" animation={animation} />
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-3 w-20" />
       </div>
     </div>
   );
 
   const ClassContainerSkeleton = () => (
-    <div className="bg-white border rounded-xl shadow-card">
+    <div className="bg-card border border-border rounded-xl shadow-sm">
       {/* Header skeleton */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
-            <Skeleton className="w-4 h-4 rounded-full" animation={animation} />
+            <Skeleton className="w-4 h-4 rounded-full" />
             <div className="space-y-2 flex-1">
-              <Skeleton className="h-5 w-32" animation={animation} />
-              <Skeleton className="h-4 w-48" animation={animation} />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-48" />
             </div>
           </div>
           <div className="text-right space-y-1">
-            <Skeleton className="h-6 w-12" animation={animation} />
-            <Skeleton className="h-1.5 w-16 rounded-full" animation={animation} />
+            <Skeleton className="h-6 w-12" />
+            <Skeleton className="h-1.5 w-16 rounded-full" />
           </div>
         </div>
         
         <div className="mt-2 flex space-x-4">
-          <Skeleton className="h-4 w-20" animation={animation} />
-          <Skeleton className="h-4 w-16" animation={animation} />
-          <Skeleton className="h-4 w-24" animation={animation} />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-24" />
         </div>
       </div>
 
@@ -151,27 +128,27 @@ export const LoadingPlaceholder = memo<LoadingPlaceholderProps>(({
     };
 
     return (
-      <tr className={cn('border-b border-gray-200', sizeStyles[size])}>
+      <tr className={cn('border-b border-border', sizeStyles[size])}>
         <td className="px-4">
-          <Skeleton className="h-4 w-8" animation={animation} />
+          <Skeleton className="h-4 w-8" />
         </td>
         <td className="px-4">
           <div className="flex items-center space-x-3">
-            <Skeleton className="w-8 h-8 rounded-full" animation={animation} />
-            <Skeleton className="h-4 w-24" animation={animation} />
+            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="h-4 w-24" />
           </div>
         </td>
         <td className="px-4">
-          <Skeleton className="h-4 w-32" animation={animation} />
+          <Skeleton className="h-4 w-32" />
         </td>
         <td className="px-4">
-          <Skeleton className="h-4 w-16" animation={animation} />
+          <Skeleton className="h-4 w-16" />
         </td>
         <td className="px-4">
-          <Skeleton className="h-6 w-16 rounded-full" animation={animation} />
+          <Skeleton className="h-6 w-16 rounded-full" />
         </td>
         <td className="px-4">
-          <Skeleton className="h-4 w-20" animation={animation} />
+          <Skeleton className="h-4 w-20" />
         </td>
       </tr>
     );
@@ -187,7 +164,6 @@ export const LoadingPlaceholder = memo<LoadingPlaceholderProps>(({
     return (
       <Skeleton 
         className={cn(sizeStyles[size], height && `h-[${height}px]`)} 
-        animation={animation} 
       />
     );
   };
@@ -206,7 +182,7 @@ export const LoadingPlaceholder = memo<LoadingPlaceholderProps>(({
         
       case 'table-row':
         return (
-          <table className="min-w-full bg-white">
+          <table className="min-w-full bg-background">
             <tbody>
               {Array.from({ length: count }).map((_, index) => (
                 <TableRowSkeleton key={index} />

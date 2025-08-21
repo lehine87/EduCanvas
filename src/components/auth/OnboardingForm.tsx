@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
+import { Loader2 } from 'lucide-react'
 import { TenantSearchModal } from './TenantSearchModal'
 import { createClient } from '@/lib/supabase/client'
 import type { Tenant } from '@/types'
@@ -186,7 +187,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
             {currentStep === 1 ? '기본 정보를 입력해주세요' : '소속 학원을 찾아주세요'}
           </CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
@@ -197,25 +198,29 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
             {/* Step 1: 기본 정보 */}
             {currentStep === 1 && (
               <div className="space-y-4">
-                <Input
-                  label="이름"
-                  type="text"
-                  {...register('name')}
-                  error={errors.name?.message}
-                  placeholder="홍길동"
-                  disabled={isLoading}
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                  <Input
+                    type="text"
+                    {...register('name')}
+                    // error will be shown below
+                    placeholder="홍길동"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
 
-                <Input
-                  label="전화번호"
-                  type="tel"
-                  {...register('phone')}
-                  error={errors.phone?.message}
-                  placeholder="010-1234-5678"
-                  disabled={isLoading}
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+                  <Input
+                    type="tel"
+                    {...register('phone')}
+                    // error will be shown below
+                    placeholder="010-1234-5678"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,7 +250,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     <label className="flex items-center">
                       <input
                         type="radio"
-                        value="admin"
+                        value="tenant_admin"
                         {...register('position')}
                         className="mr-2"
                         disabled={isLoading}
@@ -259,14 +264,16 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                 </div>
 
                 {position === 'instructor' && (
-                  <Input
-                    label="전문분야"
-                    type="text"
-                    {...register('specialization')}
-                    error={errors.specialization?.message}
-                    placeholder="영어회화, 수학, 과학 등"
-                    disabled={isLoading}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">전문분야</label>
+                    <Input
+                      type="text"
+                      {...register('specialization')}
+                      // error will be shown below
+                      placeholder="영어회화, 수학, 과학 등"
+                      disabled={isLoading}
+                    />
+                  </div>
                 )}
 
                 <div>
@@ -282,14 +289,16 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                   />
                 </div>
 
-                <Input
-                  label="비상연락처"
-                  type="tel"
-                  {...register('emergency_contact')}
-                  error={errors.emergency_contact?.message}
-                  placeholder="가족 연락처 등"
-                  disabled={isLoading}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">비상연락처</label>
+                  <Input
+                    type="tel"
+                    {...register('emergency_contact')}
+                    // error will be shown below
+                    placeholder="가족 연락처 등"
+                    disabled={isLoading}
+                  />
+                </div>
 
                 <Button
                   type="button"
@@ -360,15 +369,15 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     type="submit"
                     className="flex-1"
                     disabled={!selectedTenant || isLoading}
-                    loading={isLoading}
                   >
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     가입 신청 완료
                   </Button>
                 </div>
               </div>
             )}
           </form>
-        </CardBody>
+        </CardContent>
       </Card>
 
       {/* 학원 검색 모달 */}

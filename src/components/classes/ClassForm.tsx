@@ -1,12 +1,16 @@
 'use client'
 
 import React, { memo, useEffect, useMemo } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { cn } from '@/lib/utils'
-import { Input, Textarea, Button, Label, Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui'
-import { Class } from '@/types/classes'
+import { Input, Textarea, Button, Label, Select, SelectTrigger, SelectContent, SelectItem, SelectValue, Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui'
+import { Loader2 } from 'lucide-react'
+import { Database } from '@/types/database'
+import { ClassStudentManager } from './ClassStudentManager'
+
+type Class = Database['public']['Tables']['classes']['Row']
 
 // 클래스 폼 스키마
 const classFormSchema = z.object({
@@ -55,8 +59,7 @@ const classFormSchema = z.object({
   supplementary_textbook: z.string()
     .max(200, '부교재명은 200자 이하여야 합니다')
     .optional(),
-  is_active: z.boolean()
-    .default(true)
+  is_active: z.boolean().optional().default(true)
 }).refine((data) => {
   // 최소 학생 수가 최대 학생 수보다 작아야 함
   if (data.min_students && data.max_students) {
@@ -116,9 +119,8 @@ export interface ClassFormProps {
   disabled?: boolean
 }
 
-// 기본 옵션들
+// 기본 옵션들 (빈 문자열 value 제거)
 const DEFAULT_GRADE_OPTIONS: SelectOption[] = [
-  { value: '', label: '학년 선택' },
   { value: '초1', label: '초등학교 1학년' },
   { value: '초2', label: '초등학교 2학년' },
   { value: '초3', label: '초등학교 3학년' },
@@ -135,7 +137,6 @@ const DEFAULT_GRADE_OPTIONS: SelectOption[] = [
 ]
 
 const DEFAULT_COURSE_OPTIONS: SelectOption[] = [
-  { value: '', label: '과정 선택' },
   { value: '정규', label: '정규 과정' },
   { value: '특별', label: '특별 과정' },
   { value: '심화', label: '심화 과정' },
@@ -146,7 +147,6 @@ const DEFAULT_COURSE_OPTIONS: SelectOption[] = [
 ]
 
 const DEFAULT_SUBJECT_OPTIONS: SelectOption[] = [
-  { value: '', label: '과목 선택' },
   { value: '국어', label: '국어' },
   { value: '영어', label: '영어' },
   { value: '수학', label: '수학' },
@@ -208,22 +208,16 @@ export const ClassForm = memo<ClassFormProps>(({
   disabled = false
 }) => {
   // 폼 설정
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isValid, isDirty }
-  } = useForm<ClassFormData>({
+  const form = useForm<ClassFormData>({
     resolver: zodResolver(classFormSchema),
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || '',
-      grade: initialData?.grade || '',
-      course: initialData?.course || '',
-      subject: initialData?.subject || '',
-      instructor_id: initialData?.instructor_id || '',
-      classroom_id: initialData?.classroom_id || '',
+      grade: initialData?.grade || undefined,
+      course: initialData?.course || undefined,
+      subject: initialData?.subject || undefined,
+      instructor_id: initialData?.instructor_id || undefined,
+      classroom_id: initialData?.classroom_id || undefined,
       max_students: initialData?.max_students || undefined,
       min_students: initialData?.min_students || undefined,
       color: initialData?.color || DEFAULT_COLOR_OPTIONS[0],
@@ -231,10 +225,12 @@ export const ClassForm = memo<ClassFormProps>(({
       end_date: initialData?.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : '',
       main_textbook: (initialData as any)?.main_textbook || '',
       supplementary_textbook: (initialData as any)?.supplementary_textbook || '',
-      is_active: initialData?.is_active !== undefined ? initialData.is_active : true
+      is_active: initialData?.is_active !== null ? (initialData?.is_active || true) : true
     },
     mode: 'onChange'
   })
+
+  const { handleSubmit, watch, setValue, formState: { errors, isValid, isDirty } } = form
 
   // 현재 선택된 색상 감시
   const selectedColor = watch('color')
@@ -244,36 +240,32 @@ export const ClassForm = memo<ClassFormProps>(({
     if (initialData && mode === 'edit') {
       Object.entries(initialData).forEach(([key, value]) => {
         if (key === 'start_date' || key === 'end_date') {
-          setValue(key as keyof ClassFormData, value ? new Date(value).toISOString().split('T')[0] : '')
+          if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+            (form.setValue as any)(key, value ? new Date(value).toISOString().split('T')[0] : '')
+          } else {
+            (form.setValue as any)(key, '')
+          }
         } else if (value !== undefined) {
-          setValue(key as keyof ClassFormData, value as any)
+          (form.setValue as any)(key, value)
         }
       })
     }
-  }, [initialData, mode, setValue])
+  }, [initialData, mode, form.setValue])
 
-  // 강사 옵션 (빈 옵션 포함)
-  const instructorSelectOptions = useMemo(() => [
-    { value: '', label: '강사 선택' },
-    ...instructors
-  ], [instructors])
+  // 강사 옵션 (placeholder 옵션 제거)
+  const instructorSelectOptions = useMemo(() => {
+    console.log('📋 ClassForm - 강사 옵션 업데이트:', instructors)
+    return instructors || []
+  }, [instructors])
 
-  // 과목 옵션 (동적 옵션이 있으면 사용, 없으면 기본값)
+  // 과목 옵션 (placeholder 옵션 제거)
   const finalSubjectOptions = useMemo(() => {
-    const baseOptions = subjectOptions.length > 0 ? subjectOptions : DEFAULT_SUBJECT_OPTIONS
-    return [
-      { value: '', label: '과목 선택' },
-      ...baseOptions
-    ]
+    return subjectOptions.length > 0 ? subjectOptions : DEFAULT_SUBJECT_OPTIONS
   }, [subjectOptions])
 
-  // 과정 옵션 (동적 옵션이 있으면 사용, 없으면 기본값)
+  // 과정 옵션 (placeholder 옵션 제거)
   const finalCourseOptions = useMemo(() => {
-    const baseOptions = courseOptions.length > 0 ? courseOptions : DEFAULT_COURSE_OPTIONS
-    return [
-      { value: '', label: '과정 선택' },
-      ...baseOptions
-    ]
+    return courseOptions.length > 0 ? courseOptions : DEFAULT_COURSE_OPTIONS
   }, [courseOptions])
 
   // 제출 핸들러
@@ -286,197 +278,212 @@ export const ClassForm = memo<ClassFormProps>(({
   }
 
   return (
-    <form 
-      onSubmit={handleSubmit(handleFormSubmit)}
-      className={cn('space-y-6', className)}
-      noValidate
-    >
+    <Form {...form}>
+      <form 
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className={cn('space-y-6', className)}
+        noValidate
+      >
       {/* 기본 정보 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 클래스 이름 */}
         <div className="md:col-span-2">
-          <Label htmlFor="name" required>
-            클래스 이름
-          </Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="name"
-            control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                id="name"
-                placeholder="클래스 이름을 입력하세요"
-                error={errors.name?.message}
-                disabled={disabled || loading}
-                aria-describedby={errors.name ? 'name-error' : undefined}
-              />
+              <FormItem>
+                <FormLabel>클래스 이름</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="클래스 이름을 입력하세요"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
 
         {/* 학년 */}
         <div>
-          <Label htmlFor="grade">학년</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="grade"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Select onValueChange={onChange} defaultValue={value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="학년을 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {gradeOptions.map((option) => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value}
-                      disabled={option.disabled}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>학년</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="학년을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gradeOptions.map((option) => (
+                        <SelectItem 
+                          key={option.value} 
+                          value={option.value}
+                          disabled={option.disabled}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {errors.grade && (
-            <p className="text-sm text-error-600 mt-1">{errors.grade.message}</p>
-          )}
         </div>
 
         {/* 과정 */}
         <div>
-          <Label htmlFor="course">과정</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="course"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Select onValueChange={onChange} defaultValue={value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="과정을 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {finalCourseOptions.map((option) => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value}
-                      disabled={option.disabled}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>과정</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="과정을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {finalCourseOptions.map((option) => (
+                        <SelectItem 
+                          key={option.value} 
+                          value={option.value}
+                          disabled={option.disabled}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {errors.course && (
-            <p className="text-sm text-error-600 mt-1">{errors.course.message}</p>
-          )}
         </div>
 
         {/* 과목 */}
         <div>
-          <Label htmlFor="subject">과목</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="subject"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Select onValueChange={onChange} defaultValue={value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="과목을 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {finalSubjectOptions.map((option) => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value}
-                      disabled={option.disabled}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>과목</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="과목을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {finalSubjectOptions.map((option) => (
+                        <SelectItem 
+                          key={option.value} 
+                          value={option.value}
+                          disabled={option.disabled}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {errors.subject && (
-            <p className="text-sm text-error-600 mt-1">{errors.subject.message}</p>
-          )}
         </div>
 
         {/* 강사 */}
         <div>
-          <Label htmlFor="instructor_id">담당 강사</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="instructor_id"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Select onValueChange={onChange} defaultValue={value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="강사를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructorSelectOptions.map((option) => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value}
-                      disabled={option.disabled}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>담당 강사</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="강사를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {instructorSelectOptions.map((option) => (
+                        <SelectItem 
+                          key={option.value} 
+                          value={option.value}
+                          disabled={option.disabled}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {errors.instructor_id && (
-            <p className="text-sm text-error-600 mt-1">{errors.instructor_id.message}</p>
-          )}
         </div>
       </div>
 
       {/* 용량 설정 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <Label htmlFor="min_students">최소 학생 수</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="min_students"
-            control={control}
-            render={({ field: { onChange, value, ...field } }) => (
-              <Input
-                {...field}
-                id="min_students"
-                type="number"
-                min="1"
-                max="1000"
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                placeholder="최소 학생 수"
-                error={errors.min_students?.message}
-                disabled={disabled || loading}
-              />
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>최소 학생 수</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    placeholder="최소 학생 수"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
 
         <div>
-          <Label htmlFor="max_students">최대 학생 수</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="max_students"
-            control={control}
-            render={({ field: { onChange, value, ...field } }) => (
-              <Input
-                {...field}
-                id="max_students"
-                type="number"
-                min="1"
-                max="1000"
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                placeholder="최대 학생 수"
-                error={errors.max_students?.message}
-                disabled={disabled || loading}
-              />
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>최대 학생 수</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    placeholder="최대 학생 수"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
@@ -486,84 +493,91 @@ export const ClassForm = memo<ClassFormProps>(({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* 색상 선택 */}
         <div>
-          <Label htmlFor="color">클래스 색상</Label>
-          <div className="space-y-3">
-            <Controller
-              name="color"
-              control={control}
-              render={({ field }) => (
-                <>
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-8 h-8 rounded-full border-2 border-gray-300"
-                      style={{ backgroundColor: selectedColor }}
-                    />
-                    <Input
-                      {...field}
-                      id="color"
-                      type="color"
-                      className="w-20 h-8 border-0 p-0 cursor-pointer"
-                      error={errors.color?.message}
-                      disabled={disabled || loading}
-                    />
-                  </div>
-                  {/* 프리셋 색상 */}
-                  <div className="flex flex-wrap gap-2">
-                    {DEFAULT_COLOR_OPTIONS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={cn(
-                          'w-6 h-6 rounded-full border-2 cursor-pointer transition-all',
-                          selectedColor === color 
-                            ? 'border-gray-900 scale-110' 
-                            : 'border-gray-300 hover:border-gray-400'
-                        )}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setValue('color', color)}
-                        disabled={disabled || loading}
-                        aria-label={`색상 ${color} 선택`}
+          <FormField
+            control={form.control}
+            name="color"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>클래스 색상</FormLabel>
+                <FormControl>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-8 h-8 rounded-full border-2 border-gray-300"
+                        style={{ backgroundColor: selectedColor }}
                       />
-                    ))}
+                      <Input
+                        {...field}
+                        type="color"
+                        className="w-20 h-8 border-0 p-0 cursor-pointer"
+                        disabled={disabled || loading}
+                      />
+                    </div>
+                    {/* 프리셋 색상 */}
+                    <div className="flex flex-wrap gap-2">
+                      {DEFAULT_COLOR_OPTIONS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={cn(
+                            'w-6 h-6 rounded-full border-2 cursor-pointer transition-all',
+                            selectedColor === color 
+                              ? 'border-gray-900 scale-110' 
+                              : 'border-gray-300 hover:border-gray-400'
+                          )}
+                          style={{ backgroundColor: color }}
+                          onClick={() => (form.setValue as any)('color', color)}
+                          disabled={disabled || loading}
+                          aria-label={`색상 ${color} 선택`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </>
-              )}
-            />
-          </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         {/* 시작일 */}
         <div>
-          <Label htmlFor="start_date">시작일</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="start_date"
-            control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                id="start_date"
-                type="date"
-                error={errors.start_date?.message}
-                disabled={disabled || loading}
-              />
+              <FormItem>
+                <FormLabel>시작일</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="date"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
 
         {/* 종료일 */}
         <div>
-          <Label htmlFor="end_date">종료일</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="end_date"
-            control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                id="end_date"
-                type="date"
-                error={errors.end_date?.message}
-                disabled={disabled || loading}
-              />
+              <FormItem>
+                <FormLabel>종료일</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="date"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
@@ -573,36 +587,42 @@ export const ClassForm = memo<ClassFormProps>(({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 주교재 */}
         <div>
-          <Label htmlFor="main_textbook">주교재</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="main_textbook"
-            control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                id="main_textbook"
-                placeholder="주교재명을 입력하세요"
-                error={errors.main_textbook?.message}
-                disabled={disabled || loading}
-              />
+              <FormItem>
+                <FormLabel>주교재</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="주교재명을 입력하세요"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
 
         {/* 부교재 */}
         <div>
-          <Label htmlFor="supplementary_textbook">부교재</Label>
-          <Controller
+          <FormField
+            control={form.control}
             name="supplementary_textbook"
-            control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                id="supplementary_textbook"
-                placeholder="부교재명을 입력하세요"
-                error={errors.supplementary_textbook?.message}
-                disabled={disabled || loading}
-              />
+              <FormItem>
+                <FormLabel>부교재</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="부교재명을 입력하세요"
+                    disabled={disabled || loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>
@@ -610,44 +630,62 @@ export const ClassForm = memo<ClassFormProps>(({
 
       {/* 설명 */}
       <div>
-        <Label htmlFor="description">설명</Label>
-        <Controller
+        <FormField
+          control={form.control}
           name="description"
-          control={control}
           render={({ field }) => (
-            <Textarea
-              {...field}
-              id="description"
-              rows={4}
-              placeholder="클래스에 대한 설명을 입력하세요"
-              error={errors.description?.message}
-              disabled={disabled || loading}
-            />
+            <FormItem>
+              <FormLabel>설명</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  rows={4}
+                  placeholder="클래스에 대한 설명을 입력하세요"
+                  disabled={disabled || loading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
         />
       </div>
 
       {/* 상태 설정 */}
       <div className="flex items-center space-x-3">
-        <Controller
+        <FormField
+          control={form.control}
           name="is_active"
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={value}
-                onChange={onChange}
-                disabled={disabled || loading}
-                className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                클래스 활성화
-              </span>
-            </label>
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={field.onChange}
+                  disabled={disabled || loading}
+                  className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="text-sm font-medium text-gray-700">
+                  클래스 활성화
+                </FormLabel>
+              </div>
+            </FormItem>
           )}
         />
       </div>
+
+      {/* 학생 관리 섹션 (수정 모드에서만 표시) */}
+      {mode === 'edit' && initialData?.id && (
+        <div className="pt-6 border-t">
+          <ClassStudentManager
+            classId={initialData.id}
+            className={initialData.name || '클래스'}
+            readOnly={disabled || loading}
+          />
+        </div>
+      )}
 
       {/* 액션 버튼 */}
       <div className="flex justify-end space-x-3 pt-6 border-t">
@@ -664,16 +702,17 @@ export const ClassForm = memo<ClassFormProps>(({
         
         <Button
           type="submit"
-          loading={loading}
-          disabled={disabled || !isValid}
+          disabled={disabled || loading || !isValid}
         >
+          {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           {mode === 'create' ? '클래스 생성' : '클래스 수정'}
         </Button>
       </div>
-    </form>
+      </form>
+    </Form>
   )
 })
 
 ClassForm.displayName = 'ClassForm'
 
-export type { ClassFormData }
+// ClassFormData is already exported above

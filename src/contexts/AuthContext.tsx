@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function isAdmin(): boolean {
-    return user?.role === 'admin' || user?.role === 'owner' || user?.role === 'developer'
+    return user?.role === 'tenant_admin' || user?.role === 'system_admin' || user?.role === 'owner' || user?.role === 'developer'
   }
 
   function isInstructor(): boolean {

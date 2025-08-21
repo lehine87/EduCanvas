@@ -152,11 +152,16 @@ export class NavigationStateMachine {
 
     if (sortedRoutes.length > 0) {
       const bestMatch = sortedRoutes[0]
-      return {
-        matches: true,
-        params: {},
-        config: ROUTE_DEFINITIONS[bestMatch],
-        score: 95
+      if (bestMatch) {
+        const config = ROUTE_DEFINITIONS[bestMatch]
+        if (config) {
+          return {
+            matches: true,
+            params: {},
+            config,
+            score: 95
+          }
+        }
       }
     }
 
@@ -247,7 +252,7 @@ export class NavigationStateMachine {
           return '/system-admin'
         }
         
-        if (context.role === 'admin' && context.tenantId) {
+        if (context.role === 'tenant_admin' && context.tenantId) {
           return '/tenant-admin'
         }
         

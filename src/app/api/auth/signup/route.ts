@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       id: authData.user.id,
       email: email,
       name: full_name || email.split('@')[0] || 'User',
-      role: 'viewer',
+      role: 'viewer' as string,
       status: 'pending_approval' as Database['public']['Enums']['user_status'],
       tenant_id: null,
       created_at: new Date().toISOString(),
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email || email,
-        name: profileInsertData.name
+        name: profileInsertData?.name || full_name || email.split('@')[0] || 'User'
       },
       message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.'
     }

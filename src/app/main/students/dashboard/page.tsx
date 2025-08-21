@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Badge } from '@/components/ui/Badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 

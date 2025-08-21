@@ -90,25 +90,29 @@ export async function GET(
         .eq('tenant_id', tenantId)
         .single()
 
-      if (error) {
-        if (error.code === 'PGRST116') {
+      if (error || !instructor) {
+        if (error?.code === 'PGRST116') {
           throw new Error('강사를 찾을 수 없습니다.')
         }
         console.error('❌ 강사 조회 실패:', error)
-        throw new Error(`강사 조회 실패: ${error.message}`)
+        throw new Error(`강사 조회 실패: ${error?.message || '데이터를 찾을 수 없습니다'}`)
+      }
+
+      // 타입 안전성 보장
+      if (!instructor) {
+        throw new Error('강사 데이터를 찾을 수 없습니다.')
       }
 
       // 담당 클래스 수 계산
-      const classCount = includeClasses && instructor.classes 
+      const classCount = includeClasses && 'classes' in instructor && Array.isArray(instructor.classes)
         ? instructor.classes.length 
         : 0
 
-      const result = {
-        ...instructor,
+      const result = Object.assign({}, instructor, {
         class_count: classCount
-      }
+      })
 
-      logApiSuccess('get-instructor', { instructorId: instructor.id })
+      logApiSuccess('get-instructor', { instructorId: (instructor as any).id })
 
       return createSuccessResponse({ instructor: result })
     },

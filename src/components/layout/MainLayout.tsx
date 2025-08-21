@@ -30,7 +30,7 @@ export function MainLayout({
   containerClassName,
   mainClassName,
   requireAuth = true,
-  allowedRoles = ['system_admin', 'admin', 'instructor', 'staff', 'viewer']
+  allowedRoles = ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer']
 }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

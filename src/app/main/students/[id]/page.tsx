@@ -3,14 +3,19 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { LoadingPlaceholder } from '@/components/ui/classflow/LoadingPlaceholder'
-import type { Student } from '@/types/student.types'
+import type { Student, Class, Attendance, StudentEnrollment, Consultation, Payment, StudentHistory } from '@/types'
+import { ClassSearchSelector, ClassSearchResult } from '@/components/ui/ClassSearchSelector'
 import { 
   ArrowLeftIcon,
   PencilIcon,
@@ -167,27 +172,27 @@ interface TabData {
     loaded: boolean
   }
   enrollment: {
-    classes: any[]
-    attendance: any[]
-    schedule: any[]
+    classes: Class[]
+    attendance: Attendance[]
+    schedule: StudentEnrollment[]
     loaded: boolean
   }
   consultation: {
-    records: any[]
-    upcoming: any[]
-    notes: any[]
+    records: Consultation[]
+    upcoming: Consultation[]
+    notes: Consultation[]
     loaded: boolean
   }
   payment: {
-    history: any[]
-    unpaid: any[]
-    nextDue: any[]
+    history: Payment[]
+    unpaid: Payment[]
+    nextDue: Payment[]
     loaded: boolean
   }
   learning: {
-    grades: any[]
-    assignments: any[]
-    progress: any[]
+    grades: StudentHistory[]
+    assignments: StudentHistory[]
+    progress: StudentHistory[]
     loaded: boolean
   }
 }
@@ -346,6 +351,8 @@ export default function StudentDetailPage() {
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [isProcessingLeave, setIsProcessingLeave] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('basic')
+  const [showClassSelector, setShowClassSelector] = useState(false)
+  const [enrollingInClass, setEnrollingInClass] = useState(false)
 
   // 🎯 UX 가이드: 모든 탭 데이터 즉시 로딩을 위한 상태
   const [tabData, setTabData] = useState<TabData>({
@@ -365,7 +372,7 @@ export default function StudentDetailPage() {
     
     try {
       // 병렬로 모든 탭 데이터 로드
-      const [enrollmentData, consultationData, paymentData, learningData] = await Promise.allSettled([
+      const [enrollmentData, consultationData, paymentData, learningData] = await Promise.all([
         // 수강 현황 데이터 (임시 목업)
         Promise.resolve({
           classes: [
@@ -395,8 +402,8 @@ export default function StudentDetailPage() {
         // 납입 내역 데이터 (임시 목업)
         Promise.resolve({
           history: [
-            { id: 1, date: '2024-08-01', amount: 200000, method: '카드', status: 'paid', course: '수학 고급반' },
-            { id: 2, date: '2024-07-01', amount: 150000, method: '계좌이체', status: 'paid', course: '영어 회화반' }
+            { id: 1, date: '2024-08-01', amount: 200000, method: '카드', status: 'completed', course: '수학 고급반' },
+            { id: 2, date: '2024-07-01', amount: 150000, method: '계좌이체', status: 'completed', course: '영어 회화반' }
           ],
           unpaid: [],
           nextDue: [
@@ -419,26 +426,26 @@ export default function StudentDetailPage() {
       ])
 
       // 탭 데이터 업데이트
-      setTabData(prev => ({
+      (setTabData as any)((prev: any) => ({
         basic: { student, loaded: true },
         enrollment: {
           ...prev.enrollment,
-          ...(enrollmentData.status === 'fulfilled' ? enrollmentData.value : {}),
+          ...enrollmentData,
           loaded: true
         },
         consultation: {
           ...prev.consultation,
-          ...(consultationData.status === 'fulfilled' ? consultationData.value : {}),
+          ...consultationData,
           loaded: true
         },
         payment: {
           ...prev.payment,
-          ...(paymentData.status === 'fulfilled' ? paymentData.value : {}),
+          ...paymentData,
           loaded: true
         },
         learning: {
           ...prev.learning,
-          ...(learningData.status === 'fulfilled' ? learningData.value : {}),
+          ...learningData,
           loaded: true
         }
       }))
@@ -468,6 +475,61 @@ export default function StudentDetailPage() {
   const handleEdit = useCallback(() => {
     router.push(`/main/students/${studentId}/edit`)
   }, [router, studentId])
+
+  // 클래스 등록 핸들러
+  const handleClassSelected = useCallback(async (classData: ClassSearchResult) => {
+    if (!tenantId || !selectedStudent) return
+
+    setEnrollingInClass(true)
+    const loadingToast = toast.loading(`${classData.name} 클래스에 등록하는 중...`)
+    
+    try {
+      const supabase = require('@supabase/ssr').createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('인증 토큰이 없습니다')
+      }
+
+      const response = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tenantId,
+          studentId: selectedStudent.id,
+          classId: classData.id,
+          packageId: null,
+          finalPrice: 0,
+          notes: `학생 상세보기에서 ${classData.name} 클래스에 배정`
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || '클래스 등록 실패')
+      }
+
+      toast.dismiss(loadingToast)
+      toast.success(`${selectedStudent.name} 학생이 ${classData.name} 클래스에 성공적으로 등록되었습니다.`)
+      
+      // 수강 현황 데이터 새로고침
+      loadAllTabData(selectedStudent)
+      setShowClassSelector(false)
+
+    } catch (error) {
+      console.error('클래스 등록 중 오류:', error)
+      toast.dismiss(loadingToast)
+      toast.error(error instanceof Error ? error.message : '클래스 등록에 실패했습니다.')
+    } finally {
+      setEnrollingInClass(false)
+    }
+  }, [tenantId, selectedStudent, loadAllTabData])
 
   // 휴원/복원 핸들러
   const handleLeave = useCallback(async () => {
@@ -805,21 +867,50 @@ export default function StudentDetailPage() {
             {/* 현재 수강 클래스 */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <AcademicCapIcon className="h-5 w-5 text-blue-600" />
-                  <span>현재 수강 클래스</span>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AcademicCapIcon className="h-5 w-5 text-blue-600" />
+                    <span>현재 수강 클래스</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowClassSelector(true)}
+                    disabled={enrollingInClass}
+                    className="flex items-center space-x-1"
+                  >
+                    <AcademicCapIcon className="h-4 w-4" />
+                    <span>클래스 추가</span>
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {tabData.enrollment.loaded ? (
                   <div className="space-y-3">
-                    {tabData.enrollment.classes.map((cls) => (
-                      <div key={cls.id} className="p-3 border rounded-lg">
-                        <h4 className="font-medium text-gray-900">{cls.name}</h4>
-                        <p className="text-sm text-gray-600">담당: {cls.instructor}</p>
-                        <p className="text-sm text-gray-500">{cls.schedule}</p>
+                    {tabData.enrollment.classes.length > 0 ? (
+                      tabData.enrollment.classes.map((cls) => (
+                        <div key={cls.id} className="p-3 border rounded-lg">
+                          <h4 className="font-medium text-gray-900">{cls.name}</h4>
+                          <p className="text-sm text-gray-600">담당: {(cls as any).instructor || cls.instructor_id}</p>
+                          <p className="text-sm text-gray-500">{(cls as any).schedule || '스케줄 정보 없음'}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <AcademicCapIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                        <p className="text-lg font-medium">등록된 클래스가 없습니다</p>
+                        <p className="text-sm mb-4">새 클래스에 학생을 등록해보세요</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowClassSelector(true)}
+                          disabled={enrollingInClass}
+                          className="flex items-center space-x-2 mx-auto"
+                        >
+                          <AcademicCapIcon className="h-4 w-4" />
+                          <span>클래스 추가</span>
+                        </Button>
                       </div>
-                    ))}
+                    )}
                   </div>
                 ) : (
                   <LoadingPlaceholder className="h-24" />
@@ -840,7 +931,7 @@ export default function StudentDetailPage() {
                   <div className="space-y-2">
                     {tabData.enrollment.attendance.map((record, index) => (
                       <div key={index} className="flex items-center justify-between p-2 border-b last:border-b-0">
-                        <span className="text-sm">{record.date}</span>
+                        <span className="text-sm">{(record as any).date || record.attendance_date}</span>
                         <Badge variant={record.status === 'present' ? 'default' : record.status === 'late' ? 'secondary' : 'destructive'}>
                           {record.status === 'present' ? '출석' : record.status === 'late' ? '지각' : '결석'}
                         </Badge>
@@ -872,11 +963,11 @@ export default function StudentDetailPage() {
                     {tabData.consultation.records.map((record) => (
                       <div key={record.id} className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900">{record.topic}</h4>
-                          <span className="text-sm text-gray-500">{record.date}</span>
+                          <h4 className="font-medium text-gray-900">{(record as any).topic || record.agenda}</h4>
+                          <span className="text-sm text-gray-500">{(record as any).date || record.scheduled_at}</span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">담당: {record.counselor}</p>
-                        <p className="text-sm text-gray-700">{record.summary}</p>
+                        <p className="text-sm text-gray-600 mb-1">담당: {(record as any).counselor || record.counselor_id}</p>
+                        <p className="text-sm text-gray-700">{(record as any).summary || record.notes}</p>
                       </div>
                     ))}
                   </div>
@@ -900,10 +991,10 @@ export default function StudentDetailPage() {
                     {tabData.consultation.upcoming.map((upcoming) => (
                       <div key={upcoming.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-orange-900">{upcoming.topic}</h4>
-                          <span className="text-sm text-orange-700">{upcoming.date}</span>
+                          <h4 className="font-medium text-orange-900">{(upcoming as any).topic || upcoming.agenda}</h4>
+                          <span className="text-sm text-orange-700">{(upcoming as any).date || upcoming.scheduled_at}</span>
                         </div>
-                        <p className="text-sm text-orange-600">담당: {upcoming.counselor}</p>
+                        <p className="text-sm text-orange-600">담당: {(upcoming as any).counselor || upcoming.counselor_id}</p>
                       </div>
                     ))}
                   </div>
@@ -932,14 +1023,14 @@ export default function StudentDetailPage() {
                     {tabData.payment.history.slice(0, 3).map((payment) => (
                       <div key={payment.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-gray-900">{payment.course}</h4>
-                          <Badge variant="default">{payment.status === 'paid' ? '완료' : '대기'}</Badge>
+                          <h4 className="font-medium text-gray-900">{(payment as any).course || '코스'}</h4>
+                          <Badge variant="default">{payment.status === 'completed' ? '완료' : '대기'}</Badge>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">{payment.date}</span>
+                          <span className="text-gray-600">{(payment as any).date || payment.payment_date}</span>
                           <span className="font-medium text-gray-900">{payment.amount.toLocaleString()}원</span>
                         </div>
-                        <span className="text-xs text-gray-500">{payment.method}</span>
+                        <span className="text-xs text-gray-500">{(payment as any).method || payment.payment_method}</span>
                       </div>
                     ))}
                     {tabData.payment.history.length > 3 && (
@@ -967,9 +1058,9 @@ export default function StudentDetailPage() {
                   <div className="space-y-3">
                     {tabData.payment.nextDue.map((due) => (
                       <div key={due.id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h4 className="font-medium text-blue-900">{due.course}</h4>
+                        <h4 className="font-medium text-blue-900">{(due as any).course || '코스'}</h4>
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-sm text-blue-700">청구 예정일: {due.dueDate}</span>
+                          <span className="text-sm text-blue-700">청구 예정일: {(due as any).dueDate || due.due_date}</span>
                           <span className="font-medium text-blue-900">{due.amount.toLocaleString()}원</span>
                         </div>
                       </div>
@@ -1000,12 +1091,12 @@ export default function StudentDetailPage() {
                     {tabData.learning.grades.map((grade, index) => (
                       <div key={index} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-gray-900">{grade.subject}</h4>
-                          <span className="text-lg font-bold text-indigo-600">{grade.score}점</span>
+                          <h4 className="font-medium text-gray-900">{(grade as any).subject || '과목 정보 없음'}</h4>
+                          <span className="text-lg font-bold text-indigo-600">{(grade as any).score || 0}점</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">{grade.test}</span>
-                          <span className="text-gray-500">{grade.date}</span>
+                          <span className="text-gray-600">{(grade as any).test || '시험 정보 없음'}</span>
+                          <span className="text-gray-500">{(grade as any).date || (grade as any).created_at}</span>
                         </div>
                       </div>
                     ))}
@@ -1030,17 +1121,17 @@ export default function StudentDetailPage() {
                     {tabData.learning.assignments.map((assignment, index) => (
                       <div key={index} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-gray-900">{assignment.title}</h4>
-                          {assignment.status === 'submitted' ? (
+                          <h4 className="font-medium text-gray-900">{(assignment as any).title || '과제 제목 없음'}</h4>
+                          {(assignment as any).status === 'submitted' ? (
                             <CheckCircleIcon className="h-5 w-5 text-green-600" />
                           ) : (
                             <XCircleIcon className="h-5 w-5 text-red-600" />
                           )}
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">마감일: {assignment.dueDate}</span>
-                          <Badge variant={assignment.status === 'submitted' ? 'default' : 'destructive'}>
-                            {assignment.status === 'submitted' ? '제출완료' : '미제출'}
+                          <span className="text-gray-600">마감일: {(assignment as any).dueDate || (assignment as any).due_date}</span>
+                          <Badge variant={(assignment as any).status === 'submitted' ? 'default' : 'destructive'}>
+                            {(assignment as any).status === 'submitted' ? '제출완료' : '미제출'}
                           </Badge>
                         </div>
                       </div>
@@ -1061,7 +1152,7 @@ export default function StudentDetailPage() {
         onClose={() => setShowLeaveModal(false)}
         onConfirm={handleLeave}
         studentName={student.name}
-        currentStatus={student.status}
+        currentStatus={student.status || 'active'}
         isProcessing={isProcessingLeave}
       />
 
@@ -1073,6 +1164,27 @@ export default function StudentDetailPage() {
         studentName={student.name}
         isDeleting={isDeleting}
       />
+
+      {/* 클래스 선택 Modal */}
+      <ClassSearchSelector
+        isOpen={showClassSelector}
+        onClose={() => setShowClassSelector(false)}
+        onClassSelected={handleClassSelected}
+        allowMultiple={false}
+        activeOnly={true}
+        title="클래스 선택"
+        description={`${student.name} 학생을 등록할 클래스를 선택하세요`}
+      />
+
+      {/* 등록 처리 중 오버레이 */}
+      {enrollingInClass && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span>클래스에 등록하고 있습니다...</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

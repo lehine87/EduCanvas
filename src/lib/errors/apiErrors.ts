@@ -21,8 +21,8 @@ export class APIError extends Error implements BaseError {
   public readonly code: string
   public readonly severity: ErrorSeverity
   public readonly category: ErrorCategory
-  public readonly context: 'backend'
-  public readonly timestamp: string
+  public readonly context: Record<string, unknown>
+  public readonly timestamp: Date
   public readonly statusCode: number
   public readonly details?: Record<string, unknown>
   public override readonly cause?: Error | BaseError
@@ -41,8 +41,8 @@ export class APIError extends Error implements BaseError {
     this.statusCode = statusCode
     this.details = details
     this.cause = cause
-    this.timestamp = new Date().toISOString()
-    this.context = 'backend'
+    this.timestamp = new Date()
+    this.context = { source: 'backend', statusCode }
     
     // 상태 코드에 따른 심각도 설정
     if (statusCode >= 500) {
@@ -106,19 +106,17 @@ export class ValidationError extends APIError implements Partial<ValidationError
 /**
  * 인증 에러
  */
-export class AuthenticationError extends APIError implements Partial<AuthenticationErrorType> {
-  public readonly reason?: AuthenticationErrorType['reason']
-  public readonly authDetails?: AuthenticationErrorType['authDetails']
+export class AuthenticationError extends APIError {
+  public readonly reason?: string
 
   constructor(
     message = '인증에 실패했습니다',
-    reason?: AuthenticationErrorType['reason'],
-    details?: AuthenticationErrorType['authDetails']
+    reason?: string,
+    details?: Record<string, unknown>
   ) {
-    super(message, 401, 'AUTH_ERROR')
+    super(message, 401, 'AUTH_ERROR', details)
     this.name = 'AuthenticationError'
     this.reason = reason
-    this.authDetails = details
     // severity와 category는 부모 클래스에서 설정됨
   }
 }
@@ -126,19 +124,20 @@ export class AuthenticationError extends APIError implements Partial<Authenticat
 /**
  * 인가 에러
  */
-export class AuthorizationError extends APIError implements Partial<AuthorizationErrorType> {
-  public readonly reason?: AuthorizationErrorType['reason']
-  public readonly authzDetails?: AuthorizationErrorType['authzDetails']
+export class AuthorizationError extends APIError {
+  public readonly requiredPermissions: string[]
+  public readonly userPermissions: string[]
 
   constructor(
     message = '권한이 없습니다',
-    reason?: AuthorizationErrorType['reason'],
-    details?: AuthorizationErrorType['authzDetails']
+    requiredPermissions: string[] = [],
+    userPermissions: string[] = [],
+    details?: Record<string, unknown>
   ) {
-    super(message, 403, 'AUTHORIZATION_ERROR')
+    super(message, 403, 'AUTHORIZATION_ERROR', details)
     this.name = 'AuthorizationError'
-    this.reason = reason
-    this.authzDetails = details
+    this.requiredPermissions = requiredPermissions
+    this.userPermissions = userPermissions
     // severity와 category는 부모 클래스에서 설정됨
   }
 }
@@ -205,25 +204,29 @@ export class InternalServerError extends APIError {
 /**
  * 데이터베이스 에러
  */
-export class DatabaseError extends APIError implements Partial<DatabaseErrorType> {
-  public readonly dbDetails?: DatabaseErrorType['dbDetails']
+export class DatabaseError extends APIError {
+  public readonly query?: string
+  public readonly table?: string
+  public readonly constraint?: string
 
   constructor(
     message = '데이터베이스 오류가 발생했습니다',
     error?: PostgrestError,
-    query?: string
+    queryParam?: string
   ) {
-    const details: DatabaseErrorType['dbDetails'] = {
-      query,
+    const details = {
+      query: queryParam,
       ...(error && {
         table: error.details,
-        operation: error.hint as string | undefined,
+        constraint: error.code,
       })
     }
     
     super(message, 500, 'DATABASE_ERROR', details, error)
     this.name = 'DatabaseError'
-    this.dbDetails = details
+    this.query = queryParam
+    this.table = error?.details
+    this.constraint = error?.code
     // severity와 category는 부모 클래스에서 statusCode에 따라 설정됨
   }
 }
@@ -264,7 +267,8 @@ export function transformSupabaseError(error: PostgrestError | AuthError): APIEr
         pgError.code === '42501') {
       return new AuthorizationError(
         '해당 데이터에 접근할 권한이 없습니다',
-        'resource_forbidden'
+        ['resource_access'],
+        []
       )
     }
     
@@ -323,10 +327,13 @@ export function errorToResponse(error: unknown) {
   
   // Supabase 에러
   if (error && typeof error === 'object' && ('code' in error || 'name' in error)) {
-    const apiError = transformSupabaseError(error as PostgrestError | AuthError | Error)
-    return {
-      error: apiError.toJSON(),
-      status: apiError.statusCode,
+    // PostgrestError 또는 AuthError인지 확인
+    if ('code' in error && 'message' in error) {
+      const apiError = transformSupabaseError(error as PostgrestError | AuthError)
+      return {
+        error: apiError.toJSON(),
+        status: apiError.statusCode,
+      }
     }
   }
   

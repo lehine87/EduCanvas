@@ -13,7 +13,7 @@ import {
 const getCoursePackagesSchema = z.object({
   tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다').optional().nullable(),
   classId: z.string().uuid().optional().nullable(),
-  billingType: z.enum(['monthly', 'per_session', 'package', 'hourly', 'fixed']).optional().nullable(),
+  billingType: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']).optional().nullable(),
   isActive: z.boolean().optional().nullable(),
   isFeatured: z.boolean().optional().nullable(),
   limit: z.number().min(1).max(1000).default(100),
@@ -28,7 +28,7 @@ const createCoursePackageSchema = z.object({
   description: z.string().optional(),
   price: z.number().min(0, '가격은 0 이상이어야 합니다'),
   original_price: z.number().min(0).optional(),
-  billing_type: z.enum(['monthly', 'per_session', 'package', 'hourly', 'fixed']),
+  billing_type: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']),
   currency: z.string().default('KRW'),
   class_id: z.string().uuid().optional(),
   hours: z.number().min(0).optional(),
@@ -125,12 +125,12 @@ export async function GET(request: NextRequest) {
       }
 
       // 활성 상태 필터링
-      if (params.isActive !== undefined) {
+      if (params.isActive !== undefined && params.isActive !== null) {
         query = query.eq('is_active', params.isActive)
       }
 
       // 추천 상태 필터링
-      if (params.isFeatured !== undefined) {
+      if (params.isFeatured !== undefined && params.isFeatured !== null) {
         query = query.eq('is_featured', params.isFeatured)
       }
 

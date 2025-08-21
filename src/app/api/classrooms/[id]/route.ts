@@ -19,7 +19,7 @@ const updateClassroomSchema = z.object({
   capacity: z.number().int().min(1, '수용 인원은 1명 이상이어야 합니다').optional(),
   area: z.number().min(0).optional(),
   classroom_type: z.enum(['general', 'lab', 'seminar', 'lecture_hall', 'study_room']).optional(),
-  facilities: z.record(z.any()).optional(),
+  facilities: z.any().optional(), // Json 타입과 호환성을 위해 any 사용
   equipment_list: z.array(z.string()).optional(),
   suitable_subjects: z.array(z.string()).optional(),
   special_features: z.array(z.string()).optional(),

@@ -21,43 +21,6 @@ export const toastConfig: ToastOptions = {
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   },
   
-  // 성공 토스트 설정
-  success: {
-    duration: 3000,
-    iconTheme: {
-      primary: '#10B981',
-      secondary: '#FFFFFF',
-    },
-    style: {
-      background: '#F0FDF4',
-      color: '#166534',
-      border: '1px solid #BBF7D0',
-    },
-  },
-  
-  // 에러 토스트 설정
-  error: {
-    duration: 5000,
-    iconTheme: {
-      primary: '#EF4444',
-      secondary: '#FFFFFF',
-    },
-    style: {
-      background: '#FEF2F2',
-      color: '#991B1B',
-      border: '1px solid #FECACA',
-    },
-  },
-  
-  // 로딩 토스트 설정
-  loading: {
-    duration: Infinity,
-    style: {
-      background: '#F0F9FF',
-      color: '#0C4A6E',
-      border: '1px solid #BAE6FD',
-    },
-  },
 }
 
 /**
@@ -262,7 +225,7 @@ export const toastHelpers = {
         })
       )
     }
-    return toast.success(message, toastConfig.success)
+    return toast.success(message, toastConfig)
   },
   
   // 에러 메시지
@@ -279,7 +242,7 @@ export const toastHelpers = {
         })
       )
     }
-    return toast.error(message, toastConfig.error)
+    return toast.error(message, toastConfig)
   },
   
   // 경고 메시지
@@ -308,7 +271,7 @@ export const toastHelpers = {
   
   // 로딩 메시지
   loading: (message: string = '처리 중...') => {
-    return toast.loading(message, toastConfig.loading)
+    return toast.loading(message, toastConfig)
   },
   
   // 로딩 메시지 업데이트

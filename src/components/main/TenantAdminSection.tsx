@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/store/useAuthStore'
-import { Button, Card, CardHeader, CardTitle, CardBody, Loading } from '@/components/ui'
+import { Button, Card, CardHeader, CardTitle, CardContent, Loading } from '@/components/ui'
 import { MemberManagementTable } from '@/components/admin/MemberManagementTable'
 import { PendingApprovalsTable } from '@/components/admin/PendingApprovalsTable'
 import { Cog6ToothIcon, UsersIcon, ClockIcon, AcademicCapIcon, UserIcon } from '@heroicons/react/24/outline'
@@ -231,13 +231,13 @@ export function TenantAdminSection({ className = '' }: TenantAdminSectionProps) 
               <span>승인 대기</span>
             </CardTitle>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <PendingApprovalsTable 
               tenantId={profile.tenant_id}
               pendingUsers={pendingMembers}
               onApprovalChange={handleRefresh}
             />
-          </CardBody>
+          </CardContent>
         </Card>
 
         {/* 회원 관리 */}
@@ -248,13 +248,13 @@ export function TenantAdminSection({ className = '' }: TenantAdminSectionProps) 
               <span>회원 관리</span>
             </CardTitle>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             <MemberManagementTable 
               tenantId={profile.tenant_id}
               members={activeMembers}
               onMemberChange={handleRefresh}
             />
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </div>

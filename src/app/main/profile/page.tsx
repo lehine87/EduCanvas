@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
 import { MainLayout } from '@/components/layout'
 import { useAuth } from '@/store/useAuthStore'
 
@@ -18,7 +18,7 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>사용자 프로필</CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">이름</label>
@@ -32,7 +32,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700">역할</label>
               <p className="mt-1 text-sm text-gray-900">
                 {profile?.role === 'system_admin' ? '시스템 관리자' :
-                 profile?.role === 'admin' ? '학원 관리자' :
+                 profile?.role === 'tenant_admin' ? '학원 관리자' :
                  profile?.role === 'instructor' ? '강사' :
                  profile?.role === 'staff' ? '스태프' : '뷰어'}
               </p>
@@ -42,7 +42,7 @@ export default function ProfilePage() {
               <p className="mt-1 text-sm text-gray-900">{profile?.tenants?.name || '미지정'}</p>
             </div>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     </MainLayout>
   )

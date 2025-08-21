@@ -88,7 +88,7 @@ export interface ClassWithRelations {
   current_students: number
   classroom: string | null
   color: string | null
-  status: Database['public']['Enums']['class_status']
+  status: 'active' | 'inactive' | 'completed' // 클래스 상태 임시 정의
   start_date: string | null
   end_date: string | null
   created_at: string

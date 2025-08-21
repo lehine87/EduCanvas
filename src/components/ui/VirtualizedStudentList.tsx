@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useCallback, memo } from 'react'
 import { FixedSizeList as List } from 'react-window'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { usePerformanceProfiler, useWhyDidYouUpdate } from '@/hooks/usePerformanceMonitor'
 import { useKeyboardNavigation, useScreenReaderSupport } from '@/hooks/useAccessibility'
@@ -121,9 +121,9 @@ const StudentItem = memo<{
                   )}
                 </div>
                 
-                {student.school_name && (
+                {(student as any).school && (
                   <div className="text-xs text-gray-500 mt-1">
-                    {student.school_name}
+                    {(student as any).school}
                   </div>
                 )}
               </div>
@@ -193,19 +193,6 @@ export const VirtualizedStudentList = memo<VirtualizedStudentListProps>(({
 
   // 접근성 지원
   const { announce } = useScreenReaderSupport()
-  const {
-    containerRef: navContainerRef,
-    focusedIndex,
-    registerItem
-  } = useKeyboardNavigation(filteredAndSortedStudents, {
-    onSelect: (index, student) => {
-      announce(`학생 ${(student as Student).name} 포커스됨`)
-    },
-    onActivate: (index, student) => {
-      onStudentSelect(student as Student)
-      announce(`학생 ${(student as Student).name} 선택됨`)
-    }
-  })
 
   // 필터링 및 정렬된 학생 목록 (최적화된 메모이제이션)
   const filteredAndSortedStudents = useMemo(() => {
@@ -232,7 +219,7 @@ export const VirtualizedStudentList = memo<VirtualizedStudentListProps>(({
           student.student_number,
           student.parent_phone_1,
           student.parent_phone_2,
-          student.school_name
+          (student as any).school
         ].join(' ').toLowerCase()
 
         return searchTerms.every(term => searchableText.includes(term))
@@ -261,6 +248,21 @@ export const VirtualizedStudentList = memo<VirtualizedStudentListProps>(({
       }
     })
   }, [students, localSearchTerm, sortBy, filterStatus])
+
+  // 키보드 네비게이션 (filteredAndSortedStudents 선언 이후)
+  const {
+    containerRef: navContainerRef,
+    focusedIndex,
+    registerItem
+  } = useKeyboardNavigation(filteredAndSortedStudents, {
+    onSelect: (index, student) => {
+      announce(`학생 ${(student as Student).name} 포커스됨`)
+    },
+    onActivate: (index, student) => {
+      onStudentSelect(student as Student)
+      announce(`학생 ${(student as Student).name} 선택됨`)
+    }
+  })
 
   // 검색 핸들러
   const handleSearchChange = useCallback((value: string) => {
@@ -354,7 +356,7 @@ export const VirtualizedStudentList = memo<VirtualizedStudentListProps>(({
 
       {/* 가상화된 학생 리스트 */}
       <div 
-        ref={navContainerRef}
+        ref={navContainerRef as React.RefObject<HTMLDivElement>}
         className="border rounded-lg overflow-hidden"
         role="region"
         aria-label="학생 리스트"

@@ -77,6 +77,8 @@ export function useKeyboardNavigation<T extends HTMLElement = HTMLElement>(
     
     // 실제 DOM 요소에 포커스
     const targetItem = items[newIndex]
+    if (!targetItem) return
+    
     const element = itemRefs.current.get(targetItem.id)
     if (element) {
       element.focus()
@@ -125,7 +127,10 @@ export function useKeyboardNavigation<T extends HTMLElement = HTMLElement>(
       case ' ':
         if (focusedIndex >= 0 && focusedIndex < items.length) {
           event.preventDefault()
-          onActivate?.(focusedIndex, items[focusedIndex])
+          const targetItem = items[focusedIndex]
+          if (targetItem) {
+            onActivate?.(focusedIndex, targetItem)
+          }
         }
         break
       case 'Escape':

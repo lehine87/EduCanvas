@@ -161,7 +161,13 @@ async function executeSmartSearch(
   }
 
   if (filters?.status && filters.status.length > 0) {
-    query = query.in('status', filters.status)
+    // 유횤한 status 값만 필터링 (데이터베이스 스키마에 맞춘)
+    const validStatuses = filters.status.filter((status: string) => 
+      ['active', 'inactive', 'graduated', 'withdrawn', 'suspended'].includes(status)
+    ) as ('active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended')[]
+    if (validStatuses.length > 0) {
+      query = query.in('status', validStatuses)
+    }
   }
 
   if (filters?.grade_level && filters.grade_level.length > 0) {

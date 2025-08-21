@@ -53,6 +53,8 @@ export {
  */
 
 // Navigation Controller의 주요 메서드들을 직접 접근 가능하게
+import { navigationController } from './NavigationController'
+
 export const checkRedirectForRequest = (request: unknown) => 
   navigationController.checkRedirectForRequest(request as any)
 
@@ -89,6 +91,8 @@ export const resetNavigationSystem = () =>
  */
 export function isNavigationSystemHealthy(): boolean {
   try {
+    // NavigationStateMachine과 NavigationController를 직접 import
+    const { navigationStateMachine } = require('./NavigationStateMachine')
     const controller = navigationController
     const stateMachine = navigationStateMachine
     
@@ -124,24 +128,36 @@ export const NAVIGATION_SYSTEM_VERSION = {
  * 네비게이션 시스템 정보 출력 (개발용)
  */
 export function printNavigationSystemInfo(): void {
-  if (NAVIGATION_CONFIG.debugMode) {
-    console.log(`🧭 Navigation System v${NAVIGATION_SYSTEM_VERSION.version}`)
-    console.log(`   Codename: ${NAVIGATION_SYSTEM_VERSION.codename}`)
-    console.log(`   Build Date: ${NAVIGATION_SYSTEM_VERSION.buildDate}`)
-    console.log(`   Health: ${isNavigationSystemHealthy() ? '✅ Healthy' : '❌ Unhealthy'}`)
-    console.log(`   Features:`)
-    NAVIGATION_SYSTEM_VERSION.features.forEach(feature => {
-      console.log(`     • ${feature}`)
-    })
+  try {
+    const { NAVIGATION_CONFIG } = require('./RouteDefinitions')
+    if (NAVIGATION_CONFIG.debugMode) {
+      console.log(`🧭 Navigation System v${NAVIGATION_SYSTEM_VERSION.version}`)
+      console.log(`   Codename: ${NAVIGATION_SYSTEM_VERSION.codename}`)
+      console.log(`   Build Date: ${NAVIGATION_SYSTEM_VERSION.buildDate}`)
+      console.log(`   Health: ${isNavigationSystemHealthy() ? '✅ Healthy' : '❌ Unhealthy'}`)
+      console.log(`   Features:`)
+      NAVIGATION_SYSTEM_VERSION.features.forEach(feature => {
+        console.log(`     • ${feature}`)
+      })
+    }
+  } catch (error) {
+    // 에러 시 무시
   }
 }
 
 /**
  * 개발 환경에서 시스템 정보 자동 출력
  */
-if (typeof window !== 'undefined' && NAVIGATION_CONFIG.debugMode) {
-  // 브라우저 환경에서만 실행
-  setTimeout(() => {
-    printNavigationSystemInfo()
-  }, 100)
+if (typeof window !== 'undefined') {
+  try {
+    const { NAVIGATION_CONFIG } = require('./RouteDefinitions')
+    if (NAVIGATION_CONFIG?.debugMode) {
+      // 브라우저 환경에서만 실행
+      setTimeout(() => {
+        printNavigationSystemInfo()
+      }, 100)
+    }
+  } catch (error) {
+    // 에러 시 무시
+  }
 }

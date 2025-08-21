@@ -15,7 +15,8 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/Badge'
+import { Badge } from '@/components/ui/badge'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import type { UserProfileDropdownProps, UserMenuItem } from './types'
 
 /**
@@ -32,11 +33,12 @@ export function UserProfileDropdown({
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+
   // Props 또는 Auth Store에서 사용자 정보 가져오기
   const user = userProp || (authUser && authProfile ? {
     email: authUser.email || '',
     name: authProfile.name || authUser.email?.split('@')[0],
-    role: authProfile.role || 'viewer',
+    role: role || authProfile.role, // usePermissions의 role을 우선 사용
     avatar: authProfile.avatar_url
   } : undefined)
 
@@ -127,6 +129,11 @@ export function UserProfileDropdown({
     }
   }, [isOpen])
 
+  // 프로필이 로딩 중일 때는 렌더링하지 않음
+  if (!authUser || !authProfile || !authProfile.role) {
+    return null
+  }
+
   // 사용자 정보가 없으면 렌더링하지 않음
   if (!user) return null
 
@@ -136,7 +143,7 @@ export function UserProfileDropdown({
   // 역할 라벨 한글화
   const roleLabels: Record<string, string> = {
     system_admin: '시스템 관리자',
-    admin: '관리자',
+    tenant_admin: '테넌트 관리자',
     instructor: '강사',
     staff: '스태프',
     viewer: '뷰어',
@@ -218,13 +225,20 @@ export function UserProfileDropdown({
                 {user.role && (
                   <Badge 
                     variant="secondary" 
-                    size="xs" 
-                    className="mt-1"
+                    className="text-xs px-2 py-0.5 mt-1"
                   >
                     {roleLabels[user.role] || user.role}
                   </Badge>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* 테마 토글 */}
+          <div className="px-4 py-2 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-700">테마</span>
+              <ThemeToggle />
             </div>
           </div>
 

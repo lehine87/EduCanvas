@@ -6,12 +6,15 @@ import { useParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Label } from '@/components/ui/Label'
-import { Textarea } from '@/components/ui/Textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { LoadingPlaceholder } from '@/components/ui/classflow/LoadingPlaceholder'
@@ -87,7 +90,7 @@ export default function EditStudentPage() {
         school_name: selectedStudent.school_name || '',
         address: selectedStudent.address || '',
         notes: selectedStudent.notes || '',
-        status: selectedStudent.status as 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended'
+        status: selectedStudent.status as any
       })
     }
   }, [selectedStudent, reset])
@@ -307,7 +310,7 @@ export default function EditStudentPage() {
               <div>
                 <Label htmlFor="status">상태</Label>
                 <Select 
-                  onValueChange={(value) => setValue('status', value as 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended')}
+                  onValueChange={(value) => setValue('status', value as any)}
                   defaultValue={selectedStudent.status || 'active'}
                 >
                   <SelectTrigger>

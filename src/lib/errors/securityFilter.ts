@@ -77,6 +77,7 @@ export function maskSensitiveString(input: string): string {
       // 이메일은 부분 마스킹
       masked = masked.replace(pattern, (match) => {
         const [local, domain] = match.split('@')
+        if (!local || !domain) return match
         const maskedLocal = local.length > 2 
           ? local.substring(0, 2) + '*'.repeat(Math.max(1, local.length - 2))
           : local
@@ -226,12 +227,12 @@ export function sanitizeStackTrace(stackTrace: string): string {
  * 에러 객체 전체 정리
  */
 export function sanitizeError(error: unknown): Record<string, unknown> {
-  if (!error) return error
+  if (!error) return {}
 
   const sanitized: Record<string, unknown> = {
     name: (error as Error)?.name || 'UnknownError',
     message: (error as Error)?.message ? maskSensitiveString((error as Error).message) : 'Unknown error',
-    stack: (error as Error)?.stack ? sanitizeStackTrace((error as Error).stack) : undefined,
+    stack: (error as Error)?.stack ? sanitizeStackTrace((error as Error).stack!) : undefined,
   }
 
   // 추가 속성이 있다면 필터링
@@ -260,16 +261,16 @@ export function sanitizeError(error: unknown): Record<string, unknown> {
 export function sanitizeRequestData(data: {
   url?: string
   method?: string
-  headers?: Record<string, unknown>
-  body?: unknown
+  headers?: Record<string, string | string[]>
+  body?: Record<string, unknown>
   query?: Record<string, unknown>
 }): Record<string, unknown> {
   return {
     url: data.url ? sanitizeUrl(data.url) : undefined,
     method: data.method,
-    headers: data.headers ? filterHttpHeaders(data.headers) : undefined,
-    body: data.body ? filterSensitiveObject(data.body) : undefined,
-    query: data.query ? filterSensitiveObject(data.query) : undefined,
+    headers: data.headers ? filterHttpHeaders(data.headers) : {},
+    body: data.body ? filterSensitiveObject(data.body) : {},
+    query: data.query ? filterSensitiveObject(data.query) : {},
   }
 }
 
@@ -278,8 +279,11 @@ export function sanitizeRequestData(data: {
  */
 export function sanitizeLogData(data: unknown): unknown {
   if (process.env.NODE_ENV === 'production') {
-    // 프로덕션에서는 추가 보안 적용
-    return filterSensitiveObject(data)
+      // 프로덕션에서는 추가 보안 적용
+    if (typeof data === 'object' && data !== null) {
+      return filterSensitiveObject(data as Record<string, unknown>)
+    }
+    return data
   }
 
   // 개발 환경에서는 덜 엄격하게 적용
@@ -288,7 +292,7 @@ export function sanitizeLogData(data: unknown): unknown {
   }
 
   if (typeof data === 'object' && data !== null) {
-    return filterSensitiveObject(data)
+    return filterSensitiveObject(data as Record<string, unknown>)
   }
 
   return data

@@ -21,25 +21,25 @@ const getEnrollmentsSchema = z.object({
   includeDetails: z.boolean().default(false)
 })
 
-// 수강 등록 생성 스키마
+// 수강 등록 생성 스키마 (패키지 기반 또는 클래스 직접 등록)
 const createEnrollmentSchema = z.object({
   tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  student_id: z.string().uuid('학생 ID는 필수입니다'),
-  class_id: z.string().uuid().optional(),
-  package_id: z.string().uuid('패키지 ID는 필수입니다'),
+  studentId: z.string().uuid('학생 ID는 필수입니다'), // snake_case에서 camelCase로 변경
+  classId: z.string().uuid('클래스 ID는 필수입니다'), // snake_case에서 camelCase로 변경  
+  packageId: z.string().uuid().optional().nullable(), // 패키지는 선택사항으로 변경
   enrollment_date: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  original_price: z.number().min(0),
+  original_price: z.number().min(0).default(0),
   discount_amount: z.number().min(0).default(0),
-  final_price: z.number().min(0),
+  final_price: z.number().min(0).default(0),
   payment_plan: z.string().optional(),
   hours_total: z.number().min(0).optional(),
   sessions_total: z.number().min(0).optional(),
   video_access_expires_at: z.string().optional(),
   can_download_videos: z.boolean().default(false),
   notes: z.string().optional(),
-  custom_fields: z.record(z.any()).optional(),
+  custom_fields: z.record(z.string(), z.any()).optional(),
   enrolled_by: z.string().uuid().optional(),
   status: z.enum(['active', 'completed', 'suspended', 'cancelled']).default('active')
 })
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
       const { data: student } = await supabase
         .from('students')
         .select('id, name, tenant_id, status')
-        .eq('id', enrollmentData.student_id)
+        .eq('id', enrollmentData.studentId)
         .eq('tenant_id', enrollmentData.tenantId)
         .single()
 
@@ -238,70 +238,109 @@ export async function POST(request: NextRequest) {
         throw new Error('비활성 상태의 학생은 수강 등록할 수 없습니다.')
       }
 
-      // 코스패키지 존재 및 유효성 확인
-      const { data: coursePackage } = await supabase
-        .from('course_packages')
-        .select('id, name, tenant_id, is_active, price, class_id')
-        .eq('id', enrollmentData.package_id)
+      // 클래스 존재 확인 (필수)
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('id, name, tenant_id, is_active, max_students')
+        .eq('id', enrollmentData.classId)
         .eq('tenant_id', enrollmentData.tenantId)
         .single()
 
-      if (!coursePackage) {
-        throw new Error('유효하지 않은 코스패키지입니다.')
+      if (!classData) {
+        throw new Error('유효하지 않은 클래스입니다.')
       }
 
-      if (!coursePackage.is_active) {
-        throw new Error('비활성 상태의 코스패키지는 등록할 수 없습니다.')
+      if (!classData.is_active) {
+        throw new Error('비활성 상태의 클래스는 등록할 수 없습니다.')
       }
 
-      // 클래스 존재 확인 (class_id가 제공된 경우)
-      if (enrollmentData.class_id) {
-        const { data: classData } = await supabase
-          .from('classes')
-          .select('id, name, tenant_id, status')
-          .eq('id', enrollmentData.class_id)
+      // 클래스 정원 확인
+      if (classData.max_students) {
+        const { count: currentEnrollments } = await supabase
+          .from('student_enrollments')
+          .select('*', { count: 'exact', head: true })
+          .eq('class_id', enrollmentData.classId)
+          .eq('status', 'active')
+
+        if (currentEnrollments && currentEnrollments >= classData.max_students) {
+          throw new Error('클래스 정원이 가득 찼습니다.')
+        }
+      }
+
+      // 코스패키지 존재 및 유효성 확인 (선택사항)
+      let coursePackage = null
+      if (enrollmentData.packageId) {
+        const { data: pkg } = await supabase
+          .from('course_packages')
+          .select('id, name, tenant_id, is_active, price, class_id')
+          .eq('id', enrollmentData.packageId)
           .eq('tenant_id', enrollmentData.tenantId)
           .single()
 
-        if (!classData) {
-          throw new Error('유효하지 않은 클래스입니다.')
+        if (!pkg) {
+          throw new Error('유효하지 않은 코스패키지입니다.')
         }
 
-        if (classData.status !== 'active') {
-          throw new Error('비활성 상태의 클래스는 등록할 수 없습니다.')
+        if (!pkg.is_active) {
+          throw new Error('비활성 상태의 코스패키지는 등록할 수 없습니다.')
         }
-      } else if (coursePackage.class_id) {
-        // 패키지에 클래스가 지정되어 있는 경우 자동 설정
-        enrollmentData.class_id = coursePackage.class_id
+
+        coursePackage = pkg
       }
 
-      // 중복 등록 확인 (같은 학생, 같은 패키지, 활성 상태)
+      // 중복 등록 확인 (같은 학생, 같은 클래스, 활성 상태)
       const { data: existingEnrollment } = await supabase
         .from('student_enrollments')
         .select('id')
-        .eq('student_id', enrollmentData.student_id)
-        .eq('package_id', enrollmentData.package_id)
+        .eq('student_id', enrollmentData.studentId)
+        .eq('class_id', enrollmentData.classId)
         .eq('status', 'active')
         .single()
 
       if (existingEnrollment) {
-        throw new Error('이미 해당 패키지로 활성 수강 중입니다.')
+        throw new Error('해당 학생은 이미 이 클래스에 활성 등록되어 있습니다.')
       }
+
+      // 클래스 내 다음 position 계산
+      const { data: maxPositionResult } = await supabase
+        .from('student_enrollments')
+        .select('position_in_class')
+        .eq('class_id', enrollmentData.classId)
+        .order('position_in_class', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextPosition = (maxPositionResult?.position_in_class || 0) + 1
 
       // 등록자 정보 설정
       const finalEnrollmentData = {
-        ...enrollmentData,
+        student_id: enrollmentData.studentId,
+        class_id: enrollmentData.classId,
+        package_id: enrollmentData.packageId,
         enrolled_by: enrollmentData.enrolled_by || userProfile!.id,
-        enrollment_date: enrollmentData.enrollment_date || new Date().toISOString()
+        enrollment_date: enrollmentData.enrollment_date || new Date().toISOString(),
+        start_date: enrollmentData.start_date || new Date().toISOString(),
+        end_date: enrollmentData.end_date,
+        original_price: enrollmentData.original_price,
+        discount_amount: enrollmentData.discount_amount,
+        final_price: enrollmentData.final_price,
+        payment_plan: enrollmentData.payment_plan,
+        hours_total: enrollmentData.hours_total,
+        sessions_total: enrollmentData.sessions_total,
+        video_access_expires_at: enrollmentData.video_access_expires_at,
+        can_download_videos: enrollmentData.can_download_videos,
+        position_in_class: nextPosition,
+        notes: enrollmentData.notes,
+        custom_fields: enrollmentData.custom_fields,
+        status: enrollmentData.status
       }
 
-      // 수강 등록 생성 - tenantId를 tenant_id로 매핑
-      const { tenantId, ...restEnrollmentData } = finalEnrollmentData
+      // 수강 등록 생성
       const { data: newEnrollment, error } = await supabase
         .from('student_enrollments')
         .insert({
-          ...restEnrollmentData,
-          tenant_id: tenantId,
+          ...finalEnrollmentData,
+          tenant_id: enrollmentData.tenantId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

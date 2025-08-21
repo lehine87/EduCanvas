@@ -438,7 +438,7 @@ export function isTableName(value: unknown): value is keyof Database['public']['
     'video_watch_sessions', 'videos'
   ] as const
   
-  return tableNames.includes(value as keyof Database['public']['Tables'])
+  return (tableNames as any).includes(value)
 }
 
 /**

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 관리자 권한 검사
-    if (currentUserProfile.role !== 'admin' && currentUserProfile.role !== 'system_admin') {
+    if (currentUserProfile.role !== 'tenant_admin' && currentUserProfile.role !== 'system_admin') {
       console.error('❌ 관리자 권한 없음:', currentUserProfile.role)
       return NextResponse.json(
         { error: '회원을 관리할 권한이 없습니다.' },
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 관리자는 다른 관리자를 수정할 수 없음 (시스템 관리자는 제외)
-    if (targetUser.role === 'admin' && currentUserProfile.role !== 'system_admin') {
+    if (targetUser.role === 'tenant_admin' && currentUserProfile.role !== 'system_admin') {
       console.error('❌ 관리자는 다른 관리자를 수정할 수 없음')
       return NextResponse.json(
         { error: '다른 관리자의 정보를 변경할 권한이 없습니다.' },

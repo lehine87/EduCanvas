@@ -6,21 +6,25 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/store/useAuthStore'
 import { authClient } from '@/lib/auth/authClient'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import {
-  HomeIcon,
-  AcademicCapIcon,
-  UserGroupIcon,
-  ClipboardDocumentListIcon,
-  CalendarDaysIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  UserCircleIcon,
-  Cog6ToothIcon,
-  ShieldCheckIcon,
-  ArrowRightOnRectangleIcon,
-  Bars3Icon,
-  ChevronLeftIcon
-} from '@heroicons/react/24/outline'
+  Home,
+  GraduationCap,
+  Users,
+  ClipboardList,
+  Calendar,
+  DollarSign,
+  BarChart3,
+  User,
+  Settings,
+  Shield,
+  LogOut,
+  Menu,
+  ChevronLeft
+} from 'lucide-react'
 
 interface MenuItem {
   name: string
@@ -35,56 +39,57 @@ interface MenuItem {
  */
 export function MainSidebar() {
   const pathname = usePathname()
-  const { profile } = useAuth()
+  const { user, profile, loading } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+
 
   // 기본 메뉴 (모든 역할 공통)
   const commonMenuItems: MenuItem[] = [
     {
       name: '대시보드',
       href: '/main',
-      icon: HomeIcon,
+      icon: Home,
       description: '메인 대시보드'
     },
     {
       name: '학생 관리',
       href: '/main/students',
-      icon: AcademicCapIcon,
+      icon: GraduationCap,
       description: '학생 정보 관리'
     },
     {
       name: '클래스 관리',
       href: '/main/classes',
-      icon: UserGroupIcon,
+      icon: Users,
       description: '수업 및 반 관리',
-      allowedRoles: ['system_admin', 'admin', 'instructor']
+      allowedRoles: ['system_admin', 'tenant_admin', 'instructor']
     },
     {
       name: '강사 관리',
       href: '/main/instructors',
-      icon: ClipboardDocumentListIcon,
+      icon: ClipboardList,
       description: '강사 정보 관리',
-      allowedRoles: ['system_admin', 'admin']
+      allowedRoles: ['system_admin', 'tenant_admin']
     },
     {
       name: '시간표',
       href: '/main/schedules',
-      icon: CalendarDaysIcon,
+      icon: Calendar,
       description: '수업 시간표'
     },
     {
       name: '수강 등록',
       href: '/main/enrollments',
-      icon: CurrencyDollarIcon,
+      icon: DollarSign,
       description: '수강 신청 및 결제',
-      allowedRoles: ['system_admin', 'admin', 'staff']
+      allowedRoles: ['system_admin', 'tenant_admin', 'staff']
     },
     {
       name: '통계 및 리포트',
       href: '/main/reports',
-      icon: ChartBarIcon,
+      icon: BarChart3,
       description: '운영 현황 분석',
-      allowedRoles: ['system_admin', 'admin']
+      allowedRoles: ['system_admin', 'tenant_admin']
     }
   ]
 
@@ -95,16 +100,16 @@ export function MainSidebar() {
     adminMenuItems.push({
       name: '시스템 관리',
       href: '#system-admin-section',
-      icon: ShieldCheckIcon,
+      icon: Shield,
       description: '시스템 전체 관리'
     })
   }
   
-  if (profile?.role === 'admin') {
+  if (profile?.role === 'tenant_admin') {
     adminMenuItems.push({
       name: '학원 관리',
       href: '#tenant-admin-section',
-      icon: Cog6ToothIcon,
+      icon: Settings,
       description: '학원 설정 및 관리'
     })
   }
@@ -132,44 +137,46 @@ export function MainSidebar() {
 
   return (
     <div className={cn(
-      'flex flex-col h-full bg-white border-r border-gray-200 transition-all duration-300',
+      'flex flex-col h-full bg-background border-r border-border transition-all duration-300',
       collapsed ? 'w-16' : 'w-64'
     )}>
       {/* 헤더 */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         {!collapsed && (
           <div>
-            <h1 className="text-lg font-bold text-gray-900">EduCanvas</h1>
-            <p className="text-sm text-gray-600">학원 관리 시스템</p>
+            <h1 className="text-lg font-bold text-foreground">EduCanvas</h1>
+            <p className="text-sm text-muted-foreground">학원 관리 시스템</p>
           </div>
         )}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+          className="h-8 w-8 p-0"
         >
-          {collapsed ? <Bars3Icon className="h-5 w-5" /> : <ChevronLeftIcon className="h-5 w-5" />}
-        </button>
+          {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
 
       {/* 사용자 정보 */}
       {!collapsed && profile && (
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-border">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
+            <Avatar className="w-10 h-10">
+              <AvatarFallback className="bg-primary text-primary-foreground">
                 {profile.name?.charAt(0) || profile.email?.charAt(0) || 'U'}
-              </span>
-            </div>
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-900 truncate">
+              <div className="text-sm font-medium text-foreground truncate">
                 {profile.name || profile.email?.split('@')[0]}
               </div>
-              <div className="text-xs text-gray-500 truncate">
+              <Badge variant="secondary" className="text-xs mt-1">
                 {profile.role === 'system_admin' ? '시스템 관리자' :
-                 profile.role === 'admin' ? '학원 관리자' :
+                 profile.role === 'tenant_admin' ? '테넌트 관리자' :
                  profile.role === 'instructor' ? '강사' :
                  profile.role === 'staff' ? '스태프' : '뷰어'}
-              </div>
+              </Badge>
             </div>
           </div>
         </div>
@@ -183,8 +190,13 @@ export function MainSidebar() {
           
           if (isAnchorLink) {
             return (
-              <button
+              <Button
                 key={item.href}
+                variant="ghost"
+                className={cn(
+                  'w-full justify-start text-left h-auto py-2',
+                  collapsed && 'justify-center px-2'
+                )}
                 onClick={() => {
                   const targetId = item.href.substring(1) // # 제거
                   const targetElement = document.getElementById(targetId)
@@ -192,91 +204,121 @@ export function MainSidebar() {
                     targetElement.scrollIntoView({ behavior: 'smooth' })
                   }
                 }}
-                className={cn(
-                  'w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-left',
-                  'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                  collapsed && 'justify-center px-2'
-                )}
                 title={collapsed ? item.name : undefined}
               >
                 <item.icon
                   className={cn(
-                    'flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500',
+                    'flex-shrink-0 h-4 w-4',
                     !collapsed && 'mr-3'
                   )}
                 />
                 {!collapsed && (
                   <span className="truncate">{item.name}</span>
                 )}
-              </button>
+              </Button>
             )
           }
           
           // 일반 링크는 기존 방식 유지
           return (
-            <Link
+            <Button
               key={item.href}
-              href={item.href}
+              asChild
+              variant={isActive(item.href) ? "secondary" : "ghost"}
               className={cn(
-                'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                isActive(item.href)
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                'w-full justify-start text-left h-auto py-2',
                 collapsed && 'justify-center px-2'
               )}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon
-                className={cn(
-                  'flex-shrink-0 h-5 w-5',
-                  isActive(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500',
-                  !collapsed && 'mr-3'
+              <Link href={item.href} className="flex items-center">
+                <item.icon
+                  className={cn(
+                    'flex-shrink-0 h-4 w-4',
+                    !collapsed && 'mr-3'
+                  )}
+                />
+                {!collapsed && (
+                  <span className="truncate">{item.name}</span>
                 )}
-              />
-              {!collapsed && (
-                <span className="truncate">{item.name}</span>
-              )}
-            </Link>
+              </Link>
+            </Button>
           )
         })}
       </nav>
 
-      {/* 프로필 및 로그아웃 */}
-      <div className="border-t border-gray-200 p-4">
+      {/* 사용자 정보 */}
+      <div className="border-t border-border p-4">
+        {!collapsed && profile && (
+          <div className="mb-4 p-3 bg-muted rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                  {profile.name?.[0] || profile.email?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {profile.name || profile.email?.split('@')[0]}
+                </p>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {profile.role === 'tenant_admin' ? '테넌트 관리자' :
+                     profile.role === 'system_admin' ? '시스템 관리자' :
+                     profile.role === 'instructor' ? '강사' :
+                     profile.role === 'staff' ? '스태프' :
+                     profile.role === 'viewer' ? '뷰어' : profile.role}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="space-y-2">
           {!collapsed ? (
             <>
-              <Link
-                href="/main/profile"
-                className="flex items-center px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-auto py-2"
+                asChild
               >
-                <UserCircleIcon className="h-4 w-4 mr-3" />
-                프로필
-              </Link>
-              <button
+                <Link href="/main/profile" className="flex items-center">
+                  <User className="h-4 w-4 mr-3" />
+                  프로필
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-auto py-2 text-destructive hover:text-destructive"
                 onClick={handleSignOut}
-                className="w-full flex items-center px-3 py-2 text-sm text-red-600 rounded-md hover:bg-red-50 transition-colors"
               >
-                <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
+                <LogOut className="h-4 w-4 mr-3" />
                 로그아웃
-              </button>
+              </Button>
             </>
           ) : (
             <div className="flex flex-col space-y-2">
-              <Link
-                href="/main/profile"
-                className="flex justify-center p-2 text-gray-600 rounded-md hover:bg-gray-50"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                asChild
                 title="프로필"
               >
-                <UserCircleIcon className="h-5 w-5" />
-              </Link>
-              <button
+                <Link href="/main/profile" className="flex items-center justify-center">
+                  <User className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                 onClick={handleSignOut}
-                className="flex justify-center p-2 text-red-600 rounded-md hover:bg-red-50"
                 title="로그아웃"
               >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-              </button>
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </div>

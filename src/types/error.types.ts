@@ -7,6 +7,71 @@ export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical'
 export type ErrorCategory = 'validation' | 'network' | 'authentication' | 'authorization' | 'business' | 'system'
 
 /**
+ * 기본 에러 인터페이스 (apiErrors.ts 호환성을 위함)
+ */
+export interface BaseError {
+  id: string
+  message: string
+  severity: ErrorSeverity
+  category: ErrorCategory
+  timestamp: Date
+  context?: Record<string, unknown>
+}
+
+/**
+ * 데이터베이스 에러 인터페이스
+ */
+export interface DatabaseError extends BaseError {
+  query?: string
+  table?: string
+  constraint?: string
+}
+
+/**
+ * 인증 에러 인터페이스
+ */
+export interface AuthenticationError extends Omit<BaseError, 'category' | 'context' | 'severity' | 'timestamp'> {
+  category: 'authentication'
+  severity: ErrorSeverity
+  timestamp: Date
+  context?: Record<string, unknown>
+  reason?: string
+}
+
+/**
+ * 인가 에러 인터페이스  
+ */
+export interface AuthorizationError extends Omit<BaseError, 'category' | 'context' | 'severity' | 'timestamp'> {
+  category: 'authorization'
+  severity: ErrorSeverity
+  timestamp: Date
+  context?: Record<string, unknown>
+  requiredPermissions: string[]
+  userPermissions: string[]
+}
+
+/**
+ * 네트워크 에러 인터페이스
+ */
+export interface NetworkError extends Omit<BaseError, 'category' | 'context' | 'severity' | 'timestamp'> {
+  category: 'network'
+  severity: ErrorSeverity
+  timestamp: Date
+  context?: Record<string, unknown>
+  url: string
+  status: number
+  method: string
+}
+
+/**
+ * 비즈니스 에러 인터페이스 (확장)
+ */
+export interface BusinessError extends AppError {
+  businessRule: string
+  affectedEntities: string[]
+}
+
+/**
  * 기본 애플리케이션 에러 인터페이스
  */
 export interface AppError {
@@ -35,20 +100,12 @@ export interface ApiError extends AppError {
 }
 
 /**
- * 검증 에러
+ * 검증 에러 (확장)
  */
-export interface ValidationError extends AppError {
+export interface ValidationError extends BaseError {
   field: string
   value: unknown
   constraint: string
-}
-
-/**
- * 비즈니스 로직 에러
- */
-export interface BusinessError extends AppError {
-  businessRule: string
-  affectedEntities: string[]
 }
 
 /**
@@ -286,7 +343,7 @@ export function isAuthError(error: unknown): error is AuthenticationError | Auth
  */
 export function getErrorMessage(error: unknown): string {
   if (isAppError(error)) {
-    return error.getDisplayMessage()
+    return error.message || error.code || 'Unknown error'
   }
   if (error instanceof Error) {
     return error.message
@@ -325,7 +382,7 @@ export function logError(error: unknown, context?: AppError['context']) {
     context
   )
 
-  console.error(`[${errorObj.severity.toUpperCase()}] ${errorObj.code}:`, errorObj.toJSON())
+  console.error(`[${errorObj.severity.toUpperCase()}] ${errorObj.code}:`, JSON.stringify(errorObj))
   
   // Sentry나 다른 에러 추적 서비스에 전송
   if (typeof window !== 'undefined' && (window as unknown as { Sentry?: unknown }).Sentry) {

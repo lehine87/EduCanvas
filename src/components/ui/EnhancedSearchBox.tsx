@@ -1,18 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { 
-  MagnifyingGlassIcon, 
-  XMarkIcon,
-  UserIcon,
-  PhoneIcon,
-  HashtagIcon,
-  AcademicCapIcon
-} from '@heroicons/react/24/outline'
+  Search, 
+  X,
+  User,
+  Phone,
+  Hash,
+  GraduationCap
+} from 'lucide-react'
 import type { Student } from '@/types/student.types'
 
 // 🎯 UX 가이드: 검색 결과 타입 정의
@@ -77,11 +77,11 @@ const searchStudents = (students: Student[], query: string): SearchResult[] => {
       id: student.id,
       name: student.name,
       student_number: student.student_number,
-      phone: student.phone,
-      parent_phone_1: student.parent_phone_1,
-      grade_level: student.grade_level,
-      status: student.status,
-      avatar_url: student.avatar_url
+      phone: student.phone ?? undefined,
+      parent_phone_1: student.parent_phone_1 ?? undefined,
+      grade_level: (student as any).grade_level ?? undefined,
+      status: student.status as string,
+      avatar_url: (student as any).avatar_url ?? undefined
     }
     
     // 1. 학생 이름으로 검색
@@ -143,11 +143,11 @@ const SearchResultItem = ({
 }) => {
   const getMatchIcon = (matchType: SearchResult['matchType']) => {
     switch (matchType) {
-      case 'name': return <UserIcon className="h-4 w-4 text-blue-500" />
-      case 'phone': return <PhoneIcon className="h-4 w-4 text-green-500" />
-      case 'student_id': return <HashtagIcon className="h-4 w-4 text-purple-500" />
-      case 'class': return <AcademicCapIcon className="h-4 w-4 text-orange-500" />
-      default: return <UserIcon className="h-4 w-4 text-gray-500" />
+      case 'name': return <User className="h-4 w-4 text-blue-500" />
+      case 'phone': return <Phone className="h-4 w-4 text-green-500" />
+      case 'student_id': return <Hash className="h-4 w-4 text-purple-500" />
+      case 'class': return <GraduationCap className="h-4 w-4 text-orange-500" />
+      default: return <User className="h-4 w-4 text-muted-foreground" />
     }
   }
   
@@ -164,7 +164,7 @@ const SearchResultItem = ({
   return (
     <div
       className={`flex items-center space-x-3 p-3 cursor-pointer transition-colors duration-150 ${
-        isHighlighted ? 'bg-blue-50 border-l-2 border-blue-500' : 'hover:bg-gray-50'
+        isHighlighted ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-muted/50'
       }`}
       onClick={onClick}
       role="option"
@@ -179,8 +179,8 @@ const SearchResultItem = ({
             className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-600 font-medium">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground font-medium">
               {result.name.charAt(0)}
             </span>
           </div>
@@ -190,7 +190,7 @@ const SearchResultItem = ({
       {/* 학생 정보 */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center space-x-2">
-          <h4 className="font-medium text-gray-900 truncate">{result.name}</h4>
+          <h4 className="font-medium text-foreground truncate">{result.name}</h4>
           <div className="flex items-center space-x-1">
             {getMatchIcon(result.matchType)}
             <Badge variant="secondary" className="text-xs">
@@ -200,20 +200,20 @@ const SearchResultItem = ({
         </div>
         <div className="flex items-center space-x-2 mt-1">
           {result.student_number && (
-            <span className="text-sm text-gray-600">#{result.student_number}</span>
+            <span className="text-sm text-muted-foreground">#{result.student_number}</span>
           )}
           {result.grade_level && (
-            <span className="text-sm text-gray-600">{result.grade_level}</span>
+            <span className="text-sm text-muted-foreground">{result.grade_level}</span>
           )}
           <span className={`inline-block w-2 h-2 rounded-full ${
-            result.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
+            result.status === 'active' ? 'bg-green-500' : 'bg-muted-foreground'
           }`} />
         </div>
       </div>
       
       {/* 매치된 텍스트 강조 */}
       <div className="flex-shrink-0">
-        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
           {result.matchText}
         </span>
       </div>
@@ -293,12 +293,14 @@ export const EnhancedSearchBox = ({
         e.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < searchResults.length) {
           const selectedResult = searchResults[highlightedIndex]
-          const student = students.find(s => s.id === selectedResult.id)
-          if (student) {
-            onStudentSelect(student)
-            onChange('')
-            setIsOpen(false)
-            setHighlightedIndex(-1)
+          if (selectedResult) {
+            const student = students.find(s => s.id === selectedResult.id)
+            if (student) {
+              onStudentSelect(student)
+              onChange('')
+              setIsOpen(false)
+              setHighlightedIndex(-1)
+            }
           }
         }
         break
@@ -334,7 +336,7 @@ export const EnhancedSearchBox = ({
     <div className={`relative ${className}`}>
       {/* 메인 검색창 */}
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           ref={inputRef}
           value={value}
@@ -343,7 +345,7 @@ export const EnhancedSearchBox = ({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="pl-12 pr-12 h-14 text-lg border-2 border-gray-300 focus:border-blue-500 rounded-xl shadow-sm"
+          className="pl-12 pr-12 h-14 text-lg border-2 border-border focus:border-primary rounded-xl shadow-sm"
           aria-label="학생 검색 - 이름, 전화번호, 학번으로 검색"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -357,20 +359,22 @@ export const EnhancedSearchBox = ({
             <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
           )}
           {value && !loading && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleClear}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="h-6 w-6 p-0 hover:bg-muted rounded-full"
               aria-label="검색어 지우기"
             >
-              <XMarkIcon className="h-5 w-5 text-gray-400" />
-            </button>
+              <X className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
       
       {/* 검색 전략 힌트 */}
       <div className="mt-2 text-center">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-muted-foreground">
           {searchStrategy.description} • 총 {students.length}명 등록
           {value.length >= 2 && ` • ${searchResults.length}개 결과`}
         </span>
@@ -421,8 +425,8 @@ export const EnhancedSearchBox = ({
                 )}
               </>
             ) : (
-              <div className="p-6 text-center text-gray-500">
-                <MagnifyingGlassIcon className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+              <div className="p-6 text-center text-muted-foreground">
+                <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
                 <p>&quot;{value}&quot;에 대한 검색 결과가 없습니다</p>
                 <p className="text-sm mt-1">
                   학생 이름, 전화번호 뒤 4자리, 학번으로 검색해보세요

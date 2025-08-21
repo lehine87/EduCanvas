@@ -31,7 +31,15 @@
       "WebSearch",
       "Bash(npx kill-port:*)",
       "Bash(touch:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(npx:*)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(true)",
+      "Bash(del \"C:\\Users\\Carl\\OneDrive\\EduCanvas\\supabase\\migrations\\20250820032714_add_video_quality_enum.sql\")",
+      "Bash(rg:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_7643e87755caf9b38f704231d7619ac55293e083 npx supabase gen types typescript --project-id hodkqpmukwfrreozwmcy)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

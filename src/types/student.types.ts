@@ -2,10 +2,10 @@
 import type { Database } from './database'
 
 /**
- * 학생 상태 타입 (통일된 정의)
- * 데이터베이스 enum과 일치: active, inactive, graduated, withdrawn, suspended
+ * 학생 상태 타입 (데이터베이스 스키마와 완전히 동기화)
+ * 데이터베이스 enum을 직접 사용하여 타입 안전성 보장
  */
-export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended'
+export type StudentStatus = Database['public']['Enums']['student_status']
 
 /**
  * 기본 Student 타입 (데이터베이스 스키마 기반)
@@ -84,11 +84,14 @@ export interface StudentCardData {
   id: string
   name: string
   grade?: string
+  grade_level?: string
   student_number?: string
   status: StudentStatus
   class_name?: string
   parent_phone_1?: string
   avatar_url?: string
+  school_name?: string
+  notes?: string
 }
 
 /**

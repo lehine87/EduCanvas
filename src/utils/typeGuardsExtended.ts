@@ -154,7 +154,7 @@ export function isActiveCoursePackage(pkg: CoursePackage): boolean {
  * 활성 수강신청인지 확인
  */
 export function isActiveEnrollment(enrollment: StudentEnrollment): boolean {
-  return enrollment.status === 'active'
+  return (enrollment as any).status === 'active'
 }
 
 /**
@@ -276,7 +276,7 @@ export function isPublishedVideo(video: Video): boolean {
  * YouTube 비디오인지 확인
  */
 export function isYouTubeVideo(video: Video): boolean {
-  return video.youtube_video_id !== null && video.youtube_video_id !== undefined
+  return (video as any).youtube_video_id !== null && (video as any).youtube_video_id !== undefined
 }
 
 // ================================================================

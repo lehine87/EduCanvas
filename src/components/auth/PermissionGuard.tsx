@@ -104,7 +104,7 @@ export function PermissionGuard({
  * 역할 기반 가드 컴포넌트
  */
 interface RoleGuardProps {
-  allowedRoles: Array<'system_admin' | 'admin' | 'instructor' | 'staff' | 'viewer'>
+  allowedRoles: Array<'system_admin' | 'tenant_admin' | 'instructor' | 'staff' | 'viewer'>
   children: React.ReactNode
   fallback?: React.ReactNode
 }
@@ -167,7 +167,7 @@ export function AdminOnly({
   fallback?: React.ReactNode 
 }) {
   return (
-    <RoleGuard allowedRoles={['system_admin', 'admin']} fallback={fallback}>
+    <RoleGuard allowedRoles={['system_admin', 'tenant_admin']} fallback={fallback}>
       {children}
     </RoleGuard>
   )
@@ -202,7 +202,7 @@ export function StaffOnly({
 }) {
   return (
     <RoleGuard 
-      allowedRoles={['system_admin', 'admin', 'instructor', 'staff']} 
+      allowedRoles={['system_admin', 'tenant_admin', 'instructor', 'staff']} 
       fallback={fallback}
     >
       {children}

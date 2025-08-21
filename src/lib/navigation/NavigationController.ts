@@ -275,9 +275,12 @@ export class NavigationController {
       if (!pathCounts[entry.path]) {
         pathCounts[entry.path] = { total: 0, redirects: 0 }
       }
-      pathCounts[entry.path].total++
-      if (entry.wasRedirected) {
-        pathCounts[entry.path].redirects++
+      const pathStats = pathCounts[entry.path]
+      if (pathStats) {
+        pathStats.total++
+        if (entry.wasRedirected) {
+          pathStats.redirects++
+        }
       }
     })
 

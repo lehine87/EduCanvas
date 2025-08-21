@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth/authClient'
-import { Button, Card, CardBody, Loading } from '@/components/ui'
+import { Button, Card, CardContent, Loading } from '@/components/ui'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile, Tenant } from '@/types/auth.types'
 import { hasTenantId } from '@/types/auth.types'
@@ -136,7 +136,7 @@ export default function PendingApprovalPage() {
 
         {/* 신청 정보 카드 */}
         <Card className="mb-6">
-          <CardBody>
+          <CardContent>
             <div className="text-center space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-800 mb-2">
@@ -157,7 +157,7 @@ export default function PendingApprovalPage() {
                     <span className="font-medium">
                       {user?.profile?.role === 'instructor' ? '강사' :
                        user?.profile?.role === 'staff' ? '스태프' :
-                       user?.profile?.role === 'admin' ? '관리자' : '미설정'}
+                       user?.profile?.role === 'tenant_admin' ? '관리자' : '미설정'}
                     </span>
                   </div>
                   {tenant && (
@@ -212,7 +212,7 @@ export default function PendingApprovalPage() {
                 </ul>
               </div>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
 
         {/* 액션 버튼들 */}

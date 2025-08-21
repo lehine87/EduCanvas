@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { authClient } from '@/lib/auth/authClient'
 import { signUpSchema, type SignUpFormData } from '@/lib/auth/authValidation'
 
@@ -24,16 +30,17 @@ export function SignUpForm() {
   })
   const router = useRouter()
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors }
-  } = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema)
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    }
   })
 
-  const emailValue = watch('email')
+  const emailValue = form.watch('email')
 
   // 실시간 이메일 중복 검사 (디바운싱)
   const checkEmailAvailability = async (email: string) => {
@@ -159,44 +166,50 @@ export function SignUpForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
-            <CardBody>
-              <div className="text-center space-y-4">
-                <div className="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                  <CheckCircleIcon className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
                 
-                <h2 className="text-xl font-bold text-gray-900">
-                  회원가입 완료!
-                </h2>
-                
-                <p className="text-gray-600">
-                  이메일로 전송된 인증 링크를 클릭하여<br />
-                  계정 인증 후 온보딩을 완료해주세요.
-                </p>
-                
-                <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md border border-blue-200">
-                  <p>📋 <strong>다음 단계:</strong></p>
-                  <ol className="mt-2 text-left space-y-1">
-                    <li>1. 이메일 인증 링크 클릭</li>
-                    <li>2. 기본 프로필 정보 입력</li>
-                    <li>3. 소속 학원 연결</li>
-                    <li>4. 관리자 승인 완료</li>
-                  </ol>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold">
+                    회원가입 완료!
+                  </h2>
+                  
+                  <p className="text-muted-foreground">
+                    이메일로 전송된 인증 링크를 클릭하여<br />
+                    계정 인증 후 온보딩을 완료해주세요.
+                  </p>
                 </div>
+                
+                <Alert>
+                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="text-left space-y-3">
+                      <p className="font-medium">📋 다음 단계:</p>
+                      <ol className="space-y-1 text-sm">
+                        <li>1. 이메일 인증 링크 클릭</li>
+                        <li>2. 기본 프로필 정보 입력</li>
+                        <li>3. 소속 학원 연결</li>
+                        <li>4. 관리자 승인 완료</li>
+                      </ol>
+                    </div>
+                  </AlertDescription>
+                </Alert>
                 
                 <Button
                   onClick={() => router.push('/auth/login')}
                   className="w-full"
+                  size="lg"
                 >
                   로그인 페이지로 이동
                 </Button>
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -204,13 +217,13 @@ export function SignUpForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold">
             EduCanvas
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             새 계정을 만들어 시작하세요
           </p>
         </div>
@@ -219,118 +232,159 @@ export function SignUpForm() {
           <CardHeader>
             <CardTitle>회원가입</CardTitle>
           </CardHeader>
-          <CardBody>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <div 
-                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {error}
-                </div>
-              )}
-
-              <Input
-                label="이름"
-                type="text"
-                {...register('full_name')}
-                error={errors.full_name?.message}
-                placeholder="홍길동"
-                disabled={isLoading}
-                required
-              />
-
-              <div className="space-y-1">
-                <Input
-                  label="이메일"
-                  type="email"
-                  {...register('email')}
-                  error={errors.email?.message}
-                  placeholder="example@academy.com"
-                  disabled={isLoading}
-                  required
-                />
-                {emailCheckResult.message && (
-                  <div className={`text-xs px-2 py-1 rounded ${
-                    emailCheckResult.isChecking
-                      ? 'text-gray-600 bg-gray-50'
-                      : emailCheckResult.isAvailable
-                      ? 'text-green-600 bg-green-50'
-                      : 'text-red-600 bg-red-50'
-                  }`}>
-                    {emailCheckResult.isChecking && (
-                      <span className="inline-block w-3 h-3 mr-1">
-                        <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                      </span>
-                    )}
-                    {emailCheckResult.isAvailable === true && '✅ '}
-                    {emailCheckResult.isAvailable === false && '❌ '}
-                    {emailCheckResult.message}
-                  </div>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {error && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon className="h-4 w-4" />
+                    <AlertDescription>
+                      {error}
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </div>
 
-              <Input
-                label="비밀번호"
-                type="password"
-                {...register('password')}
-                error={errors.password?.message}
-                placeholder="••••••••"
-                hint="최소 8자, 영문과 숫자 포함"
-                disabled={isLoading}
-                required
-              />
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이름</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="홍길동" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Input
-                label="비밀번호 확인"
-                type="password"
-                {...register('confirmPassword')}
-                error={errors.confirmPassword?.message}
-                placeholder="••••••••"
-                disabled={isLoading}
-                required
-              />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이메일</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="example@academy.com" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      {emailCheckResult.message && (
+                        <div className="flex items-center gap-2 mt-2">
+                          {emailCheckResult.isChecking && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                          )}
+                          {emailCheckResult.isAvailable === true && (
+                            <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                          )}
+                          {emailCheckResult.isAvailable === false && (
+                            <XCircleIcon className="h-4 w-4 text-red-600" />
+                          )}
+                          <Badge 
+                            variant={
+                              emailCheckResult.isChecking 
+                                ? "secondary"
+                                : emailCheckResult.isAvailable 
+                                ? "default" 
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            {emailCheckResult.message}
+                          </Badge>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>비밀번호</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="••••••••" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        최소 8자, 영문과 숫자 포함
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button
-                type="submit"
-                className="w-full"
-                loading={isLoading}
-                disabled={isLoading || emailCheckResult.isAvailable === false}
-              >
-                {emailCheckResult.isAvailable === false 
-                  ? '이미 사용 중인 이메일입니다' 
-                  : '회원가입'
-                }
-              </Button>
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>비밀번호 확인</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="••••••••" 
+                          disabled={isLoading}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  이미 계정이 있으신가요?{' '}
-                  <Link
-                    href="/auth/login"
-                    className="font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    로그인
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </CardBody>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || emailCheckResult.isAvailable === false}
+                >
+                  {isLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  )}
+                  {emailCheckResult.isAvailable === false 
+                    ? '이미 사용 중인 이메일입니다' 
+                    : '회원가입'
+                  }
+                </Button>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    이미 계정이 있으신가요?{' '}
+                    <Link
+                      href="/auth/login"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      로그인
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
         </Card>
 
-        <div className="text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-muted-foreground">
           <p>
             회원가입 시{' '}
-            <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+            <Link href="/terms" className="text-primary hover:underline">
               이용약관
             </Link>{' '}
             및{' '}
-            <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+            <Link href="/privacy" className="text-primary hover:underline">
               개인정보처리방침
             </Link>
             에 동의하는 것으로 간주됩니다.

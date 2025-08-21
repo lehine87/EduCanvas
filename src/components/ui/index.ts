@@ -1,285 +1,104 @@
-/**
- * EduCanvas UI Components Library
- * 
- * Centralized exports for all UI components to enable easy UI replacement
- * When replacing the UI library, only this file needs to be updated.
- * 
- * Usage:
- * import { Button, Input, Modal } from '@/components/ui';
- */
+// =============================================================================
+// UI COMPONENTS INDEX
+// =============================================================================
+// 이 파일은 모든 UI 컴포넌트의 중앙 export 허브입니다.
 
 // =============================================================================
-// BASIC UI COMPONENTS
+// EXISTING CUSTOM COMPONENTS (정리 후 추가할 예정)
 // =============================================================================
-
-// Button Components
-export { Button } from './Button';
-export type { ButtonProps } from './Button';
-
-// Input Components
-export { Input } from './Input';
-export type { InputProps } from './Input';
-
-// Textarea Components
-export { Textarea } from './Textarea';
-export type { TextareaProps } from './Textarea';
-
-// Select Components
-export { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './Select';
-export type { SelectProps, SelectTriggerProps, SelectContentProps, SelectItemProps, SelectValueProps } from './Select';
-
-// Label Components
-export { Label } from './Label';
-export type { LabelProps } from './Label';
-
-// Card Components
-export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from './Card';
-export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps } from './Card';
-
-// Modal Components
-export { Modal, ConfirmModal, AlertModal } from './Modal';
-export type { ModalProps } from './Modal';
-
-// Table Components
-export { Table } from './Table';
-export type { TableProps, TableColumn } from './Table';
-
-// Badge Components
-export { Badge, StatusBadge, CountBadge, TagBadge } from './Badge';
-export type { BadgeProps, StatusBadgeProps, CountBadgeProps, TagBadgeProps } from './Badge';
 
 // Loading Components
-export { 
-  Loading,
-  Skeleton,
-  CardSkeleton,
-  TableSkeleton,
-  ListSkeleton
-} from './Loading';
-export type { LoadingProps, SkeletonProps, TableSkeletonProps, ListSkeletonProps } from './Loading';
+export { Loading } from './Loading';
 
-// =============================================================================
-// CLASSFLOW SPECIFIC COMPONENTS
-// =============================================================================
+// Modal Components  
+export { Modal } from './Modal';
 
-// Student Card Component
+// Student Components
 export { StudentCard } from './StudentCard';
-export type { StudentCardProps, ClassFlowStudent } from './StudentCard';
+export { VirtualizedStudentList } from './VirtualizedStudentList';
 
-// Drop Zone Components
-export { DropZone, ClassFlowDropZone } from './DropZone';
-export type { DropZoneProps, ClassFlowDropZoneProps } from './DropZone';
+// Other Custom Components
+export { EnhancedSearchBox } from './EnhancedSearchBox';
+export { DropZone } from './DropZone';
+export { SkipLinks } from './SkipLinks';
+// FocusManager component temporarily disabled due to export issues
+// export { FocusManager } from './FocusManager';
 
-// =============================================================================
-// TYPE DEFINITIONS
-// =============================================================================
-
-// Common Types and Interfaces
-export type {
-  BaseComponentProps,
-  AccessibilityProps,
-  ComponentSize,
-  ComponentVariant
-} from './types';
+// ClassFlow Components
+export { ClassContainer } from './classflow/ClassContainer';
+export { DragHandle } from './classflow/DragHandle';
+export { LoadingPlaceholder } from './classflow/LoadingPlaceholder';
 
 // =============================================================================
-// UTILITY EXPORTS
+// SHADCN/UI COMPONENTS (설치 완료)  
 // =============================================================================
+// NOTE: 기존 커스텀 컴포넌트와 중복되지 않는 새로운 컴포넌트만 export
 
-// Re-export cn utility for convenience
-export { cn } from '@/utils/cn';
+// Form Components (새로운)
+export { Button, buttonVariants } from './button';
+export { Input } from './input';
+export { Label } from './label';
+export { Textarea } from './textarea';
+export { Checkbox } from './checkbox';
+export { RadioGroup, RadioGroupItem } from './radio-group';
+export { Switch } from './switch';
+export { Slider } from './slider';
 
-// =============================================================================
-// COMPONENT GROUPS FOR ORGANIZED IMPORTS
-// =============================================================================
+// Layout Components (새로운)
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+export { Separator } from './separator';
+export { AspectRatio } from './aspect-ratio';
+export { ScrollArea, ScrollBar } from './scroll-area';
 
-/**
- * Basic UI Components
- * For standard form elements and basic interactions
- */
-// export const BasicComponents = {
-//   Button,
-//   Input,
-//   Textarea,
-//   Modal,
-//   ConfirmModal,
-//   Table,
-//   SimpleTable,
-// } as const;
+// Navigation Components (새로운)
+export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './select';
+export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
+export { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from './navigation-menu';
+export { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './breadcrumb';
+export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './pagination';
 
-/**
- * ClassFlow Components
- * Specialized components for drag-and-drop student management
- */
-// export const ClassFlowComponents = {
-//   DragHandle,
-//   StudentCard,
-//   ClassContainer,
-//   LoadingPlaceholder,
-//   StudentCardLoader,
-//   ClassContainerLoader,
-//   TableRowLoader,
-// } as const;
+// Feedback Components
+export { Alert, AlertDescription, AlertTitle } from './alert';
+export { Badge, badgeVariants } from './badge';
+export { Progress } from './progress';
+export { Skeleton } from './skeleton';
+// Sonner component temporarily disabled due to export issues
+// export { Sonner } from './sonner';
 
-// =============================================================================
-// VERSION INFORMATION
-// =============================================================================
+// Overlay Components
+export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
+export { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './alert-dialog';
+export { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './sheet';
+export { Popover, PopoverContent, PopoverTrigger } from './popover';
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+export { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 
-/**
- * UI Library Version
- * Update this when making breaking changes to component APIs
- */
-export const UI_VERSION = '1.0.0' as const;
+// Menu Components
+export { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from './dropdown-menu';
+export { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuLabel, ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from './context-menu';
+export { Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarLabel, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from './menubar';
 
-/**
- * UI Library Metadata
- */
-export const UI_METADATA = {
-  version: UI_VERSION,
-  lastUpdated: '2025-08-11',
-  framework: 'React 19 + TypeScript',
-  styling: 'TailwindCSS 4',
-  designSystem: 'EduCanvas Design System',
-  performance: {
-    targetFPS: 60,
-    maxStudents: 10000,
-    virtualizationThreshold: 100,
-  },
-  accessibility: 'WCAG 2.1 AA Compliant',
-} as const;
+// Display Components
+export { Avatar, AvatarFallback, AvatarImage } from './avatar';
+export { Calendar } from './calendar';
+export { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './carousel';
+// Chart components temporarily disabled due to export issues
+// export { Chart, ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from './chart';
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './table';
 
-// =============================================================================
-// DEVELOPMENT UTILITIES
-// =============================================================================
+// Interaction Components
+export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from './command';
+export { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './accordion';
+export { Toggle, toggleVariants } from './toggle';
+export { ToggleGroup, ToggleGroupItem } from './toggle-group';
+export { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerPortal, DrawerTitle, DrawerTrigger } from './drawer';
 
-/**
- * Component Registry for Development and Testing
- * Useful for Storybook, documentation, and debugging
- */
-export const COMPONENT_REGISTRY = {
-  basic: [
-    'Button',
-    'Input',
-    'Textarea',
-    'Select',
-    'Label',
-    'Card',
-    'Modal',
-    'Table',
-    'Badge',
-    'Loading',
-  ],
-  classflow: [
-    'StudentCard', 
-    'DropZone',
-    'ClassFlowDropZone',
-  ],
-} as const;
+// Layout & Sizing
+// Resizable components temporarily disabled due to export issues
+// export { Resizable, ResizableHandle, ResizablePanel, ResizablePanelGroup } from './resizable';
+export { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuAction, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSkeleton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarSeparator, SidebarTrigger, useSidebar } from './sidebar';
 
-/**
- * Check if component exists in registry
- */
-type ComponentName = typeof COMPONENT_REGISTRY.basic[number] | typeof COMPONENT_REGISTRY.classflow[number];
-
-export const hasComponent = (componentName: string): componentName is ComponentName => {
-  return (
-    COMPONENT_REGISTRY.basic.includes(componentName as typeof COMPONENT_REGISTRY.basic[number]) ||
-    COMPONENT_REGISTRY.classflow.includes(componentName as typeof COMPONENT_REGISTRY.classflow[number])
-  );
-};
-
-/**
- * Get component category
- */
-export const getComponentCategory = (componentName: string): 'basic' | 'classflow' | null => {
-  if (COMPONENT_REGISTRY.basic.includes(componentName as typeof COMPONENT_REGISTRY.basic[number])) return 'basic';
-  if (COMPONENT_REGISTRY.classflow.includes(componentName as typeof COMPONENT_REGISTRY.classflow[number])) return 'classflow';
-  return null;
-};
-
-// =============================================================================
-// MIGRATION HELPERS
-// =============================================================================
-
-/**
- * Migration utilities for future UI library replacements
- * These help track component usage and breaking changes
- */
-export const MIGRATION_UTILS = {
-  /**
-   * Get all exported component names
-   */
-  getComponentNames: () => [
-    ...COMPONENT_REGISTRY.basic,
-    ...COMPONENT_REGISTRY.classflow,
-  ],
-  
-  /**
-   * Check for breaking changes between versions
-   */
-  checkBreakingChanges: (fromVersion: string, toVersion: string) => {
-    // Implementation for version compatibility checking
-    console.warn(`Migration check: ${fromVersion} -> ${toVersion}`);
-    return [];
-  },
-  
-  /**
-   * Generate component usage report
-   */
-  generateUsageReport: () => {
-    // This would be implemented to scan codebase for component usage
-    console.log('Generating component usage report...');
-    return {
-      totalComponents: COMPONENT_REGISTRY.basic.length + COMPONENT_REGISTRY.classflow.length,
-      basicComponents: COMPONENT_REGISTRY.basic.length,
-      classflowComponents: COMPONENT_REGISTRY.classflow.length,
-    };
-  },
-} as const;
-
-// =============================================================================
-// EXAMPLES AND DOCUMENTATION
-// =============================================================================
-
-/**
- * Example Usage Patterns
- * 
- * @example
- * // Basic form with validation
- * import { Button, Input } from '@/components/ui';
- * 
- * <form>
- *   <Input
- *     label="Email"
- *     type="email"
- *     error={errors.email}
- *     required
- *   />
- *   <Button type="submit" loading={isSubmitting}>
- *     Submit
- *   </Button>
- * </form>
- * 
- * @example
- * // ClassFlow drag-and-drop
- * import { ClassContainer, StudentCard } from '@/components/ui';
- * 
- * <ClassContainer
- *   classData={classInfo}
- *   students={students}
- *   onStudentClick={handleStudentClick}
- *   variant="grid"
- * />
- * 
- * @example
- * // Data table with virtualization
- * import { Table } from '@/components/ui';
- * 
- * <Table
- *   data={largeDataset}
- *   columns={columns}
- *   virtualized
- *   height={400}
- *   selectable
- * />
- */
+// Forms  
+export { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from './form';
+export { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from './input-otp';

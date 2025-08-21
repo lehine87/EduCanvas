@@ -126,8 +126,8 @@ export function usePermissions() {
   const { user, profile } = useAuthStore()
   
   // 기존 인터페이스와 호환을 위한 computed values
-  const isOwner = profile?.role === 'admin' && profile?.status === 'active'
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'system_admin'
+  const isOwner = profile?.role === 'tenant_admin' && profile?.status === 'active'
+  const isAdmin = profile?.role === 'tenant_admin' || profile?.role === 'system_admin'
   const isInstructor = profile?.role === 'instructor'
   
   // Legacy hasPermission 함수 (호환성)
@@ -135,7 +135,7 @@ export function usePermissions() {
     if (!profile) return false
     // 간단한 권한 체크 로직
     const role = profile.role
-    if (role === 'system_admin' || role === 'admin') return true
+    if (role === 'system_admin' || role === 'tenant_admin') return true
     if (role === 'instructor' && (resource === 'classes' || resource === 'students')) return true
     if (role === 'staff' && resource === 'students') return true
     return false

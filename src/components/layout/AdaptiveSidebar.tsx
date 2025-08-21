@@ -77,7 +77,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     icon: HomeIcon,
     description: '전체 현황 보기',
     roleCustomization: {
-      admin: { 
+      tenant_admin: { 
         name: '학원 관리 대시보드',
         description: '학원 전체 현황 및 관리'
       },
@@ -99,7 +99,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/staff',
     icon: UserGroupIcon,
     description: '직원 정보 및 관리',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'user', action: 'read' }
     ]
@@ -110,7 +110,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/payroll',
     icon: CurrencyDollarIcon,
     description: '직원 급여 및 수당 관리',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'user', action: 'read' },
       { resource: 'payment', action: 'read' }
@@ -122,7 +122,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/permissions',
     icon: ShieldCheckIcon,
     description: '역할 및 권한 설정',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'user', action: 'manage' }
     ]
@@ -137,7 +137,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
       { resource: 'analytics', action: 'read' }
     ],
     roleCustomization: {
-      admin: { 
+      tenant_admin: { 
         name: '종합 통계 분석',
         description: '학원 전체 통계 및 분석'
       },
@@ -148,8 +148,9 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
       }
     },
     shouldShow: (permissions, role) => {
-      return permissions.resources?.analytics?.canRead || 
-             (role === 'admin' || role === 'instructor')
+      const perms = permissions as any
+      return perms?.resources?.analytics?.canRead || 
+             (role === 'tenant_admin' || role === 'instructor')
     }
   },
   {
@@ -158,7 +159,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/notifications',
     icon: BellIcon,
     description: '시스템 알림 관리',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'system', action: 'read' }
     ]
@@ -169,7 +170,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/audit-logs',
     icon: DocumentTextIcon,
     description: '시스템 활동 로그',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'audit', action: 'read' }
     ]
@@ -180,7 +181,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     href: '/admin/academy-settings',
     icon: BuildingOfficeIcon,
     description: '학원 기본 설정',
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
     requiredPermissions: [
       { resource: 'tenant', action: 'update' }
     ]
@@ -236,7 +237,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
           { resource: 'student', action: 'create' }
         ],
         shouldShow: (permissions, role) => {
-          return permissions.resources?.students?.canWrite && role !== 'instructor'
+          return (permissions as any)?.resources?.students?.canWrite && role !== 'instructor'
         }
       }
     ]
@@ -283,7 +284,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
       { resource: 'payment', action: 'read' }
     ],
     shouldShow: (permissions, role) => {
-      return permissions.resources?.payments?.canRead && role !== 'instructor'
+      return (permissions as any)?.resources?.payments?.canRead && role !== 'instructor'
     }
   },
 
@@ -310,7 +311,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
       { resource: 'document', action: 'read' }
     ],
     shouldShow: (permissions, role) => {
-      return role === 'instructor' && permissions.resources?.videos?.canRead
+      return role === 'instructor' && (permissions as any)?.resources?.videos?.canRead
     }
   },
 
@@ -322,7 +323,7 @@ const ADAPTIVE_NAVIGATION_CONFIG: AdaptiveNavigationItem[] = [
     icon: Cog6ToothIcon,
     description: '개인 및 시스템 설정',
     roleCustomization: {
-      admin: { 
+      tenant_admin: { 
         description: '시스템 및 학원 설정'
       },
       staff: { 
@@ -364,12 +365,13 @@ export function AdaptiveSidebar({ className, collapsed = false, onToggle }: Adap
   const [lastPermissionHash, setLastPermissionHash] = useState<string>('')
   
   // 권한 해시 생성 (권한 변경 감지용)
-  const generatePermissionHash = useCallback((perms: any) => {
+  const generatePermissionHash = useCallback((perms: unknown) => {
+    const p = perms as any
     const hashData = {
-      role: perms.role,
-      resources: perms.resources,
-      userStatus: perms.user?.status,
-      tenantId: perms.user?.tenant_id
+      role: p?.role,
+      resources: p?.resources,
+      userStatus: p?.user?.status,
+      tenantId: p?.user?.tenant_id
     }
     return JSON.stringify(hashData)
   }, [])

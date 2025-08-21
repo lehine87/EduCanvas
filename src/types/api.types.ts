@@ -119,7 +119,7 @@ export interface SearchTenantsResponse {
     name: string
     slug: string
     contact_email?: string
-    status: Database['public']['Enums']['tenant_status']
+    status: 'active' | 'inactive' | 'suspended'
   }>
 }
 
@@ -130,7 +130,7 @@ export interface OnboardingRequest {
   full_name: string
   phone?: string
   birth_date?: string
-  gender?: Database['public']['Enums']['gender']
+  gender?: string
   address?: string
   emergency_contact?: string
   tenant_id: string
@@ -156,7 +156,7 @@ export interface UpdateMemberRequest {
   userId: string
   tenantId: string
   updates: {
-    role?: Database['public']['Enums']['user_role']
+    role?: string
     status?: UserStatus
     name?: string
     phone?: string
@@ -185,7 +185,7 @@ export interface CreateTenantResponse {
     id: string
     name: string
     slug: string
-    status: Database['public']['Enums']['tenant_status']
+    status: 'active' | 'inactive' | 'suspended'
   }
 }
 

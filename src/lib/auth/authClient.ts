@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { UserRole } from '@/types/database'
+import type { UserRole } from '@/types/auth.types'
 import type { UserProfile } from '@/types/auth.types'
 
 // 환경에 따른 앱 URL 동적 생성

@@ -13,7 +13,7 @@ import {
 const getSalaryPoliciesSchema = z.object({
   tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다').optional().nullable(),
   instructorId: z.string().uuid().optional().nullable(),
-  policyType: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based', 'hybrid', 'guaranteed_minimum']).optional().nullable(),
+  policyType: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based']).optional().nullable(),
   isActive: z.boolean().optional().nullable(),
   limit: z.number().min(1).max(1000).default(100),
   offset: z.number().min(0).default(0),
@@ -24,14 +24,15 @@ const getSalaryPoliciesSchema = z.object({
 const createSalaryPolicySchema = z.object({
   tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
   name: z.string().min(1, '정책 이름은 필수입니다'),
-  policy_type: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based', 'hybrid', 'guaranteed_minimum']),
+  policy_type: z.enum(['fixed_monthly', 'fixed_hourly', 'commission', 'tiered_commission', 'student_based']),
   instructor_id: z.string().uuid().optional(),
-  base_amount: z.number().min(0).optional(),
-  commission_rate: z.number().min(0).max(100).optional(),
-  effective_from: z.string().optional(),
+  effective_from: z.string(),
   effective_until: z.string().optional(),
-  conditions: z.record(z.any()).optional(),
-  tier_config: z.record(z.any()).optional(),
+  base_amount: z.number().min(0).optional(),
+  commission_rate: z.number().min(0).optional(),
+  conditions: z.any().optional(),
+  tier_config: z.any().optional(),
+  description: z.string().optional(),
   is_active: z.boolean().default(true)
 })
 
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 활성 상태 필터링
-      if (params.isActive !== undefined) {
+      if (params.isActive !== undefined && params.isActive !== null) {
         query = query.eq('is_active', params.isActive)
       }
 
@@ -219,25 +220,31 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 정책 타입별 필수 필드 검증
+      // 급여 타입별 필수 필드 검증
       switch (policyData.policy_type) {
         case 'fixed_monthly':
-        case 'fixed_hourly':
-        case 'student_based':
-        case 'guaranteed_minimum':
           if (!policyData.base_amount) {
-            throw new Error(`${policyData.policy_type} 타입에는 기본 금액이 필요합니다.`)
+            throw new Error('월급제에는 월급액이 필요합니다.')
+          }
+          break
+        case 'fixed_hourly':
+          if (!policyData.base_amount) {
+            throw new Error('시급제에는 시급이 필요합니다.')
           }
           break
         case 'commission':
-        case 'tiered_commission':
           if (!policyData.commission_rate) {
-            throw new Error('수수료 타입에는 수수료율이 필요합니다.')
+            throw new Error('수수료제에는 수수료율이 필요합니다.')
           }
           break
-        case 'hybrid':
-          if (!policyData.base_amount && !policyData.commission_rate) {
-            throw new Error('하이브리드 타입에는 기본 금액 또는 수수료율이 필요합니다.')
+        case 'tiered_commission':
+          if (!policyData.commission_rate) {
+            throw new Error('단계별 수수료제에는 수수료율이 필요합니다.')
+          }
+          break
+        case 'student_based':
+          if (!policyData.base_amount) {
+            throw new Error('학생수 기반 급여제에는 기본 금액이 필요합니다.')
           }
           break
       }

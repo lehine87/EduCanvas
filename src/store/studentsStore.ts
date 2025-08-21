@@ -117,7 +117,7 @@ const apiCall = async <T>(
     
     // 세션이 있으면 Authorization 헤더 추가
     if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`
+      (headers as any)['Authorization'] = `Bearer ${session.access_token}`
     }
     
     // AbortController로 타임아웃 설정
@@ -188,8 +188,7 @@ const apiCall = async <T>(
     // 에러 로깅
     logError(error, {
       component: 'studentsStore',
-      action: 'apiCall',
-      url
+      action: 'apiCall'
     })
     throw error
   }
@@ -219,7 +218,7 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
           limit: get().pagination.limit.toString(),
           offset: '0',
           ...(currentFilters.status && currentFilters.status.length > 0 && 
-             currentFilters.status[0] !== 'all' && { status: currentFilters.status[0] }),
+             !['all', ''].includes(currentFilters.status[0] || '') && { status: currentFilters.status[0] }),
           ...(currentFilters.class_id && currentFilters.class_id.length > 0 && 
              { classId: currentFilters.class_id[0] }),
           ...(currentFilters.search && { search: currentFilters.search })

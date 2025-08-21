@@ -10,7 +10,7 @@ Sentry.init({
   
   // 환경 설정
   environment: process.env.NODE_ENV,
-  enabled: !!SENTRY_DSN, // DSN이 있으면 활성화 (개발/프로덕션 모두)
+  enabled: !!SENTRY_DSN && process.env.NODE_ENV === 'production', // 프로덕션 환경에서만 활성화
   
   // 성능 모니터링
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0, // 프로덕션에서는 10%만 샘플링
@@ -172,7 +172,7 @@ export function captureError(error: Error, context?: Record<string, unknown>) {
   if (context) {
     Sentry.withScope((scope) => {
       Object.keys(context).forEach(key => {
-        scope.setContext(key, context[key])
+        scope.setContext(key, context[key] as Record<string, unknown>)
       })
       Sentry.captureException(error)
     })

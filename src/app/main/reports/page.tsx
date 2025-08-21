@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
 import { MainLayout } from '@/components/layout'
 
 export default function ReportsPage() {
@@ -23,12 +23,12 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle>통계 및 리포트</CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">통계 및 리포트 기능을 개발 중입니다.</p>
             <p className="text-sm text-gray-400">곧 사용할 수 있습니다.</p>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     </MainLayout>
   )

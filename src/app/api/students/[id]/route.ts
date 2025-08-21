@@ -342,7 +342,7 @@ export async function DELETE(
 
         result = { deleted: true, type: 'hard' }
       } else {
-        // 소프트 삭제: 상태를 'withdrawn'으로 변경
+        // 소프트 삭제: 상태를 'transferred'로 변경
         const { data: updatedStudent, error } = await supabase
           .from('students')
           .update({

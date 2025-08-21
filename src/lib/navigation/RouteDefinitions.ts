@@ -33,7 +33,7 @@ export const NAVIGATION_CONFIG: NavigationConfig = {
  */
 const ROLE_DEFAULT_PATHS: Record<UserRole, string> = {
   system_admin: '/main',  // 시스템 관리자도 메인 대시보드에서 시작
-  admin: '/main',         // 테넌트 관리자도 메인 대시보드에서 시작  
+  tenant_admin: '/main',  // 테넌트 관리자도 메인 대시보드에서 시작
   instructor: '/main',    // 강사는 메인 대시보드만
   staff: '/main',         // 스태프는 메인 대시보드만
   viewer: '/main'         // 뷰어는 메인 대시보드만
@@ -223,7 +223,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main': {
     path: '/main',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     requiresEmailVerification: false,
     redirectTo: () => {
       // 모든 역할이 메인 대시보드에 접근 가능
@@ -244,7 +244,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/admin': {
     path: '/admin',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     redirectTo: () => '/main', // 기존 admin 접근을 main으로 리다이렉트
     metadata: {
       title: '관리자 대시보드 (리다이렉트)',
@@ -256,7 +256,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/admin/students': {
     path: '/admin/students',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     redirectTo: () => '/main/students', // 기존 admin/students 접근을 main/students로 리다이렉트
     metadata: {
       title: '학생 관리 (리다이렉트)',
@@ -280,7 +280,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/admin/tenant-admin': {
     path: '/admin/tenant-admin',
     allowedStates: ['active'],
-    allowedRoles: ['admin'],
+    allowedRoles: ['tenant_admin'],
     redirectTo: () => '/main', // 학원 관리 기능도 main으로 통합됨
     metadata: {
       title: '학원 관리 (리다이렉트)',
@@ -304,7 +304,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/tenant-admin': {
     path: '/tenant-admin',
     allowedStates: ['active'],
-    allowedRoles: ['admin'],
+    allowedRoles: ['tenant_admin'],
     redirectTo: () => '/main', // 기존 tenant-admin 접근을 main으로 리다이렉트
     metadata: {
       title: '학원 관리 (리다이렉트)',
@@ -316,7 +316,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/router': {
     path: '/router',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     redirectTo: () => '/main', // router 페이지도 main으로 리다이렉트
     metadata: {
       title: '라우터 (리다이렉트)',
@@ -332,7 +332,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students': {
     path: '/main/students',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     metadata: {
       title: '학생 관리',
       description: '학생 목록 및 관리',
@@ -343,7 +343,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students/new': {
     path: '/main/students/new',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'staff'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'staff'],
     metadata: {
       title: '학생 등록',
       description: '새 학생 등록',
@@ -354,7 +354,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students/dashboard': {
     path: '/main/students/dashboard',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff'],
     metadata: {
       title: '학생 대시보드',
       description: '학생 통계 및 분석',
@@ -365,7 +365,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students/smart': {
     path: '/main/students/smart',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'staff'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'staff'],
     metadata: {
       title: '스마트 학생 검색',
       description: 'AI 기반 학생 검색',
@@ -377,7 +377,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students/[id]': {
     path: '/main/students/[id]',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
     metadata: {
       title: '학생 상세',
       description: '학생 상세 정보',
@@ -388,7 +388,7 @@ export const ROUTE_DEFINITIONS: Record<string, RouteConfig> = {
   '/main/students/[id]/edit': {
     path: '/main/students/[id]/edit',
     allowedStates: ['active'],
-    allowedRoles: ['system_admin', 'admin', 'staff'],
+    allowedRoles: ['system_admin', 'tenant_admin', 'staff'],
     metadata: {
       title: '학생 정보 수정',
       description: '학생 정보 편집',
@@ -461,7 +461,7 @@ export const MIDDLEWARE_EXCLUDE_PATTERNS = [
  * 인증 없이 접근 가능한 라우트들
  */
 export const PUBLIC_ROUTES = Object.keys(ROUTE_DEFINITIONS).filter(
-  route => ROUTE_DEFINITIONS[route].metadata?.isPublic
+  route => ROUTE_DEFINITIONS[route]?.metadata?.isPublic === true
 )
 
 /**
@@ -469,5 +469,5 @@ export const PUBLIC_ROUTES = Object.keys(ROUTE_DEFINITIONS).filter(
  * 인증이 필요한 라우트들
  */
 export const PROTECTED_ROUTES = Object.keys(ROUTE_DEFINITIONS).filter(
-  route => ROUTE_DEFINITIONS[route].metadata?.isProtected
+  route => ROUTE_DEFINITIONS[route]?.metadata?.isProtected === true
 )

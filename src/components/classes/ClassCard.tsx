@@ -49,8 +49,8 @@ export interface ClassCardProps {
  */
 const ClassStatusBadge = memo<{ isActive?: boolean; compact?: boolean }>(({ isActive, compact }) => (
   <Badge 
-    variant={isActive ? 'success' : 'error'} 
-    size={compact ? 'xs' : 'sm'}
+    variant={isActive ? 'default' : 'destructive'} 
+    className={`${compact ? 'text-xs px-1 py-0' : 'text-sm px-2 py-1'} ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
   >
     {compact ? (
       isActive ? (
@@ -162,12 +162,9 @@ export const ClassCard = memo<ClassCardProps>(({
 }) => {
   // 이벤트 핸들러
   const handleCardClick = useCallback(() => {
-    if (showSelection) {
-      onSelect?.(classData.id, !isSelected)
-    } else {
-      onClick?.(classData)
-    }
-  }, [showSelection, onSelect, classData.id, isSelected, onClick, classData])
+    // 선택 모드일 때는 이미 GroupedClassView에서 올바른 onClick이 전달됨
+    onClick?.(classData)
+  }, [onClick, classData])
 
   const handleEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -208,11 +205,11 @@ export const ClassCard = memo<ClassCardProps>(({
     <div className={cardStyles} onClick={handleCardClick}>
       {/* 선택 체크박스 */}
       {showSelection && (
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-3 left-3 z-10" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={handleSelect}
+            onChange={(e) => handleSelect(e as any)}
             className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
             aria-label={`${classData.name} 클래스 선택`}
           />
@@ -225,7 +222,7 @@ export const ClassCard = memo<ClassCardProps>(({
         compact ? 'top-2 right-2' : 'top-3 right-3'
       )}>
         <ClassStatusBadge 
-          isActive={classData.is_active} 
+          isActive={classData.is_active ?? false} 
           compact={compact}
         />
       </div>
@@ -233,7 +230,9 @@ export const ClassCard = memo<ClassCardProps>(({
       {/* 헤더 */}
       <div className={cn(
         'flex items-start',
-        compact ? 'space-x-2 mb-2' : 'space-x-3 mb-3'
+        compact ? 'space-x-2 mb-2' : 'space-x-3 mb-3',
+        // 체크박스가 있을 때 왼쪽 여백 추가
+        showSelection && 'pl-8'
       )}>
         {/* 색상 인디케이터 */}
         {classData.color && (
@@ -265,7 +264,9 @@ export const ClassCard = memo<ClassCardProps>(({
       {/* 클래스 정보 */}
       <div className={cn(
         'grid gap-2',
-        compact ? 'grid-cols-1' : 'grid-cols-2'
+        compact ? 'grid-cols-1' : 'grid-cols-2',
+        // 체크박스가 있을 때 왼쪽 여백 추가
+        showSelection && 'pl-8'
       )}>
         {/* 학년/과정 */}
         {(classData.grade || classData.course) && (
@@ -345,11 +346,13 @@ export const ClassCard = memo<ClassCardProps>(({
       {/* 학생 수 표시 */}
       <div className={cn(
         'border-t pt-3',
-        compact ? 'mt-2' : 'mt-3'
+        compact ? 'mt-2' : 'mt-3',
+        // 체크박스가 있을 때 왼쪽 여백 추가
+        showSelection && 'pl-8'
       )}>
         <ClassCapacityIndicator
           current={classData.student_count || 0}
-          max={classData.max_students}
+          max={classData.max_students ?? undefined}
           compact={compact}
         />
       </div>

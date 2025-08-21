@@ -1,7 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal, Button, Input, Loading } from '@/components/ui'
+import { Modal, Button } from '@/components/ui'
+import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import type { Tenant } from '@/types/auth.types'
 
 interface TenantSearchModalProps {
@@ -132,8 +137,10 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
 
         {/* 검색 입력 */}
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {searchType === 'code' ? '고객번호' : '학원명'}
+          </label>
           <Input
-            label={searchType === 'code' ? '고객번호' : '학원명'}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -143,20 +150,28 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
                 ? '123456 (6자리 숫자)' 
                 : 'ABC 영어학원'
             }
-            error={error}
             disabled={isSearching}
             maxLength={searchType === 'code' ? 6 : 50}
           />
+          {error && (
+            <p className="text-sm text-red-600 mt-1">{typeof error === 'string' ? error : (error as any)?.message || 'Error occurred'}</p>
+          )}
           
           <div className="mt-2">
             <Button
               type="button"
               onClick={handleSearch}
               disabled={isSearching || !searchQuery.trim()}
-              loading={isSearching}
               className="w-full"
             >
-              {isSearching ? '검색 중...' : '🔍 검색'}
+              {isSearching ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  검색 중...
+                </>
+              ) : (
+                '🔍 검색'
+              )}
             </Button>
           </div>
         </div>

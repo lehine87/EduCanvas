@@ -235,7 +235,7 @@ function createContextFromProfile(profile: UserProfile, email: string): Navigati
 
   return {
     userState,
-    role: profile.role || undefined,
+    role: (profile.role as 'system_admin' | 'tenant_admin' | 'instructor' | 'staff' | 'viewer') || undefined,
     tenantId: profile.tenant_id || undefined,
     isEmailVerified: profile.email_verified || false,
     accountStatus: profile.status || undefined,

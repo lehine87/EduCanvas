@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Table, Button, Badge, Loading, Input } from '@/components/ui'
+import { Button, Badge, Loading, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile } from '@/types/auth.types'
 
@@ -67,7 +67,7 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
     // 검색어 필터링
     if (searchQuery) {
       filtered = filtered.filter(member =>
-        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (member.phone && member.phone.includes(searchQuery))
       )
@@ -243,96 +243,6 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
     )
   }
 
-  const columns = [
-    {
-      key: 'user_info',
-      header: '회원 정보',
-      render: (value: unknown, member: UserProfile) => (
-        <div>
-          <div className="font-medium text-gray-900">{member.name}</div>
-          <div className="text-sm text-gray-500">{member.email}</div>
-          {member.phone && (
-            <div className="text-sm text-gray-500">{member.phone}</div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'role',
-      header: '역할',
-      render: (value: unknown, member: UserProfile) => (
-        <div className="space-y-2">
-          {getRoleBadge(member.role || 'viewer')}
-          {member.status === 'active' && (member.role || 'viewer') !== 'admin' && (
-            <div className="space-x-1">
-              <select
-                value={member.role || 'viewer'}
-                onChange={(e) => handleChangeRole(member.id, e.target.value)}
-                disabled={actionLoading === member.id}
-                className="text-xs border border-gray-300 rounded px-2 py-1"
-              >
-                <option value="viewer">뷰어</option>
-                <option value="staff">스태프</option>
-                <option value="instructor">강사</option>
-              </select>
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'status',
-      header: '상태',
-      render: (value: unknown, member: UserProfile) => getStatusBadge(member.status || 'inactive')
-    },
-    {
-      key: 'last_login',
-      header: '최근 로그인',
-      render: (value: unknown, member: UserProfile) => (
-        <div className="text-sm text-gray-500">
-          {member.last_login_at ? formatDate(member.last_login_at) : '없음'}
-        </div>
-      )
-    },
-    {
-      key: 'created_at',
-      header: '가입일',
-      render: (value: unknown, member: UserProfile) => (
-        <div className="text-sm text-gray-500">
-          {member.created_at ? formatDate(member.created_at) : '없음'}
-        </div>
-      )
-    },
-    {
-      key: 'actions',
-      header: '작업',
-      render: (value: unknown, member: UserProfile) => {
-        if (!member || !member.id) return <div>-</div>;
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('작업 컬럼 렌더링:', { id: member.id, role: member.role, status: member.status });
-        }
-        
-        return (
-          <div className="space-y-1">
-            {member.role !== 'admin' ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleToggleStatus(member.id, member.status || 'inactive')}
-                disabled={actionLoading === member.id}
-                loading={actionLoading === member.id}
-              >
-                {member.status === 'active' ? '비활성화' : '활성화'}
-              </Button>
-            ) : (
-              <div className="text-sm text-gray-500">관리자</div>
-            )}
-          </div>
-        );
-      }
-    }
-  ]
 
   return (
     <div className="space-y-4">
@@ -353,7 +263,7 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
           >
             <option value="all">모든 역할</option>
-            <option value="admin">관리자</option>
+            <option value="tenant_admin">관리자</option>
             <option value="instructor">강사</option>
             <option value="staff">스태프</option>
             <option value="viewer">뷰어</option>
@@ -403,11 +313,85 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
           </p>
         </div>
       ) : (
-        <Table
-          columns={columns}
-          data={filteredMembers}
-          keyField="id"
-        />
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>회원 정보</TableHead>
+              <TableHead>역할</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>최근 로그인</TableHead>
+              <TableHead>가입일</TableHead>
+              <TableHead>작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredMembers.map((member) => (
+              <TableRow key={member.id}>
+                <TableCell>
+                  <div>
+                    <div className="font-medium text-gray-900">{member.name}</div>
+                    <div className="text-sm text-gray-500">{member.email}</div>
+                    {member.phone && (
+                      <div className="text-sm text-gray-500">{member.phone}</div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-2">
+                    {getRoleBadge(member.role || 'viewer')}
+                    {member.status === 'active' && (member.role || 'viewer') !== 'admin' && (
+                      <div className="space-x-1">
+                        <select
+                          value={member.role || 'viewer'}
+                          onChange={(e) => handleChangeRole(member.id, e.target.value)}
+                          disabled={actionLoading === member.id}
+                          className="text-xs border border-gray-300 rounded px-2 py-1"
+                        >
+                          <option value="viewer">뷰어</option>
+                          <option value="staff">스태프</option>
+                          <option value="instructor">강사</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(member.status || 'inactive')}
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-500">
+                    {member.last_login_at ? formatDate(member.last_login_at) : '없음'}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-500">
+                    {member.created_at ? formatDate(member.created_at) : '없음'}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {member && member.id ? (
+                    <div className="space-y-1">
+                      {member.role !== 'admin' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleToggleStatus(member.id, member.status || 'inactive')}
+                          disabled={actionLoading === member.id}
+                        >
+                          {member.status === 'active' ? '비활성화' : '활성화'}
+                        </Button>
+                      ) : (
+                        <div className="text-sm text-gray-500">관리자</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   )

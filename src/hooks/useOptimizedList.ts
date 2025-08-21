@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, useEffect } from 'react'
+import { useMemo, useCallback, useRef, useEffect, useState } from 'react'
 
 /**
  * 대용량 리스트 최적화 Hook
@@ -10,7 +10,7 @@ export interface OptimizedListOptions<T> {
   /** 정렬 기준 */
   sortBy?: string
   /** 필터 조건 */
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
   /** 가상화 임계값 (이 개수 이상일 때 가상화 적용) */
   virtualizationThreshold?: number
   /** 검색 디바운스 시간 (ms) */
@@ -50,7 +50,7 @@ export function useOptimizedList<T extends { id: string }>(
     chunkSize = 50
   } = options
 
-  const debounceTimer = useRef<NodeJS.Timeout>()
+  const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const lastSearchTerm = useRef('')
   const searchCache = useRef<Map<string, T[]>>(new Map())
 
@@ -83,7 +83,7 @@ export function useOptimizedList<T extends { id: string }>(
           if (value === '' || value === null || value === undefined) return true
           if (Array.isArray(value) && value.length === 0) return true
           
-          const itemValue = (item as any)[key]
+          const itemValue = (item as Record<string, unknown>)[key]
           if (Array.isArray(value)) {
             return value.includes(itemValue)
           }
@@ -95,15 +95,15 @@ export function useOptimizedList<T extends { id: string }>(
     // 정렬 적용
     if (sortBy) {
       result = [...result].sort((a, b) => {
-        const aValue = (a as any)[sortBy]
-        const bValue = (b as any)[sortBy]
+        const aValue = (a as Record<string, unknown>)[sortBy]
+        const bValue = (b as Record<string, unknown>)[sortBy]
         
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           return aValue.localeCompare(bValue, 'ko')
         }
         
-        if (aValue < bValue) return -1
-        if (aValue > bValue) return 1
+        if ((aValue as any) < (bValue as any)) return -1
+        if ((aValue as any) > (bValue as any)) return 1
         return 0
       })
     }
@@ -111,7 +111,9 @@ export function useOptimizedList<T extends { id: string }>(
     // 캐시에 저장 (최대 10개까지만)
     if (searchCache.current.size >= 10) {
       const firstKey = searchCache.current.keys().next().value
-      searchCache.current.delete(firstKey)
+      if (firstKey !== undefined) {
+        searchCache.current.delete(firstKey)
+      }
     }
     searchCache.current.set(cacheKey, result)
 
@@ -124,7 +126,7 @@ export function useOptimizedList<T extends { id: string }>(
   }, [filteredItems.length, virtualizationThreshold])
 
   // 청크 단위 로딩을 위한 상태
-  const [visibleChunks, setVisibleChunks] = React.useState(1)
+  const [visibleChunks, setVisibleChunks] = useState(1)
   const visibleItems = useMemo(() => {
     if (!shouldVirtualize) return filteredItems
     return filteredItems.slice(0, visibleChunks * chunkSize)
@@ -226,7 +228,7 @@ export function useOptimizedListWithCustomFilters<T extends { id: string }>(
 
   const shouldVirtualize = filteredItems.length >= virtualizationThreshold
   
-  const [visibleChunks, setVisibleChunks] = React.useState(1)
+  const [visibleChunks, setVisibleChunks] = useState(1)
   const visibleItems = useMemo(() => {
     if (!shouldVirtualize) return filteredItems
     return filteredItems.slice(0, visibleChunks * chunkSize)

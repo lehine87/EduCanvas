@@ -106,7 +106,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'audit', action: '*', scope: 'system' },
   ],
   
-  admin: [
+  tenant_admin: [
     { resource: 'tenant', action: 'read', scope: 'tenant' },
     { resource: 'tenant', action: 'update', scope: 'tenant' },
     { resource: 'user', action: '*', scope: 'tenant' },
@@ -195,7 +195,7 @@ export const ROLE_PERMISSION_STRINGS: Record<UserRole, PermissionString[]> = {
     'audit:*',
   ],
   
-  admin: [
+  tenant_admin: [
     'tenant:read:tenant',
     'tenant:update:tenant',
     'user:*:tenant',
@@ -267,7 +267,7 @@ export const ROUTE_PERMISSIONS: Record<string, {
   conditions?: PermissionCondition[]
 }> = {
   '/admin': {
-    roles: ['system_admin', 'admin', 'instructor', 'staff', 'viewer'],
+    roles: ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer'],
   },
   '/admin/students': {
     permissions: ['student:read:tenant', 'student:list:tenant'],
@@ -288,18 +288,18 @@ export const ROUTE_PERMISSIONS: Record<string, {
     permissions: ['class:create:tenant'],
   },
   '/admin/instructors': {
-    roles: ['system_admin', 'admin'],
+    roles: ['system_admin', 'tenant_admin'],
     permissions: ['instructor:read:tenant', 'instructor:list:tenant'],
   },
   '/admin/payments': {
-    roles: ['system_admin', 'admin', 'staff'],
+    roles: ['system_admin', 'tenant_admin', 'staff'],
     permissions: ['payment:read:tenant'],
   },
   '/admin/analytics': {
     permissions: ['analytics:read:tenant'],
   },
   '/admin/settings': {
-    roles: ['system_admin', 'admin'],
+    roles: ['system_admin', 'tenant_admin'],
   },
   '/instructor': {
     roles: ['instructor'],

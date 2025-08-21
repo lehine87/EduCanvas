@@ -259,7 +259,15 @@ export function getUserFriendlyErrorMessage(
   // 컨텍스트별 커스터마이징 적용
   if (context?.feature && context.feature in CONTEXT_SPECIFIC_MESSAGES) {
     const contextMessage = CONTEXT_SPECIFIC_MESSAGES[context.feature]
-    errorMessage = { ...errorMessage, ...contextMessage }
+    if (contextMessage) {
+      errorMessage = { 
+        ...errorMessage, 
+        ...contextMessage,
+        // 필수 필드들이 없으면 기본값 설정
+        title: contextMessage.title || errorMessage.title,
+        description: contextMessage.description || errorMessage.description
+      }
+    }
   }
 
   // 심각도 조정 (컨텍스트에 따라)
@@ -267,7 +275,14 @@ export function getUserFriendlyErrorMessage(
     errorMessage.severity = 'critical'
   }
 
-  return errorMessage
+  return {
+    title: errorMessage.title || 'Unknown Error',
+    description: errorMessage.description || 'An unknown error occurred',
+    actionText: errorMessage.actionText,
+    severity: errorMessage.severity || 'error',
+    canRetry: errorMessage.canRetry ?? false,
+    suggestions: errorMessage.suggestions
+  }
 }
 
 /**

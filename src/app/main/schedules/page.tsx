@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
 import { MainLayout } from '@/components/layout'
 
 export default function SchedulesPage() {
@@ -23,12 +23,12 @@ export default function SchedulesPage() {
         <CardHeader>
           <CardTitle>시간표 관리</CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">시간표 관리 기능을 개발 중입니다.</p>
             <p className="text-sm text-gray-400">곧 사용할 수 있습니다.</p>
           </div>
-        </CardBody>
+        </CardContent>
       </Card>
     </MainLayout>
   )

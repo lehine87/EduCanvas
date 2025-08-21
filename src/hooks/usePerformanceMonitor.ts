@@ -81,7 +81,16 @@ export function useMemoryMonitor(componentName: string, enabled = process.env.NO
   const checkMemory = useCallback(() => {
     if (!enabled || !('memory' in performance)) return null
 
-    const memory = (performance as any).memory
+    const memory = (performance as Performance & {
+      memory?: {
+        usedJSHeapSize: number
+        totalJSHeapSize: number
+        jsHeapSizeLimit: number
+      }
+    }).memory
+    
+    if (!memory) return null
+    
     const usedMB = memory.usedJSHeapSize / 1048576
     const totalMB = memory.totalJSHeapSize / 1048576
     const limitMB = memory.jsHeapSizeLimit / 1048576
@@ -119,15 +128,15 @@ export function useMemoryMonitor(componentName: string, enabled = process.env.NO
 /**
  * 리렌더링 이유 추적 Hook
  */
-export function useWhyDidYouUpdate(name: string, props: Record<string, any>, enabled = process.env.NODE_ENV === 'development') {
-  const previousProps = useRef<Record<string, any>>()
+export function useWhyDidYouUpdate(name: string, props: Record<string, unknown>, enabled = process.env.NODE_ENV === 'development') {
+  const previousProps = useRef<Record<string, unknown>>({})
 
   useEffect(() => {
     if (!enabled) return
 
     if (previousProps.current) {
       const allKeys = Object.keys({ ...previousProps.current, ...props })
-      const changedProps: Record<string, { from: any; to: any }> = {}
+      const changedProps: Record<string, { from: unknown; to: unknown }> = {}
 
       allKeys.forEach(key => {
         if (previousProps.current![key] !== props[key]) {
@@ -170,7 +179,7 @@ export function useComponentLifecycle(componentName: string, enabled = process.e
  */
 export function usePerformanceProfiler(
   componentName: string, 
-  props?: Record<string, any>,
+  props?: Record<string, unknown>,
   options?: {
     enablePerformance?: boolean
     enableMemory?: boolean

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
  * 클래스-교실 연관관계 설정을 위한 관리자 전용 API
@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     console.log('🚀 클래스-교실 연관관계 설정 API 시작')
 
     // Service Role로 Supabase 클라이언트 생성
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = createServiceRoleClient()
 
     // 1. 테넌트 정보 조회
     const { data: tenant, error: tenantError } = await supabase
@@ -33,6 +30,13 @@ export async function POST(request: NextRequest) {
     }
 
     const tenantId = tenant.tenant_id
+    
+    if (!tenantId) {
+      return Response.json({ 
+        success: false, 
+        error: '테넌트 ID가 없습니다' 
+      }, { status: 400 })
+    }
 
     // 2. 기존 클래스와 교실 정보 조회
     const { data: classes } = await supabase
@@ -109,6 +113,12 @@ export async function POST(request: NextRequest) {
       const classInfo = classes[i]
       const classroom = classrooms[i % classrooms.length] // 순환하여 배정
       
+      // 타입 가드: classInfo와 classroom이 존재하는지 확인
+      if (!classInfo || !classroom) {
+        console.warn(`⚠️ 클래스 또는 교실 정보가 없습니다. 인덱스: ${i}`)
+        continue
+      }
+      
       // 이미 기본 교실이 설정되어 있다면 스킵
       if (!classInfo.default_classroom_id) {
         updatePromises.push(
@@ -140,13 +150,19 @@ export async function POST(request: NextRequest) {
     if (!existingSchedules || existingSchedules.length === 0) {
       console.log('📅 요일별 교실 스케줄 생성 중...')
       
-      const daysOfWeek = ['monday', 'wednesday', 'friday'] // 월,수,금
+      const daysOfWeek: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'> = ['monday', 'wednesday', 'friday'] // 월,수,금
       const schedules = []
 
       for (let i = 0; i < classes.length; i++) {
         const classInfo = classes[i]
         const timeSlot = timeSlots[i % timeSlots.length]
         const classroom = classrooms[i % classrooms.length]
+        
+        // 타입 가드: classInfo, timeSlot, classroom이 존재하는지 확인
+        if (!classInfo || !timeSlot || !classroom) {
+          console.warn(`⚠️ 스케줄 생성 중 누락된 데이터. 인덱스: ${i}`)
+          continue
+        }
         
         for (const day of daysOfWeek) {
           schedules.push({
@@ -155,7 +171,7 @@ export async function POST(request: NextRequest) {
             classroom_id: classroom.id,
             time_slot_id: timeSlot.id,
             day_of_week: day,
-            effective_from: new Date().toISOString().split('T')[0],
+            effective_from: new Date().toISOString().split('T')[0] as string,
             is_recurring: true,
             recurrence_weeks: 1,
             is_active: true,

@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { authClient } from '@/lib/auth/authClient'
 import { signInSchema, type SignInFormData } from '@/lib/auth/authValidation'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -38,12 +41,12 @@ export function LoginForm() {
     }
   }, [])
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<SignInFormData>({
-    resolver: zodResolver(signInSchema)
+  const form = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
   })
 
   // URL 파라미터에서 에러 메시지 확인
@@ -149,8 +152,14 @@ export function LoginForm() {
         await new Promise(resolve => setTimeout(resolve, waitTime))
         
         console.log(`🔄 [LOGIN-DEBUG] 리다이렉트 실행 중...`)
-        router.push('/admin')
-        router.refresh()
+        
+        // Next.js router navigation 대신 브라우저 네이티브 navigation 사용 (더 안전함)
+        if (typeof window !== 'undefined') {
+          window.location.href = '/admin'
+        } else {
+          router.push('/admin')
+          router.refresh()
+        }
       } else {
         if (isVercel) {
           console.error(`❌ [VERCEL-LOGIN-${requestId}] AUTH INCOMPLETE:`, {
@@ -187,13 +196,13 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted/50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             EduCanvas
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             학원 관리 시스템에 로그인하세요
           </p>
         </div>
@@ -202,99 +211,117 @@ export function LoginForm() {
           <CardHeader>
             <CardTitle>로그인</CardTitle>
           </CardHeader>
-          <CardBody>
-            <form 
-              onSubmit={(e) => {
-                console.log(`📝 [FORM-SUBMIT] Form submission triggered`)
-                handleSubmit(onSubmit)(e)
-              }} 
-              className="space-y-4"
-            >
-              {error && (
-                <div 
-                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {error}
-                </div>
-              )}
-              
-              {message && (
-                <div 
-                  className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {message}
-                </div>
-              )}
-
-              <Input
-                label="이메일"
-                type="email"
-                {...register('email')}
-                error={errors.email?.message}
-                placeholder="example@academy.com"
-                disabled={isLoading}
-                required
-              />
-
-              <Input
-                label="비밀번호"
-                type="password"
-                {...register('password')}
-                error={errors.password?.message}
-                placeholder="••••••••"
-                disabled={isLoading}
-                required
-              />
-
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/auth/reset-password"
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  비밀번호를 잊으셨나요?
-                </Link>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                loading={isLoading}
-                disabled={isLoading}
-                onClick={() => {
-                  // 로그인 버튼 클릭 즉시 로그 (로컬 환경에서도 출력)
-                  console.log(`🖱️ [LOGIN-CLICK] LOGIN BUTTON CLICKED:`, {
-                    timestamp: new Date().toISOString(),
-                    isLoading,
-                    hasErrors: !!(errors.email || errors.password),
-                    emailError: errors.email?.message,
-                    passwordError: errors.password?.message,
-                    cookiesCount: document.cookie.split(';').length
-                  })
-                }}
+          <CardContent>
+            {error && (
+              <div 
+                className="bg-destructive/15 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm mb-4"
+                role="alert"
+                aria-live="polite"
               >
-                로그인
-              </Button>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  계정이 없으신가요?{' '}
-                  <Link
-                    href="/auth/signup"
-                    className="font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    회원가입
-                  </Link>
-                </p>
+                {error}
               </div>
-            </form>
-          </CardBody>
+            )}
+            
+            {message && (
+              <div 
+                className="bg-primary/15 border border-primary/20 text-primary px-4 py-3 rounded-md text-sm mb-4"
+                role="alert"
+                aria-live="polite"
+              >
+                {message}
+              </div>
+            )}
+
+            <Form {...form}>
+              <form 
+                onSubmit={(e) => {
+                  console.log(`📝 [FORM-SUBMIT] Form submission triggered`)
+                  form.handleSubmit(onSubmit)(e)
+                }} 
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이메일</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="example@academy.com"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>비밀번호</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline"
+                  >
+                    비밀번호를 잊으셨나요?
+                  </Link>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => {
+                    // 로그인 버튼 클릭 즉시 로그 (로컬 환경에서도 출력)
+                    console.log(`🖱️ [LOGIN-CLICK] LOGIN BUTTON CLICKED:`, {
+                      timestamp: new Date().toISOString(),
+                      isLoading,
+                      hasErrors: !!Object.keys(form.formState.errors).length,
+                      errors: form.formState.errors,
+                      cookiesCount: document.cookie.split(';').length
+                    })
+                  }}
+                >
+                  {isLoading ? "로그인 중..." : "로그인"}
+                </Button>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    계정이 없으신가요?{' '}
+                    <Link
+                      href="/auth/signup"
+                      className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline"
+                    >
+                      회원가입
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
         </Card>
 
-        <div className="text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-muted-foreground">
           <p>© 2025 EduCanvas. 모든 권리 보유.</p>
         </div>
       </div>

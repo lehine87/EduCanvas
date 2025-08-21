@@ -5,17 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Label } from '@/components/ui/Label'
-import { Textarea } from '@/components/ui/Textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { ClassSearchSelector, ClassSearchResult } from '@/components/ui/ClassSearchSelector'
 import type { StudentFormData } from '@/types/student.types'
-import { ArrowLeftIcon, UserPlusIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, UserPlusIcon, AcademicCapIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { toast } from 'react-hot-toast'
+import { createBrowserClient } from '@supabase/ssr'
+import { Database } from '@/types/database.types'
 
 // 폼 검증 스키마 - Database 타입과 일치시키기 위해 status를 optional로 수정
 const studentFormSchema = z.object({
@@ -40,8 +44,17 @@ export default function NewStudentPage() {
   const { profile } = useAuthStore()
   const { actions } = useStudentsStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedClass, setSelectedClass] = useState<ClassSearchResult | null>(null)
+  const [showClassSelector, setShowClassSelector] = useState(false)
+  const [enrollingInClass, setEnrollingInClass] = useState(false)
 
   const tenantId = profile?.tenant_id
+
+  // Supabase 클라이언트
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   // React Hook Form 설정
   const {
@@ -57,6 +70,42 @@ export default function NewStudentPage() {
     }
   })
 
+  // 클래스 등록 핸들러
+  const enrollStudentInClass = useCallback(async (studentId: string, classId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('인증 토큰이 없습니다')
+      }
+
+      const response = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tenantId,
+          studentId,
+          classId,
+          packageId: null, // 기본 패키지 (추후 확장 가능)
+          finalPrice: 0,
+          notes: `학생 생성 시 ${selectedClass?.name} 클래스에 배정`
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || '클래스 등록 실패')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('클래스 등록 중 오류:', error)
+      throw error
+    }
+  }, [tenantId, supabase.auth, selectedClass])
+
   // 폼 제출 핸들러
   const onSubmit = useCallback(async (data: StudentFormValues) => {
     if (!tenantId) {
@@ -71,17 +120,17 @@ export default function NewStudentPage() {
     try {
       console.log('📝 폼 데이터:', data)
       
-      const studentData: StudentFormData = {
+      const studentData: any = {
         ...data,
         email: data.email || undefined, // 빈 문자열을 undefined로 변환
         phone: data.phone || undefined,
         parent_name: data.parent_name || undefined,
         parent_phone_1: data.parent_phone_1 || undefined,
         parent_phone_2: data.parent_phone_2 || undefined,
-        grade_level: data.grade_level || undefined,
-        school_name: data.school_name || undefined,
+        grade: data.grade_level || undefined,
+        school: data.school_name || undefined,
         address: data.address || undefined,
-        notes: data.notes || undefined
+        memo: data.notes || undefined
       }
       
       console.log('🚀 전송할 데이터:', studentData)
@@ -89,20 +138,50 @@ export default function NewStudentPage() {
       const newStudent = await actions.createStudent(studentData, tenantId)
       
       console.log('✅ 학생 등록 완료:', newStudent)
-      toast.dismiss(loadingToast)
-      toast.success('학생이 성공적으로 등록되었습니다.')
+      
+      // 클래스가 선택된 경우 클래스에 등록
+      if (selectedClass) {
+        setEnrollingInClass(true)
+        toast.dismiss(loadingToast)
+        const classEnrollToast = toast.loading(`${selectedClass.name} 클래스에 등록하는 중...`)
+        
+        try {
+          await enrollStudentInClass(newStudent.id, selectedClass.id)
+          toast.dismiss(classEnrollToast)
+          toast.success(`학생이 성공적으로 등록되고 ${selectedClass.name} 클래스에 배정되었습니다.`)
+        } catch (classError) {
+          toast.dismiss(classEnrollToast)
+          toast.error(`학생은 등록되었지만 클래스 배정에 실패했습니다: ${classError instanceof Error ? classError.message : '알 수 없는 오류'}`)
+        } finally {
+          setEnrollingInClass(false)
+        }
+      } else {
+        toast.dismiss(loadingToast)
+        toast.success('학생이 성공적으로 등록되었습니다.')
+      }
       
       // 약간의 딜레이로 사용자가 성공 메시지를 볼 수 있게 함
       setTimeout(() => {
         router.push(`/main/students/${newStudent.id}`)
-      }, 500)
+      }, 1000)
     } catch (error) {
       console.error('❌ 학생 등록 실패:', error)
       toast.dismiss(loadingToast)
       toast.error(error instanceof Error ? error.message : '학생 등록에 실패했습니다.')
       setIsSubmitting(false)
     }
-  }, [tenantId, actions, router])
+  }, [tenantId, actions, router, selectedClass, enrollStudentInClass])
+
+  // 클래스 선택 핸들러
+  const handleClassSelected = useCallback((classData: ClassSearchResult) => {
+    setSelectedClass(classData)
+    setShowClassSelector(false)
+  }, [])
+
+  // 클래스 선택 해제
+  const handleRemoveClass = useCallback(() => {
+    setSelectedClass(null)
+  }, [])
 
   // 취소 핸들러
   const handleCancel = useCallback(() => {
@@ -287,6 +366,73 @@ export default function NewStudentPage() {
           </CardContent>
         </Card>
 
+        {/* 클래스 배정 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AcademicCapIcon className="w-5 h-5 text-blue-600" />
+              클래스 배정 (선택사항)
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              학생을 특정 클래스에 바로 배정하려면 클래스를 선택하세요. 나중에도 배정할 수 있습니다.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {selectedClass ? (
+              <div className="border border-green-200 bg-green-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-medium text-gray-900">
+                        {selectedClass.name}
+                      </h4>
+                      <Badge variant="default">
+                        {selectedClass.current_student_count}/{selectedClass.max_students || '무제한'}명
+                      </Badge>
+                      {selectedClass.grade && (
+                        <Badge variant="outline">
+                          {selectedClass.grade}학년
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      {selectedClass.subject && <span>과목: {selectedClass.subject}</span>}
+                      {selectedClass.instructor_name && (
+                        <span className="ml-4">담당강사: {selectedClass.instructor_name}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveClass}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
+                <AcademicCapIcon className="w-8 h-8 mx-auto mb-3 text-gray-400" />
+                <p className="text-gray-600 mb-4">클래스를 선택하지 않았습니다</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowClassSelector(true)}
+                  className="flex items-center gap-2"
+                >
+                  <AcademicCapIcon className="w-4 h-4" />
+                  클래스 선택
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* 추가 정보 */}
         <Card>
           <CardHeader>
@@ -326,7 +472,7 @@ export default function NewStudentPage() {
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || enrollingInClass}
             className="min-w-[120px] transition-all"
           >
             {isSubmitting ? (
@@ -334,15 +480,33 @@ export default function NewStudentPage() {
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>등록 중...</span>
               </div>
+            ) : enrollingInClass ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>클래스 배정 중...</span>
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <UserPlusIcon className="h-4 w-4" />
-                <span>학생 등록</span>
+                <span>
+                  {selectedClass ? `학생 등록 및 ${selectedClass.name} 배정` : '학생 등록'}
+                </span>
               </div>
             )}
           </Button>
         </div>
       </form>
+
+      {/* 클래스 선택 Modal */}
+      <ClassSearchSelector
+        isOpen={showClassSelector}
+        onClose={() => setShowClassSelector(false)}
+        onClassSelected={handleClassSelected}
+        allowMultiple={false}
+        activeOnly={true}
+        title="클래스 선택"
+        description="새로 등록할 학생을 배정할 클래스를 선택하세요"
+      />
     </div>
   )
 }

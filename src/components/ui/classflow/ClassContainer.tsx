@@ -2,7 +2,10 @@
 
 import React, { memo, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { StudentCard, StudentCardData } from './StudentCard';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { StudentCard, StudentCardData } from '../StudentCard';
+import { User, MapPin, Calendar, Users, Plus } from 'lucide-react';
 
 /**
  * Class container data interface
@@ -113,22 +116,6 @@ export const ClassContainer = memo<ClassContainerProps>(({
     };
   }, [students.length, classData.capacity]);
 
-  // Container styles
-  const containerStyles = cn(
-    // Base styles
-    'relative bg-white border rounded-xl shadow-card transition-all duration-200',
-    // Interactive states
-    'hover:shadow-card-hover',
-    // Selection state
-    isSelected && 'ring-2 ring-brand-500 border-brand-300',
-    // Drop target state
-    isDropTarget && 'border-dashed border-2 border-brand-400 bg-brand-50',
-    // Drop over state
-    isOver && 'border-success-400 bg-success-50 shadow-dropdown',
-    // Capacity-based styling
-    capacityInfo.isFull && 'border-error-200 bg-error-50',
-    className
-  );
 
   // Student grid styles based on variant
   const studentGridStyles = cn(
@@ -139,16 +126,22 @@ export const ClassContainer = memo<ClassContainerProps>(({
   );
 
   const getCapacityColor = () => {
-    if (capacityInfo.isFull) return 'text-error-600';
-    if (capacityInfo.isNearFull) return 'text-warning-600';
-    return 'text-success-600';
+    if (capacityInfo.isFull) return 'text-destructive';
+    if (capacityInfo.isNearFull) return 'text-orange-600';
+    return 'text-primary';
   };
 
   return (
-    <div className={containerStyles} data-testid={`class-container-${classData.id}`}>
+    <Card className={cn('relative transition-all duration-200 hover:shadow-lg', 
+      isSelected && 'ring-2 ring-primary border-primary/30',
+      isDropTarget && 'border-dashed border-2 border-primary bg-primary/5',
+      isOver && 'border-primary bg-primary/10 shadow-lg',
+      capacityInfo.isFull && 'border-destructive/30 bg-destructive/5',
+      className
+    )} data-testid={`class-container-${classData.id}`}>
       {/* Header */}
-      <div 
-        className="p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-xl"
+      <CardHeader 
+        className="cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={handleContainerClick}
       >
         <div className="flex items-center justify-between">
@@ -163,11 +156,11 @@ export const ClassContainer = memo<ClassContainerProps>(({
               )}
               
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                <h3 className="text-lg font-semibold text-foreground truncate">
                   {classData.name}
                 </h3>
                 {classData.description && (
-                  <p className="text-sm text-gray-500 truncate mt-1">
+                  <p className="text-sm text-muted-foreground truncate mt-1">
                     {classData.description}
                   </p>
                 )}
@@ -175,28 +168,22 @@ export const ClassContainer = memo<ClassContainerProps>(({
             </div>
 
             {/* Class info */}
-            <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
               {classData.instructor && (
                 <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
+                  <User className="w-4 h-4 mr-1" />
                   {classData.instructor}
                 </span>
               )}
               {classData.room && (
                 <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd" />
-                  </svg>
+                  <MapPin className="w-4 h-4 mr-1" />
                   {classData.room}
                 </span>
               )}
               {classData.schedule && (
                 <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                  <Calendar className="w-4 h-4 mr-1" />
                   {classData.schedule}
                 </span>
               )}
@@ -205,46 +192,37 @@ export const ClassContainer = memo<ClassContainerProps>(({
 
           {/* Capacity indicator */}
           <div className="flex-shrink-0 text-right">
-            <div className={cn('text-lg font-semibold', getCapacityColor())}>
+            <Badge 
+              variant={capacityInfo.isFull ? 'destructive' : capacityInfo.isNearFull ? 'secondary' : 'default'}
+              className="text-sm font-semibold"
+            >
               {capacityInfo.currentCount} / {capacityInfo.capacity}
-            </div>
-            <div className="text-xs text-gray-400">학생</div>
+            </Badge>
+            <div className="text-xs text-muted-foreground mt-1">학생</div>
             
             {/* Capacity bar */}
-            <div className="w-16 h-1.5 bg-gray-200 rounded-full mt-2 overflow-hidden">
+            <div className="w-16 h-1.5 bg-secondary rounded-full mt-2 overflow-hidden">
               <div 
                 className={cn(
                   'h-full transition-all duration-300 rounded-full',
-                  capacityInfo.isFull && 'bg-error-500',
-                  capacityInfo.isNearFull && !capacityInfo.isFull && 'bg-warning-500',
-                  !capacityInfo.isNearFull && 'bg-success-500'
+                  capacityInfo.isFull && 'bg-destructive',
+                  capacityInfo.isNearFull && !capacityInfo.isFull && 'bg-orange-500',
+                  !capacityInfo.isNearFull && 'bg-primary'
                 )}
                 style={{ width: `${Math.min(capacityInfo.percentage, 100)}%` }}
               />
             </div>
           </div>
         </div>
-      </div>
+      </CardHeader>
 
       {/* Student list */}
-      <div className="p-4">
+      <CardContent className="p-4">
         {students.length === 0 ? (
           // Empty state
           <div className="text-center py-8">
-            <svg 
-              className="mx-auto h-12 w-12 text-gray-300 mb-3" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1} 
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-              />
-            </svg>
-            <p className="text-gray-500 text-sm">
+            <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground text-sm">
               {isDropTarget ? '학생을 여기로 드래그하세요' : '배정된 학생이 없습니다'}
             </p>
           </div>
@@ -257,13 +235,15 @@ export const ClassContainer = memo<ClassContainerProps>(({
             {students.map((student) => (
               <StudentCard
                 key={student.id}
-                student={student}
-                onClick={handleStudentClick}
-                onSelectionChange={handleStudentSelectionChange}
-                compact={variant === 'compact'}
-                showDragHandle={showDragHandles}
-                showSelection={showStudentSelection}
-                isSelected={selectedStudents.has(student.id)}
+                {...({
+                  student,
+                  onClick: handleStudentClick,
+                  onSelectionChange: handleStudentSelectionChange,
+                  compact: variant === 'compact',
+                  showDragHandle: showDragHandles,
+                  showSelection: showStudentSelection,
+                  isSelected: selectedStudents.has(student.id)
+                } as any)}
               />
             ))}
           </div>
@@ -271,17 +251,15 @@ export const ClassContainer = memo<ClassContainerProps>(({
 
         {/* Drop zone indicator */}
         {isDropTarget && isOver && (
-          <div className="absolute inset-4 border-2 border-dashed border-success-400 bg-success-50 bg-opacity-50 rounded-lg flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-4 border-2 border-dashed border-primary bg-primary/10 rounded-lg flex items-center justify-center pointer-events-none">
             <div className="text-center">
-              <svg className="mx-auto h-8 w-8 text-success-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <p className="text-success-600 font-medium">여기에 놓기</p>
+              <Plus className="mx-auto h-8 w-8 text-primary mb-2" />
+              <p className="text-primary font-medium">여기에 놓기</p>
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 });
 

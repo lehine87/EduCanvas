@@ -11,7 +11,7 @@ import type { UserRole } from '@/types/auth.types'
 export function useAdaptiveNavigation() {
   const permissions = usePermissions()
   const [lastRole, setLastRole] = useState<UserRole | undefined>(undefined)
-  const [menuCache, setMenuCache] = useState<Map<string, any>>(new Map())
+  const [menuCache, setMenuCache] = useState<Map<string, boolean>>(new Map())
 
   // 역할 변경 감지 및 실시간 업데이트
   useEffect(() => {
@@ -56,7 +56,7 @@ export function useAdaptiveNavigation() {
   }, [permissions.resources, menuCache])
 
   // 메뉴 가시성 계산 (메모화)
-  const calculateMenuVisibility = useCallback((menuId: string, requiredPermissions?: any[]) => {
+  const calculateMenuVisibility = useCallback((menuId: string, requiredPermissions?: Array<{ resource: string; action: string }>) => {
     const cacheKey = `${menuId}-${permissions.role}-${JSON.stringify(requiredPermissions)}`
     
     if (menuCache.has(cacheKey)) {
@@ -136,7 +136,7 @@ export function useAdaptiveNavigation() {
       }
     }
 
-    return (customizations as any)[menuId]?.[role] || null
+    return (customizations as Record<string, Record<string, { title: string; subtitle?: string; icon?: string }>>)[menuId]?.[role] || null
   }, [])
 
   // 실시간 권한 상태
@@ -172,7 +172,7 @@ export function useAdaptiveNavigation() {
 /**
  * 특정 메뉴 아이템의 가시성을 확인하는 훅
  */
-export function useMenuVisibility(menuId: string, requiredPermissions?: any[]) {
+export function useMenuVisibility(menuId: string, requiredPermissions?: Array<{ resource: string; action: string }>) {
   const { calculateMenuVisibility } = useAdaptiveNavigation()
   
   return useMemo(() => 

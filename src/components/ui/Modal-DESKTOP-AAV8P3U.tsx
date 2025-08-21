@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/utils/cn'
-import { Button } from './Button'
+import { Button } from './button'
 import type { BaseComponentProps, AccessibilityProps, ComponentSize } from './types'
 
 export interface ModalProps extends BaseComponentProps, AccessibilityProps {
@@ -217,9 +217,9 @@ export function ConfirmModal({
   ...props
 }: ConfirmModalProps) {
   const variantStyles = {
-    danger: 'error',
-    warning: 'warning', 
-    info: 'primary'
+    danger: 'destructive',
+    warning: 'secondary', 
+    info: 'default'
   } as const
 
   const icons = {
@@ -256,7 +256,6 @@ export function ConfirmModal({
           <Button
             variant={variantStyles[variant]}
             onClick={onConfirm}
-            loading={loading}
             disabled={loading}
           >
             {confirmText}
@@ -294,10 +293,10 @@ export function AlertModal({
   ...props
 }: AlertModalProps) {
   const variantStyles = {
-    success: 'success',
-    error: 'error',
-    warning: 'warning',
-    info: 'primary'
+    success: 'default',
+    error: 'destructive',
+    warning: 'secondary',
+    info: 'default'
   } as const
 
   const icons = {
@@ -331,7 +330,7 @@ export function AlertModal({
         <Button
           variant={variantStyles[variant]}
           onClick={onClose}
-          fullWidth
+          className="w-full"
         >
           {confirmText}
         </Button>

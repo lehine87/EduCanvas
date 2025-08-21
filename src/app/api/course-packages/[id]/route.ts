@@ -16,7 +16,7 @@ const updateCoursePackageSchema = z.object({
   description: z.string().optional(),
   price: z.number().min(0, '가격은 0 이상이어야 합니다').optional(),
   original_price: z.number().min(0).optional(),
-  billing_type: z.enum(['monthly', 'per_session', 'package', 'hourly', 'fixed']).optional(),
+  billing_type: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']).optional(),
   currency: z.string().optional(),
   class_id: z.string().uuid().optional(),
   hours: z.number().min(0).optional(),
@@ -105,30 +105,34 @@ export async function GET(
         .eq('tenant_id', tenantId)
         .single()
 
-      if (error) {
-        if (error.code === 'PGRST116') {
+      if (error || !coursePackage) {
+        if (error?.code === 'PGRST116') {
           throw new Error('코스패키지를 찾을 수 없습니다.')
         }
         console.error('❌ 코스패키지 조회 실패:', error)
-        throw new Error(`코스패키지 조회 실패: ${error.message}`)
+        throw new Error(`코스패키지 조회 실패: ${error?.message || '데이터를 찾을 수 없습니다'}`)
+      }
+
+      // 타입 안전성 보장
+      if (!coursePackage) {
+        throw new Error('코스패키지 데이터를 찾을 수 없습니다.')
       }
 
       // 수강 통계 계산
-      const enrollmentCount = includeEnrollments && coursePackage.student_enrollments 
+      const enrollmentCount = includeEnrollments && 'student_enrollments' in coursePackage && Array.isArray(coursePackage.student_enrollments)
         ? coursePackage.student_enrollments.length 
         : 0
 
-      const activeEnrollmentCount = includeEnrollments && coursePackage.student_enrollments
-        ? coursePackage.student_enrollments.filter((e: { status: string }) => e.status === 'active').length
+      const activeEnrollmentCount = includeEnrollments && 'student_enrollments' in coursePackage && Array.isArray(coursePackage.student_enrollments)
+        ? coursePackage.student_enrollments.filter((e: { enrollment_status: string }) => e.enrollment_status === 'active').length
         : 0
 
-      const result = {
-        ...coursePackage,
+      const result = Object.assign({}, coursePackage, {
         enrollment_count: enrollmentCount,
         active_enrollment_count: activeEnrollmentCount
-      }
+      })
 
-      logApiSuccess('get-course-package', { packageId: coursePackage.id })
+      logApiSuccess('get-course-package', { packageId: (coursePackage as any).id })
 
       return createSuccessResponse({ course_package: result })
     },

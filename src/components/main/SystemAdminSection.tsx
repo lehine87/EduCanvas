@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import React from 'react'
-import { Button, Card, CardHeader, CardTitle, CardBody } from '@/components/ui'
+import { Button, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
 import { TenantCreateModal } from '@/components/admin/TenantCreateModal'
 import { TenantListTable } from '@/components/admin/TenantListTable'
 import { ShieldCheckIcon, BuildingOfficeIcon, UsersIcon, ChartBarIcon } from '@heroicons/react/24/outline'
@@ -172,13 +172,13 @@ export function SystemAdminSection({ className = '' }: SystemAdminSectionProps) 
             <span>학원 관리</span>
           </CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardContent>
           <TenantListTable
             tenants={tenants}
             isLoading={isLoadingTenants}
             onRefresh={loadTenants}
           />
-        </CardBody>
+        </CardContent>
       </Card>
 
       {/* 테넌트 생성 모달 */}
