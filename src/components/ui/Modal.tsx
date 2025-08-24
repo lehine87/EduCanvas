@@ -51,18 +51,16 @@ export function Modal({
         onPointerDownOutside={closeOnOverlayClick ? undefined : (e) => e.preventDefault()}
         onEscapeKeyDown={closeOnEscape ? undefined : (e) => e.preventDefault()}
       >
-        {header || (title || description) ? (
-          <DialogHeader>
-            {header ? (
-              header
-            ) : (
-              <>
-                {title && <DialogTitle>{title}</DialogTitle>}
-                {description && <DialogDescription>{description}</DialogDescription>}
-              </>
-            )}
-          </DialogHeader>
-        ) : null}
+        <DialogHeader>
+          {header ? (
+            header
+          ) : (
+            <>
+              <DialogTitle>{title || '대화상자'}</DialogTitle>
+              {description && <DialogDescription>{description}</DialogDescription>}
+            </>
+          )}
+        </DialogHeader>
         
         <div className="py-4">
           {children}

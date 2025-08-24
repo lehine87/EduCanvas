@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 EduCanvas is a revolutionary student management system for educational institutions (hakwon/academy), featuring the industry's first drag-and-drop class management interface (ClassFlow). Built with Next.js 15, React 19, and Supabase, it focuses on intuitive UI/UX, enterprise-grade RBAC, and high-performance handling of large datasets.
 
-**Current Phase**: Ready for MVP development (Week 1/10 of development plan)  
+**Current Phase**: Beta 테스트 및 Staff 관리 통합 완료 (2025-08-22)  
 **Key Innovation**: ClassFlow - drag-and-drop student management with 60fps performance  
 **Target**: 10-week MVP completion timeline (2025-08-12 ~ 2025-10-17)
 
@@ -183,7 +183,7 @@ npx tsc --noEmit --strict  # 반드시 0 errors
 
 ## 🎯 TypeScript 타입 시스템 철학 및 권장사항
 
-**⚠️ 2025-08-12 Type Refactoring Completion**: 코드베이스 전체 타입 불일치 문제 해결 완료
+**⚠️ 2025-08-22 Staff Management Integration**: 강사(Instructor)를 직원(Staff)으로 통합 완료 - tenant_memberships 기반 역할 관리
 
 ### 핵심 타입 시스템 원칙
 
@@ -257,10 +257,11 @@ const data: any = await fetchData() // 즉시 제거 대상
 ```
 src/types/
 ├── index.ts              # 🎯 모든 타입의 중앙 Export
-├── database.ts           # 🎯 메인 데이터베이스 타입 (v4.1)
-├── database.types.ts     # 🔄 Supabase 자동 생성
+├── database.ts           # 🎯 메인 데이터베이스 타입 (v5.0)
+├── database.types.ts     # 🔄 Supabase 자동 생성 (2025-08-22)
 ├── auth.types.ts         # 👤 인증 관련 통합 타입
 ├── student.types.ts      # 🎓 학생 관리 통합 타입
+├── staff.types.ts        # 👥 직원 관리 통합 타입 (NEW)
 ├── app.types.ts          # 📱 애플리케이션 레벨 타입
 └── api/                  # 🌐 API 관련 타입들
 ```
@@ -313,9 +314,10 @@ if (hasDynamicProperty(obj)) {
 ### 레거시 타입 정리 체크리스트
 
 #### 단계 1: 중복 타입 통합
-- [ ] `Student` 타입 정의가 20+개 → `student.types.ts`로 통합 완료
-- [ ] `UserProfile` 타입 불일치 → `auth.types.ts`로 통합 완료
-- [ ] `Database` 타입 v2.0 → v4.1 업데이트 완료
+- [x] `Student` 타입 정의가 20+개 → `student.types.ts`로 통합 완료
+- [x] `UserProfile` 타입 불일치 → `auth.types.ts`로 통합 완료
+- [x] `Database` 타입 v2.0 → v5.0 업데이트 완료
+- [x] `Instructor` → `TenantMembership` 통합 완료
 
 #### 단계 2: Type Guard 도입
 - [ ] `hasTenantId()`, `hasRole()` 타입 가드 적용
@@ -481,6 +483,8 @@ console.log('✅ 처리 완료') || console.error('❌ 처리 실패:', error)
 - `npm run build` - Build production version
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npx supabase gen types typescript --project-id hodkqpmukwfrreozwmcy` - DB 타입 생성
+- `npx tsc --noEmit --strict` - TypeScript 타입 체크
 
 ## Tech Stack & Architecture
 
@@ -542,25 +546,27 @@ The project uses TypeScript path aliases configured in tsconfig.json:
 
 ## Database & API Architecture
 
-- **Database**: Supabase PostgreSQL with Row Level Security (RLS) - **Schema v4.1**
+- **Database**: Supabase PostgreSQL with Row Level Security (RLS) - **Schema v5.0**
 - **Authentication**: Supabase Auth with comprehensive RBAC (admin/instructor/staff/viewer)
 - **API**: RESTful API with Next.js App Router + Supabase client-side queries
 - **Real-time**: Supabase real-time subscriptions for ClassFlow and live updates
 - **Complex Systems**: Advanced billing types (5 types) and salary policies (7 types)
 
-**Schema v4.1 Key Features** (2025-08-11 Updated):
+**Schema v5.0 Key Features** (2025-08-22 Updated):
 
 - **MVP Core** (v2.0): 5 billing types, 7 salary policies, complete enrollment tracking
 - **Extended Features** (v3.0): Classroom management, timetable system, grade management
 - **Multitenant Architecture** (v4.0): Complete tenant isolation with flexible RBAC
 - **Enhanced Student Management** (v4.1): 복수 학부모 연락처, 학생 이메일 지원
 - **Advanced Class Management** (v4.1): 학년별/과정별 세분화된 클래스 관리
+- **Staff Management Integration** (v5.0): tenant_memberships 기반 통합 직원 관리
 
-**v4.1 Schema Updates** (2025-08-11):
+**v5.0 Schema Updates** (2025-08-22):
 
-- **Students Table**: `parent_phone_1`, `parent_phone_2`, `parent_name`, `email` 컬럼 추가
-- **Classes Table**: `grade`, `course` 컬럼 추가 (학년별/과정별 관리 지원)
-- **Enhanced Indexing**: 성능 최적화를 위한 학년/연락처별 인덱스 추가
+- **Instructor Integration**: `instructors` 테이블을 `tenant_memberships` 기반으로 통합
+- **Role-Based Access**: admin, instructor, staff, viewer 역할별 세분화
+- **Staff Page**: `/main/staff` 페이지 추가 - 전체 직원 통합 관리
+- **Simplified Architecture**: user_profiles → tenant_memberships 직접 연계
 
 **Key Entities**: Students, Classes, Users, Course Packages, Student Enrollments, Salary Policies, Classrooms, Exams, Documents, Student Histories, Consultations.
 
@@ -584,12 +590,13 @@ npx supabase gen types typescript  // 실제 DB 구조 확인
 #### EduCanvas의 User-First Architecture 이해 (필수 암기)
 
 ```typescript
-// EduCanvas 핵심 아키텍처
+// EduCanvas 핵심 아키텍처 (v5.0)
 user_profiles (모든 사용자의 기본 정보)
     ↓ (user_id FK)
-instructors (강사 추가 정보)
-    ↓ (instructor_id는 user_profiles.id를 직접 참조!)
-classes.instructor_id → user_profiles.id (NOT instructors.id!)
+tenant_memberships (테넌트별 역할 관리)
+    ├→ role: admin/instructor/staff/viewer
+    └→ staff_info: 직원 추가 정보 (급여, 입사일 등)
+classes.instructor_id → user_profiles.id (user_profiles 직접 참조)
 ```
 
 **설계 의도**: 권한 관리의 일관성과 단순성을 위해 모든 강사는 먼저 사용자가 되고, 클래스는 사용자 계정과 직접 연결됨
@@ -618,7 +625,8 @@ classes.instructor_id → user_profiles.id (NOT instructors.id!)
 // 발견된 숨겨진 제약조건들
 user_profiles.id → auth.users.id (FK, 타입에 미표시)
 students.student_number: NOT NULL (필수, 누락 시 오류)
-classes.cource (오타: "course"가 아님, 실제 컬럼명)
+tenant_memberships.role: ENUM ('admin', 'instructor', 'staff', 'viewer')
+tenant_memberships.staff_info: JSONB (급여정책, 입사일 등)
 ```
 
 #### Supabase RLS 및 권한 체계 완전 이해
@@ -711,6 +719,7 @@ Uses Zustand for state management with separate stores for different domains:
 - `useAuthStore.ts` - Authentication state and user permissions
 - `useModalStore.ts` - Modal/dialog state management
 - `paymentsStore.ts` - Enrollment and payment data management
+- `staffStore.ts` - Staff management and role assignments (NEW)
 
 ## Design System
 
@@ -980,9 +989,10 @@ AUDIT_LOG_ENDPOINT="https://audit.educanvas.com/api/logs"
 
 ## Current Development Status
 
-**Phase**: MVP Development Ready (Post-reorganization)  
-**Timeline**: Week 1/10 (2025-08-12 ~ 2025-10-17)  
-**Next Steps**: Begin Phase 1 infrastructure development as per development_plan.md
+**Phase**: MVP Beta Testing & Refinement  
+**Timeline**: Week 2/10 (2025-08-22)  
+**Completed**: Staff Management Integration, RLS 정책 수정, 클래스 관리 UI 개선  
+**Next Steps**: 성능 최적화 및 사용자 피드백 반영
 
 **P0 MVP Features (10-week timeline)**:
 
@@ -994,9 +1004,21 @@ AUDIT_LOG_ENDPOINT="https://audit.educanvas.com/api/logs"
 
 **Success Criteria**: ClassFlow 60fps + 1000+ students + WCAG 2.1 AA + 99.9% uptime
 
+## 🎯 프로젝트 작업 가이드라인
+
+### 필수 준수사항
 - 한국어로 답변해줘.
 - Supabase 접속은 항상 .env.local 정보를 이용해 npx supabase 명령어로 cli를 이용하도록 해
 - 이 프로젝트에서는 로컬DB를 사용하지 않아. 항상 .env.local 파일의 정보를 이용해 supabase 클라우드 데이터베이스로 접속해야 해.
 
-- UI컴포넌트 사용시 docs/project_manual/UI-Components-Manual.md 파일을 봐야 해.
-- TypeScript 타입 사용시 docs/typescript-type-dictionary.md 타입 사전을 반드시 참고해야 해.
+### 참조 문서
+- UI컴포넌트 사용시 `docs/project_manual/UI-Components-Manual.md` 파일을 봐야 해.
+- TypeScript 타입 사용시 `docs/typescript-type-dictionary.md` 타입 사전을 반드시 참고해야 해.
+- Staff 관리 관련: `/main/staff` 페이지 참조
+- 권한 관리: `tenant_memberships` 테이블의 `role` 필드 활용
+
+### 최근 주요 변경사항 (2025-08-22)
+1. **Staff Management 통합**: Instructor를 Staff로 통합, tenant_memberships 기반 관리
+2. **RLS 정책 수정**: tenant_memberships RLS 비활성화로 권한 문제 해결
+3. **UI 개선**: shadcn/ui 기반 마이그레이션 진행 중
+4. **타입 안전성**: database.types.ts 자동 생성 타입 사용 필수

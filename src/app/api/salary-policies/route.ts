@@ -85,11 +85,10 @@ export async function GET(request: NextRequest) {
         .from('salary_policies')
         .select(`
           *,
-          instructors:instructor_id (
+          instructor:instructor_id (
             id,
-            name,
-            email,
-            status
+            full_name,
+            email
           )
         `)
 
@@ -192,18 +191,26 @@ export async function POST(request: NextRequest) {
 
       // 강사 유효성 확인 (instructor_id가 제공된 경우)
       if (policyData.instructor_id) {
-        const { data: instructor } = await supabase
-          .from('instructors')
-          .select('id, name, tenant_id, status')
-          .eq('id', policyData.instructor_id)
+        const { data: membership } = await supabase
+          .from('tenant_memberships')
+          .select(`
+            id,
+            status,
+            user_profiles!inner (
+              id,
+              full_name
+            )
+          `)
+          .eq('user_id', policyData.instructor_id)
           .eq('tenant_id', policyData.tenantId)
+          .eq('job_function', 'instructor')
           .single()
 
-        if (!instructor) {
+        if (!membership) {
           throw new Error('유효하지 않은 강사입니다.')
         }
 
-        if (instructor.status !== 'active') {
+        if (membership.status !== 'active') {
           throw new Error('비활성 상태의 강사에게는 급여정책을 적용할 수 없습니다.')
         }
 
@@ -261,11 +268,10 @@ export async function POST(request: NextRequest) {
         })
         .select(`
           *,
-          instructors:instructor_id (
+          instructor:instructor_id (
             id,
-            name,
-            email,
-            status
+            full_name,
+            email
           )
         `)
         .single()

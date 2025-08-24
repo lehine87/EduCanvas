@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { 
   withApiHandler, 
@@ -8,29 +8,37 @@ import {
   logApiStart,
   logApiSuccess 
 } from '@/lib/api/utils'
+import type { CoursePackageWithRelations } from '@/types/course.types'
 
-// 코스패키지 수정 스키마
+// 코스패키지 수정 스키마 - 컴포넌트와 호환
 const updateCoursePackageSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  name: z.string().min(1, '패키지 이름은 필수입니다').optional(),
+  tenantId: z.string().uuid('유효한 테넌트 ID가 필요합니다'),
+  name: z.string().min(1, '과정명은 필수입니다').optional(),
   description: z.string().optional(),
   price: z.number().min(0, '가격은 0 이상이어야 합니다').optional(),
-  original_price: z.number().min(0).optional(),
+  original_price: z.number().optional(),
   billing_type: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']).optional(),
   currency: z.string().optional(),
   class_id: z.string().uuid().optional(),
-  hours: z.number().min(0).optional(),
-  sessions: z.number().min(0).optional(),
-  months: z.number().min(0).optional(),
-  validity_days: z.number().min(0).optional(),
-  video_access_days: z.number().min(0).optional(),
-  max_enrollments: z.number().min(0).optional(),
-  available_from: z.string().optional(),
-  available_until: z.string().optional(),
+  
+  // 기간/횟수 관련
+  months: z.number().optional(),
+  sessions: z.number().optional(),
+  hours: z.number().optional(),
+  validity_days: z.number().optional(),
+  
+  // 접근 제어
+  max_enrollments: z.number().optional(),
   is_active: z.boolean().optional(),
   is_featured: z.boolean().optional(),
+  available_from: z.string().optional(),
+  available_until: z.string().optional(),
+  
+  // 추가 기능
   download_allowed: z.boolean().optional(),
-  offline_access: z.boolean().optional()
+  offline_access: z.boolean().optional(),
+  video_access_days: z.number().optional(),
+  display_order: z.number().optional()
 })
 
 type UpdateCoursePackageData = z.infer<typeof updateCoursePackageSchema>
@@ -231,23 +239,20 @@ export async function PUT(
         .eq('tenant_id', updateData.tenantId)
         .select(`
           *,
-          classes:class_id (
+          class:classes!course_packages_class_id_fkey (
             id,
-            name,
-            grade,
-            course
+            name
           ),
-          user_profiles:created_by (
+          created_by_user:user_profiles!course_packages_created_by_fkey (
             id,
-            email,
             name
           )
         `)
         .single()
 
       if (error) {
-        console.error('❌ 코스패키지 수정 실패:', error)
-        throw new Error(`코스패키지 수정 실패: ${error.message}`)
+        console.error('❌ 과정 수정 실패:', error)
+        throw new Error(`과정 수정에 실패했습니다: ${error.message}`)
       }
 
       logApiSuccess('update-course-package', { 
@@ -255,10 +260,12 @@ export async function PUT(
         packageName: updatedPackage.name 
       })
 
-      return createSuccessResponse(
-        { course_package: updatedPackage },
-        '코스패키지 정보가 성공적으로 수정되었습니다.'
-      )
+      // 컴포넌트와 호환되는 응답 형식
+      return NextResponse.json({
+        success: true,
+        data: updatedPackage as CoursePackageWithRelations,
+        message: '과정이 수정되었습니다.'
+      })
     },
     {
       requireAuth: true
@@ -354,12 +361,14 @@ export async function DELETE(
         deleteType: forceDelete ? 'hard' : 'soft'
       })
 
-      return createSuccessResponse(
-        result,
-        forceDelete 
-          ? '코스패키지가 완전히 삭제되었습니다.' 
-          : '코스패키지가 비활성화되었습니다.'
-      )
+      // 컴포넌트와 호환되는 응답 형식
+      return NextResponse.json({
+        success: true,
+        data: result,
+        message: forceDelete 
+          ? '과정이 완전히 삭제되었습니다.' 
+          : '과정이 비활성화되었습니다.'
+      })
     },
     {
       requireAuth: true

@@ -91,7 +91,7 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
         return
       }
 
-      const response = await fetch(`/api/instructors?tenantId=${tenantId}`, {
+      const response = await fetch(`/api/tenant-admin/members?tenantId=${tenantId}&job_function=instructor`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -101,8 +101,8 @@ export const CreateClassModal = memo<CreateClassModalProps>(({
       if (response.ok) {
         const result = await response.json()
         console.log('강사 목록 응답:', result) // 디버깅용
-        if (result.success && result.data.instructors) {
-          const instructorOptions = result.data.instructors.map((instructor: { id: string; name: string; email: string; status: string }) => ({
+        if (result.members && Array.isArray(result.members)) {
+          const instructorOptions = result.members.map((instructor: { id: string; name: string; email: string; status: string }) => ({
             value: instructor.id,
             label: instructor.name,
             disabled: instructor.status !== 'active'

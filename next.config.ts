@@ -13,22 +13,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // 개발 서버 설정 - EPIPE 에러 방지
+  // Turbopack 설정 (안정화된 버전)
   ...(process.env.NODE_ENV === 'development' && {
-    experimental: {
-      // Turbopack 최적화
-      turbo: {
-        loaders: {
-          '.ts': ['ts-loader'],
-          '.tsx': ['ts-loader'],
-        },
+    turbopack: {
+      // Turbopack 최적화 설정
+      resolveAlias: {
+        '@': './src',
       },
     },
-    // 개발 서버 옵션
-    devIndicators: {
-      buildActivity: false, // 빌드 인디케이터 비활성화 (콘솔 출력 감소)
-    },
   }),
+
 
   // Webpack 설정 - Production에서 dev-tools 디렉터리 완전 제외
   webpack: (config, { dev, isServer }) => {

@@ -126,53 +126,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 강사인 경우 instructors 테이블에도 레코드 생성
+    // 강사인 경우 tenant_memberships에 job_function과 추가 정보 업데이트
     if (position === 'instructor') {
-      const instructorData = {
-        user_id: user.id,
-        tenant_id,
-        name,
-        phone,
-        email: user.email,
-        specialization: specialization || null,
-        hire_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
-        status: 'active',
-        bio: bio || null, // 자기소개 (새 컬럼)
-        emergency_contact: emergency_contact || null, // 비상연락처 (새 컬럼)
-        // memo 필드에도 백업으로 저장 (호환성)
-        memo: [
-          bio && `[자기소개] ${bio}`,
-          emergency_contact && `[비상연락처] ${emergency_contact}`
-        ].filter(Boolean).join('\n') || null
-      }
-
-      // instructors 테이블에 레코드 생성 (user_id가 UNIQUE라면 upsert, 아니면 insert)
-      const { data: existingInstructor } = await supabaseServiceRole
-        .from('instructors')
+      // tenant_memberships 테이블에 강사 정보 업데이트
+      const { data: membership } = await supabaseServiceRole
+        .from('tenant_memberships')
         .select('id')
         .eq('user_id', user.id)
+        .eq('tenant_id', tenant_id)
         .single()
 
-      let instructorError = null
-      if (existingInstructor) {
-        // 기존 레코드 업데이트
-        const { error } = await supabaseServiceRole
-          .from('instructors')
-          .update(instructorData)
-          .eq('user_id', user.id)
-        instructorError = error
-      } else {
-        // 새 레코드 생성
-        const { error } = await supabaseServiceRole
-          .from('instructors')
-          .insert(instructorData)
-        instructorError = error
-      }
+      if (membership) {
+        const { error: updateError } = await supabaseServiceRole
+          .from('tenant_memberships')
+          .update({
+            job_function: 'instructor',
+            hire_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+            specialization: specialization || null,
+            bio: bio || null,
+            emergency_contact: emergency_contact || null
+          })
+          .eq('id', membership.id)
 
-      if (instructorError) {
-        console.warn('⚠️ 강사 레코드 생성 실패 (계속 진행):', instructorError)
+        if (updateError) {
+          console.warn('⚠️ 강사 정보 업데이트 실패 (계속 진행):', updateError)
+        } else {
+          console.log('✅ 강사 정보 업데이트 완료')
+        }
       } else {
-        console.log('✅ 강사 레코드 생성 완료')
+        console.warn('⚠️ tenant_memberships 레코드를 찾을 수 없음')
       }
     }
 

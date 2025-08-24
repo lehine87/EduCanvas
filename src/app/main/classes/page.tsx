@@ -258,12 +258,7 @@ export default function ClassesPage() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={toggleSelectionMode}
-              className={cn(
-                "transition-all flex-shrink-0 z-10",
-                selectionMode 
-                  ? "bg-brand-600 hover:bg-brand-700 text-white border-brand-600" 
-                  : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
-              )}
+              className="transition-all flex-shrink-0 z-10"
               title={selectionMode ? "상세보기 모드로 전환" : "선택 모드로 전환"}
             >
               <CheckCircleOutline className="w-4 h-4 mr-1" />
@@ -327,10 +322,10 @@ export default function ClassesPage() {
               </div>
             </div>
 
-            {/* 새 클래스 생성 */}
+            {/* 새 클래스 등록 */}
             <Button onClick={handleCreateClass}>
               <PlusIcon className="w-4 h-4 mr-2" />
-              새 클래스
+              새 클래스 등록
             </Button>
           </div>
         </div>

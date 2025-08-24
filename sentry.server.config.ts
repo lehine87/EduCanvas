@@ -4,6 +4,52 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+// 타입 가드: NodeJS 에러 타입 체크
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    typeof (error as NodeJS.ErrnoException).code === 'string'
+  );
+}
+
+// EPIPE 에러 전역 처리기 설정 (개발 환경에서만)
+if (process.env.NODE_ENV === 'development') {
+  process.on('uncaughtException', (error: Error) => {
+    // EPIPE 에러는 로그만 남기고 무시
+    if (isNodeError(error) && error.code === 'EPIPE') {
+      console.warn('⚠️ EPIPE 에러 감지됨 (무시됨):', error.message);
+      return;
+    }
+    
+    if (error.message?.includes('broken pipe')) {
+      console.warn('⚠️ Broken pipe 에러 감지됨 (무시됨):', error.message);
+      return;
+    }
+    
+    // 다른 심각한 에러는 Sentry로 전송하고 프로세스 종료
+    Sentry.captureException(error);
+    console.error('💥 Uncaught Exception:', error);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+    // Promise rejection에서도 EPIPE 관련 에러 필터링
+    if (isNodeError(reason) && reason.code === 'EPIPE') {
+      console.warn('⚠️ EPIPE Promise rejection 감지됨 (무시됨):', reason.message);
+      return;
+    }
+    
+    if (reason instanceof Error && reason.message?.includes('broken pipe')) {
+      console.warn('⚠️ Broken pipe Promise rejection 감지됨 (무시됨):', reason.message);
+      return;
+    }
+    
+    Sentry.captureException(reason);
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+}
+
 Sentry.init({
   dsn: "https://50a49008792ea74145b9b19c61361780@o4509846881173504.ingest.us.sentry.io/4509846885892096",
 

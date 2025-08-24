@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
 /**
  * 클라이언트 사이드에서만 실행되는 초기화 컴포넌트
@@ -8,6 +9,18 @@ import { useEffect } from 'react'
  */
 export function ClientInitializer() {
   useEffect(() => {
+    // Sentry 초기화 (클라이언트 사이드)
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      Sentry.init({
+        dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+        environment: process.env.NODE_ENV,
+        tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+        debug: false,
+        replaysOnErrorSampleRate: 1.0,
+        replaysSessionSampleRate: 0.1,
+      })
+    }
+
     // 개발 환경에서만 Debug Interface 초기화
     if (process.env.NODE_ENV === 'development') {
       import('@/dev-tools/init').catch(() => {

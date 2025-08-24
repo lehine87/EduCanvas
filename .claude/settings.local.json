@@ -39,7 +39,8 @@
       "Bash(rg:*)",
       "WebFetch(domain:localhost)",
       "Bash(SUPABASE_ACCESS_TOKEN=sbp_7643e87755caf9b38f704231d7619ac55293e083 npx supabase gen types typescript --project-id hodkqpmukwfrreozwmcy)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

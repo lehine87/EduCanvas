@@ -530,7 +530,7 @@ export function validateStudent(data: unknown): { success: true; data: Student }
   const result = StudentSchema.safeParse(data)
   if (result.success) {
     // Zod 스키마 결과를 Database 타입으로 안전하게 변환
-    return { success: true, data: result.data as any }
+    return { success: true, data: result.data as Student }
   } else {
     return {
       success: false,
@@ -566,7 +566,7 @@ export function validateClass(data: unknown): { success: true; data: Class } | {
 export function validateVideo(data: unknown): { success: true; data: Video } | { success: false; errors: string[] } {
   const result = VideoSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data as any }
+    return { success: true, data: result.data as Video }
   } else {
     return {
       success: false,
@@ -578,7 +578,7 @@ export function validateVideo(data: unknown): { success: true; data: Video } | {
 export function validateVideoWatchSession(data: unknown): { success: true; data: VideoWatchSession } | { success: false; errors: string[] } {
   const result = VideoWatchSessionSchema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data as any }
+    return { success: true, data: result.data as VideoWatchSession }
   } else {
     return {
       success: false,

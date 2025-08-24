@@ -83,7 +83,7 @@ export const EditClassModal = memo<EditClassModalProps>(({
     if (!tenantId) return
 
     try {
-      const response = await fetch(`/api/instructors?tenantId=${tenantId}`, {
+      const response = await fetch(`/api/tenant-admin/members?tenantId=${tenantId}&job_function=instructor`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -91,11 +91,11 @@ export const EditClassModal = memo<EditClassModalProps>(({
 
       if (response.ok) {
         const result = await response.json()
-        if (result.success && result.data.instructors) {
-          const instructorOptions = result.data.instructors.map((instructor: { id: string; full_name: string; email: string; is_active: boolean }) => ({
+        if (result.members && Array.isArray(result.members)) {
+          const instructorOptions = result.members.map((instructor: { id: string; name: string; email: string; status: string }) => ({
             value: instructor.id,
-            label: `${instructor.full_name} (${instructor.email})`,
-            disabled: !instructor.is_active
+            label: `${instructor.name} (${instructor.email})`,
+            disabled: instructor.status !== 'active'
           }))
           setInstructors(instructorOptions)
         }

@@ -23,7 +23,8 @@ import {
   Shield,
   LogOut,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  BookOpen
 } from 'lucide-react'
 
 interface MenuItem {
@@ -65,11 +66,18 @@ export function MainSidebar() {
       allowedRoles: ['system_admin', 'tenant_admin', 'instructor']
     },
     {
-      name: '강사 관리',
-      href: '/main/instructors',
-      icon: ClipboardList,
-      description: '강사 정보 관리',
-      allowedRoles: ['system_admin', 'tenant_admin']
+      name: '직원 관리',
+      href: '/main/staff',
+      icon: Users,
+      description: '직원 정보 관리 (강사 + 행정직원)',
+      allowedRoles: ['system_admin', 'tenant_admin', 'principal', 'vice_principal', 'team_leader']
+    },
+    {
+      name: '과정 관리',
+      href: '/main/courses',
+      icon: BookOpen,
+      description: '수강 과정 및 패키지 관리',
+      allowedRoles: ['system_admin', 'tenant_admin', 'instructor']
     },
     {
       name: '시간표',

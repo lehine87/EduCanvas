@@ -15,10 +15,17 @@ const updateClassSchema = z.object({
   name: z.string().min(1, '클래스 이름은 필수입니다').optional(),
   grade: z.string().optional(),
   course: z.string().optional(),
-  instructor_id: z.string().uuid().optional(),
-  classroom_id: z.string().uuid().optional(),
+  subject: z.string().optional(),
+  level: z.string().nullable().optional(),
+  main_textbook: z.string().nullable().optional(),
+  supplementary_textbook: z.string().nullable().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().nullable().optional(),
+  instructor_id: z.string().uuid().nullable().optional(),
+  classroom_id: z.string().uuid().nullable().optional(),
   max_students: z.number().int().min(1).optional(),
-  description: z.string().optional(),
+  min_students: z.number().int().min(1).optional(),
+  description: z.string().nullable().optional(),
   is_active: z.boolean().optional()
 })
 
@@ -143,6 +150,13 @@ export async function PUT(
 
       const updateData: UpdateClassData = validationResult
 
+      console.log('📋 클래스 수정 요청 데이터:', {
+        classId: params.id,
+        updateData: updateData,
+        instructor_id: updateData.instructor_id,
+        instructor_id_type: typeof updateData.instructor_id
+      })
+
       // 테넌트 권한 검증
       if (!validateTenantAccess(userProfile!, updateData.tenantId)) {
         throw new Error('해당 테넌트의 클래스 정보를 수정할 권한이 없습니다.')
@@ -181,21 +195,33 @@ export async function PUT(
       // 강사 권한 확인 (instructor_id가 제공된 경우)
       if (updateData.instructor_id) {
         const { data: instructor } = await supabase
-          .from('user_profiles')
-          .select('id, role, tenant_id')
-          .eq('id', updateData.instructor_id)
+          .from('tenant_memberships')
+          .select(`
+            user_id,
+            tenant_id,
+            status,
+            job_function,
+            tenant_roles!inner (
+              name
+            )
+          `)
+          .eq('user_id', updateData.instructor_id)
           .eq('tenant_id', updateData.tenantId)
-          .eq('role', 'instructor')
           .eq('status', 'active')
           .single()
 
-        if (!instructor) {
+        if (!instructor || (instructor.job_function !== 'instructor' && instructor.tenant_roles?.name !== 'instructor')) {
           throw new Error('유효하지 않은 강사입니다.')
         }
       }
 
       // tenantId 제거 (업데이트 대상이 아님)
       const { tenantId: _, ...updateFields } = updateData
+
+      console.log('🔄 업데이트할 필드들:', {
+        updateFields: updateFields,
+        instructor_id_in_fields: updateFields.instructor_id
+      })
 
       // 클래스 정보 업데이트
       const { data: updatedClass, error } = await supabase

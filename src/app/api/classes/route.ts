@@ -72,13 +72,13 @@ export async function GET(request: NextRequest) {
       offset: rawParams.offset
     }
 
-    // 기본 쿼리 구성
+    // 기본 쿼리 구성 - user_profiles와 tenant_memberships를 통해 강사 정보 조회
     let selectFields = `
       *,
-      instructors:instructor_id (
+      instructor:instructor_id (
         id,
-        name,
-        email
+        email,
+        name
       )
     `
 
@@ -121,11 +121,44 @@ export async function GET(request: NextRequest) {
       throw new Error(`클래스 목록 조회 실패: ${error.message}`)
     }
 
-    // 기본 클래스 정보 반환 (임시로 student_count를 0으로 설정)
+    // 모든 클래스의 학생 수를 한 번에 조회 (더 효율적)
+    const classIds = (classes || []).map(cls => cls.id).filter(Boolean)
+    let studentCounts: Record<string, number> = {}
+    
+    if (classIds.length > 0) {
+      console.log('📊 학생 수 조회 시작:', { classIds })
+      
+      // student_enrollments 테이블에서 클래스별 학생 수 집계
+      const { data: enrollmentCounts, error: countError } = await supabase
+        .from('student_enrollments')
+        .select('class_id')
+        .in('class_id', classIds)
+        .eq('status', 'active')
+      
+      console.log('📊 수강신청 조회 결과:', { 
+        enrollmentCounts: enrollmentCounts?.length, 
+        error: countError,
+        data: enrollmentCounts 
+      })
+      
+      if (countError) {
+        console.error('❌ 학생 수 조회 실패:', countError)
+      } else if (enrollmentCounts) {
+        // 클래스별로 학생 수 집계
+        enrollmentCounts.forEach(enrollment => {
+          if (enrollment.class_id) {
+            studentCounts[enrollment.class_id] = (studentCounts[enrollment.class_id] || 0) + 1
+          }
+        })
+        console.log('📊 최종 학생 수 집계:', studentCounts)
+      }
+    }
+    
+    // 클래스 정보에 학생 수 추가
     const classesWithStats = (classes || [])
       .filter((cls): cls is NonNullable<typeof cls> => cls !== null && cls !== undefined)
       .map(cls => Object.assign({}, cls, {
-        student_count: 0 // 임시로 0으로 설정
+        student_count: studentCounts[cls.id] || 0
       }))
 
     const result = {
@@ -135,6 +168,7 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ 처리 완료:', { 
       count: classes?.length || 0,
+      totalStudents: Object.values(studentCounts).reduce((sum, count) => sum + count, 0),
       includeStudents: params.includeStudents
     })
 
@@ -216,21 +250,30 @@ export async function POST(request: NextRequest) {
 
     // 강사 존재 확인 (instructor_id가 제공된 경우)
     if (cleanedData.instructor_id) {
-      const { data: instructor, error: instructorError } = await supabase
-        .from('instructors')
-        .select('id, name')
-        .eq('id', cleanedData.instructor_id)
+      const { data: membership, error: membershipError } = await supabase
+        .from('tenant_memberships')
+        .select(`
+          id,
+          status,
+          user_profiles!tenant_memberships_user_id_fkey (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', cleanedData.instructor_id)
         .eq('tenant_id', cleanedData.tenantId)
+        .eq('job_function', 'instructor')
         .eq('status', 'active')
         .single()
 
-      if (!instructor || instructorError) {
+      if (!membership || membershipError) {
+        console.error('❌ 강사 검증 실패:', membershipError)
         return NextResponse.json({
           error: '유효하지 않은 강사입니다.'
         }, { status: 400 })
       }
 
-      console.log('✅ 강사 검증 완료:', instructor.name)
+      console.log('✅ 강사 검증 완료:', membership.user_profiles?.name)
     }
 
     // 클래스 생성 - tenantId를 tenant_id로 매핑
@@ -245,9 +288,8 @@ export async function POST(request: NextRequest) {
       })
       .select(`
         *,
-        instructors:instructor_id (
+        instructor:instructor_id (
           id,
-          name,
           email
         )
       `)

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { 
   withApiHandler, 
@@ -8,42 +8,53 @@ import {
   logApiStart,
   logApiSuccess 
 } from '@/lib/api/utils'
+import type { 
+  CoursePackageWithRelations, 
+  CoursePackageStats,
+  BillingType 
+} from '@/types/course.types'
 
-// 코스패키지 조회 파라미터 스키마
+// 코스패키지 조회 파라미터 스키마 - 컴포넌트와 호환
 const getCoursePackagesSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다').optional().nullable(),
-  classId: z.string().uuid().optional().nullable(),
-  billingType: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']).optional().nullable(),
-  isActive: z.boolean().optional().nullable(),
-  isFeatured: z.boolean().optional().nullable(),
-  limit: z.number().min(1).max(1000).default(100),
-  offset: z.number().min(0).default(0),
-  search: z.string().optional().nullable()
+  tenantId: z.string().uuid('유효한 테넌트 ID가 필요합니다'),
+  status: z.enum(['all', 'active', 'inactive']).optional().default('all'),
+  billingType: z.enum(['all', 'monthly', 'sessions', 'hours', 'package', 'drop_in']).optional().default('all'),
+  search: z.string().optional(),
+  sortBy: z.enum(['name', 'created_at', 'price']).optional().default('name'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+  limit: z.coerce.number().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().min(0).optional().default(0)
 })
 
-// 코스패키지 생성 스키마
+// 코스패키지 생성 스키마 - 컴포넌트와 호환
 const createCoursePackageSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  name: z.string().min(1, '패키지 이름은 필수입니다'),
+  tenantId: z.string().uuid('유효한 테넌트 ID가 필요합니다'),
+  name: z.string().min(1, '과정명은 필수입니다'),
   description: z.string().optional(),
   price: z.number().min(0, '가격은 0 이상이어야 합니다'),
-  original_price: z.number().min(0).optional(),
+  original_price: z.number().optional(),
   billing_type: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']),
   currency: z.string().default('KRW'),
   class_id: z.string().uuid().optional(),
-  hours: z.number().min(0).optional(),
-  sessions: z.number().min(0).optional(),
-  months: z.number().min(0).optional(),
-  validity_days: z.number().min(0).optional(),
-  video_access_days: z.number().min(0).optional(),
-  max_enrollments: z.number().min(0).optional(),
-  available_from: z.string().optional(),
-  available_until: z.string().optional(),
+  
+  // 기간/횟수 관련
+  months: z.number().optional(),
+  sessions: z.number().optional(),
+  hours: z.number().optional(),
+  validity_days: z.number().optional(),
+  
+  // 접근 제어
+  max_enrollments: z.number().optional(),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
+  available_from: z.string().optional(),
+  available_until: z.string().optional(),
+  
+  // 추가 기능
   download_allowed: z.boolean().default(false),
   offline_access: z.boolean().default(false),
-  created_by: z.string().uuid().optional()
+  video_access_days: z.number().optional(),
+  display_order: z.number().default(0)
 })
 
 type GetCoursePackagesParams = z.infer<typeof getCoursePackagesSchema>
@@ -59,17 +70,17 @@ export async function GET(request: NextRequest) {
     async ({ request, userProfile, supabase }) => {
       logApiStart('get-course-packages', { userId: userProfile!.id })
 
-      // URL 파라미터 파싱
+      // URL 파라미터 파싱 - 컴포넌트와 호환
       const { searchParams } = new URL(request.url)
       const rawParams = {
         tenantId: searchParams.get('tenantId'),
-        classId: searchParams.get('classId'),
-        billingType: searchParams.get('billingType'),
-        isActive: searchParams.get('isActive') === 'true' ? true : searchParams.get('isActive') === 'false' ? false : undefined,
-        isFeatured: searchParams.get('isFeatured') === 'true' ? true : searchParams.get('isFeatured') === 'false' ? false : undefined,
-        limit: parseInt(searchParams.get('limit') || '100'),
-        offset: parseInt(searchParams.get('offset') || '0'),
-        search: searchParams.get('search')
+        status: searchParams.get('status') || 'all',
+        billingType: searchParams.get('billingType') || 'all',
+        search: searchParams.get('search') || undefined,
+        sortBy: searchParams.get('sortBy') || 'name',
+        sortOrder: searchParams.get('sortOrder') || 'asc',
+        limit: parseInt(searchParams.get('limit') || '50'),
+        offset: parseInt(searchParams.get('offset') || '0')
       }
       
       console.log('📋 API 파라미터:', rawParams)
@@ -85,53 +96,36 @@ export async function GET(request: NextRequest) {
 
       const params: GetCoursePackagesParams = validationResult
 
-      // 테넌트 권한 검증 (시스템 관리자는 전체 접근 가능)
+      // 테넌트 권한 검증 
       const isSystemAdmin = userProfile!.role === 'system_admin'
       if (!isSystemAdmin && !validateTenantAccess(userProfile!, params.tenantId)) {
-        throw new Error('해당 테넌트의 코스패키지 정보에 접근할 권한이 없습니다.')
+        throw new Error('해당 테넌트의 과정 정보에 접근할 권한이 없습니다.')
       }
 
-      // 기본 쿼리 구성
+      // 기본 쿼리 구성 - 컴포넌트와 호환
       let query = supabase
         .from('course_packages')
         .select(`
           *,
-          classes:class_id (
+          class:classes!course_packages_class_id_fkey (
             id,
-            name,
-            grade,
-            course
+            name
           ),
-          user_profiles:created_by (
+          created_by_user:user_profiles!course_packages_created_by_fkey (
             id,
-            email,
             name
           )
         `)
+        .eq('tenant_id', params.tenantId)
 
-      // 시스템 관리자가 아닌 경우에만 테넌트 필터링
-      if (!isSystemAdmin && params.tenantId) {
-        query = query.eq('tenant_id', params.tenantId)
+      // 상태 필터링 (all, active, inactive)
+      if (params.status !== 'all') {
+        query = query.eq('is_active', params.status === 'active')
       }
 
-      // 클래스 필터링
-      if (params.classId) {
-        query = query.eq('class_id', params.classId)
-      }
-
-      // 결제 타입 필터링
-      if (params.billingType) {
+      // 결제 타입 필터링 
+      if (params.billingType !== 'all') {
         query = query.eq('billing_type', params.billingType)
-      }
-
-      // 활성 상태 필터링
-      if (params.isActive !== undefined && params.isActive !== null) {
-        query = query.eq('is_active', params.isActive)
-      }
-
-      // 추천 상태 필터링
-      if (params.isFeatured !== undefined && params.isFeatured !== null) {
-        query = query.eq('is_featured', params.isFeatured)
       }
 
       // 검색 기능 (이름, 설명)
@@ -139,32 +133,63 @@ export async function GET(request: NextRequest) {
         query = query.or(`name.ilike.%${params.search}%,description.ilike.%${params.search}%`)
       }
 
+      // 정렬
+      const orderColumn = params.sortBy === 'created_at' ? 'created_at' : 
+                         params.sortBy === 'price' ? 'price' : 'name'
+      query = query.order(orderColumn, { ascending: params.sortOrder === 'asc' })
+
       // 페이지네이션
       const { data: coursePackages, error, count } = await query
         .range(params.offset, params.offset + params.limit - 1)
-        .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('❌ 코스패키지 목록 조회 실패:', error)
-        throw new Error(`코스패키지 목록 조회 실패: ${error.message}`)
+        console.error('❌ 과정 목록 조회 실패:', error)
+        throw new Error(`과정 목록을 조회하는데 실패했습니다: ${error.message}`)
       }
 
-      const result = {
-        course_packages: coursePackages || [],
-        pagination: {
-          total: count || 0,
-          limit: params.limit,
-          offset: params.offset,
-          hasMore: (count || 0) > params.offset + params.limit
+      // 통계 데이터 계산
+      const statsQuery = supabase
+        .from('course_packages')
+        .select('id, is_active, is_featured, billing_type, price')
+        .eq('tenant_id', params.tenantId)
+
+      const { data: statsData } = await statsQuery
+
+      const stats: CoursePackageStats = {
+        total: statsData?.length || 0,
+        active: statsData?.filter(c => c.is_active).length || 0,
+        inactive: statsData?.filter(c => !c.is_active).length || 0,
+        featured: statsData?.filter(c => c.is_featured).length || 0,
+        total_enrollments: 0, // TODO: 수강신청 테이블 연동 시 계산
+        total_revenue: statsData?.reduce((sum, c) => sum + (c.price || 0), 0) || 0,
+        average_price: statsData?.length ? 
+          (statsData.reduce((sum, c) => sum + (c.price || 0), 0) / statsData.length) : 0,
+        by_billing_type: {
+          monthly: statsData?.filter(c => c.billing_type === 'monthly').length || 0,
+          sessions: statsData?.filter(c => c.billing_type === 'sessions').length || 0,
+          hours: statsData?.filter(c => c.billing_type === 'hours').length || 0,
+          package: statsData?.filter(c => c.billing_type === 'package').length || 0,
+          drop_in: statsData?.filter(c => c.billing_type === 'drop_in').length || 0,
         }
       }
 
       logApiSuccess('get-course-packages', { 
         count: coursePackages?.length || 0, 
-        total: count || 0 
+        total: count || 0,
+        stats: {
+          total: stats.total,
+          active: stats.active,
+          featured: stats.featured
+        }
       })
 
-      return createSuccessResponse(result)
+      // 컴포넌트와 호환되는 응답 형식
+      return NextResponse.json({
+        success: true,
+        data: coursePackages as CoursePackageWithRelations[],
+        total: count || 0,
+        stats
+      })
     },
     {
       requireAuth: true
@@ -225,41 +250,33 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 생성자 정보 설정
-      const finalPackageData = {
-        ...packageData,
-        created_by: packageData.created_by || userProfile!.id
-      }
-
-      // 코스패키지 생성 - tenantId를 tenant_id로 매핑
-      const { tenantId, ...restPackageData } = finalPackageData
+      // 과정 생성 - 컴포넌트와 호환
+      const { tenantId, ...restPackageData } = packageData
       const { data: newPackage, error } = await supabase
         .from('course_packages')
         .insert({
           ...restPackageData,
           tenant_id: tenantId,
+          created_by: userProfile!.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .select(`
           *,
-          classes:class_id (
+          class:classes!course_packages_class_id_fkey (
             id,
-            name,
-            grade,
-            course
+            name
           ),
-          user_profiles:created_by (
+          created_by_user:user_profiles!course_packages_created_by_fkey (
             id,
-            email,
             name
           )
         `)
         .single()
 
       if (error) {
-        console.error('❌ 코스패키지 생성 실패:', error)
-        throw new Error(`코스패키지 생성 실패: ${error.message}`)
+        console.error('❌ 과정 생성 실패:', error)
+        throw new Error(`과정 등록에 실패했습니다: ${error.message}`)
       }
 
       logApiSuccess('create-course-package', { 
@@ -267,10 +284,12 @@ export async function POST(request: NextRequest) {
         packageName: newPackage.name 
       })
 
-      return createSuccessResponse(
-        { course_package: newPackage },
-        '코스패키지가 성공적으로 생성되었습니다.'
-      )
+      // 컴포넌트와 호환되는 응답 형식
+      return NextResponse.json({
+        success: true,
+        data: newPackage as CoursePackageWithRelations,
+        message: '새 과정이 등록되었습니다.'
+      })
     },
     {
       requireAuth: true

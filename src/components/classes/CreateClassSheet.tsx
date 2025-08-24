@@ -91,9 +91,9 @@ export const CreateClassSheet = memo<CreateClassSheetProps>(({
         return
       }
 
-      console.log('🔍 강사 API 호출 시작:', `/api/instructors?tenantId=${tenantId}`)
+      console.log('🔍 강사 API 호출 시작:', `/api/tenant-admin/members?tenantId=${tenantId}&job_function=instructor`)
 
-      const response = await fetch(`/api/instructors?tenantId=${tenantId}`, {
+      const response = await fetch(`/api/tenant-admin/members?tenantId=${tenantId}&job_function=instructor`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -116,9 +116,9 @@ export const CreateClassSheet = memo<CreateClassSheetProps>(({
       
       console.log('🔍 강사 API 전체 응답:', data) // 전체 구조 확인
       
-      // API 응답 구조: { success: true, data: { instructors: [...], pagination: {...} } }
-      if (data.success && data.data && Array.isArray(data.data.instructors)) {
-        const instructorArray = data.data.instructors
+      // API 응답 구조: { members: [...], stats: {...} }
+      if (Array.isArray(data.members)) {
+        const instructorArray = data.members
         console.log('✅ 강사 배열 확인:', instructorArray.length, '개')
         console.log('✅ 첫 번째 강사:', instructorArray[0])
         
