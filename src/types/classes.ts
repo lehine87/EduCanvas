@@ -1,6 +1,6 @@
 // src/types/classes.ts
-// Updated for Schema v4.1 (2025-08-11)
-// Key changes: grade, course columns, User-first Architecture
+// Updated for Schema v5.0 (2025-08-25)
+// Key changes: instructor_id → tenant_memberships.id, staff_info integration
 
 export type ClassStatus = 'active' | 'inactive' | 'archived'
 
@@ -13,7 +13,7 @@ export interface Class {
   level?: string  // Additional level classification
   max_students?: number
   min_students?: number  // ⚠️ v4.1: Minimum students requirement
-  instructor_id?: string  // ⚠️ CRITICAL: References user_profiles.id (NOT instructors.id!)
+  instructor_id?: string  // ⚠️ SCHEMA v5.0: References tenant_memberships.id (unified staff management)
   classroom_id?: string  // FK to classrooms table
   color?: string
   description?: string  // Additional description field

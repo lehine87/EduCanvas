@@ -1,4 +1,40 @@
 // Staff 관리 관련 타입 정의
+// Updated for Schema v5.0 (2025-08-25) - staff_info integration
+
+import { Database } from './database.types'
+
+export type TenantMembership = Database['public']['Tables']['tenant_memberships']['Row']
+export type TenantMembershipInsert = Database['public']['Tables']['tenant_memberships']['Insert']
+export type TenantMembershipUpdate = Database['public']['Tables']['tenant_memberships']['Update']
+
+// Staff Info stored in tenant_memberships.staff_info JSONB field
+export interface StaffInfo {
+  // Basic info
+  name?: string
+  name_english?: string
+  phone?: string
+  email?: string
+  bio?: string
+  
+  // Employment info
+  hire_date?: string
+  employment_status?: string
+  employment_type?: string
+  
+  // Financial info
+  hourly_rate?: number
+  salary_policy_id?: string
+  bank_account?: string
+  
+  // Teaching info
+  qualifications?: string[]
+  specialties?: string[]
+  max_classes?: number
+  teaching_experience_years?: number
+  
+  // Additional custom fields
+  [key: string]: any
+}
 
 export interface StaffMember {
   id: string
@@ -15,6 +51,7 @@ export interface StaffMember {
   bio?: string
   created_at: string
   membership_id: string
+  staff_info?: StaffInfo  // ✅ v5.0: Additional staff information
 }
 
 export interface StaffStats {
@@ -41,6 +78,7 @@ export interface CreateStaffRequest {
   hire_date?: string
   specialization?: string
   bio?: string
+  staff_info?: StaffInfo  // ✅ v5.0: Additional staff information
 }
 
 export interface UpdateStaffRequest {
@@ -52,4 +90,5 @@ export interface UpdateStaffRequest {
   hire_date?: string
   specialization?: string
   bio?: string
+  staff_info?: StaffInfo  // ✅ v5.0: Additional staff information
 }

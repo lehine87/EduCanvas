@@ -1,7 +1,7 @@
-// EduCanvas v4.1 통합 타입 Export 시스템
+// EduCanvas v5.0 통합 타입 Export 시스템
 // 모든 타입을 중앙에서 관리하고 일관되게 export
-// @version v4.1 완전 체계화 버전
-// @since 2025-08-12
+// @version v5.0 Staff Management Integration
+// @since 2025-08-25
 
 // ================================================================
 // 1. 핵심 데이터베이스 타입들 (최우선)
@@ -60,6 +60,24 @@ export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['U
 export type TenantInsert = Database['public']['Tables']['tenants']['Insert']
 export type TenantUpdate = Database['public']['Tables']['tenants']['Update']
 
+// ✅ v5.0: Staff Management Integration - tenant_memberships based
+export type TenantMembership = Database['public']['Tables']['tenant_memberships']['Row']
+export type TenantMembershipInsert = Database['public']['Tables']['tenant_memberships']['Insert']
+export type TenantMembershipUpdate = Database['public']['Tables']['tenant_memberships']['Update']
+
+// Staff types (unified instructor/staff management)
+export type {
+  StaffInfo,
+  StaffMember,
+  StaffStats,
+  StaffJobFunction,
+  StaffRole,
+  StaffStatus,
+  CreateStaffRequest,
+  UpdateStaffRequest
+} from './staff.types'
+
+// Legacy instructor table (will be deprecated)
 export type Instructor = Database['public']['Tables']['instructors']['Row']
 // export type Course = Database['public']['Tables']['courses']['Row'] // 테이블 없음
 export type CoursePackage = Database['public']['Tables']['course_packages']['Row']

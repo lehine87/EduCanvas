@@ -513,7 +513,14 @@ export type Database = {
             foreignKeyName: "classes_instructor_id_fkey"
             columns: ["instructor_id"]
             isOneToOne: false
-            referencedRelation: "user_profiles"
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_new_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
             referencedColumns: ["id"]
           },
           {
@@ -524,6 +531,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      classes_backup_20250825: {
+        Row: {
+          classroom_id: string | null
+          color: string | null
+          course: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_fields: Json | null
+          default_classroom_id: string | null
+          description: string | null
+          end_date: string | null
+          grade: string | null
+          id: string | null
+          instructor_id: string | null
+          is_active: boolean | null
+          level: string | null
+          main_textbook: string | null
+          max_students: number | null
+          min_students: number | null
+          name: string | null
+          schedule_config: Json | null
+          start_date: string | null
+          subject: string | null
+          supplementary_textbook: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          classroom_id?: string | null
+          color?: string | null
+          course?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          default_classroom_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          grade?: string | null
+          id?: string | null
+          instructor_id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          main_textbook?: string | null
+          max_students?: number | null
+          min_students?: number | null
+          name?: string | null
+          schedule_config?: Json | null
+          start_date?: string | null
+          subject?: string | null
+          supplementary_textbook?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          classroom_id?: string | null
+          color?: string | null
+          course?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          default_classroom_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          grade?: string | null
+          id?: string | null
+          instructor_id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          main_textbook?: string | null
+          max_students?: number | null
+          min_students?: number | null
+          name?: string | null
+          schedule_config?: Json | null
+          start_date?: string | null
+          subject?: string | null
+          supplementary_textbook?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       classrooms: {
         Row: {
@@ -1728,6 +1816,7 @@ export type Database = {
           qualification: string | null
           role_id: string | null
           specialization: string | null
+          staff_info: Json | null
           status: string | null
           tenant_id: string | null
           updated_at: string | null
@@ -1750,6 +1839,7 @@ export type Database = {
           qualification?: string | null
           role_id?: string | null
           specialization?: string | null
+          staff_info?: Json | null
           status?: string | null
           tenant_id?: string | null
           updated_at?: string | null
@@ -1772,6 +1862,7 @@ export type Database = {
           qualification?: string | null
           role_id?: string | null
           specialization?: string | null
+          staff_info?: Json | null
           status?: string | null
           tenant_id?: string | null
           updated_at?: string | null
