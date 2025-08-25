@@ -1,8 +1,29 @@
+---
+category: root
+priority: 5
+type: readme
+tags: ["main", "overview", "classflow", "educanvas"]
+version: "v2.0"
+last_updated: "2025-08-25"
+status: active
+frequency: weekly
+project_phase: "v2-renewal"
+related_files:
+  - "CLAUDE.md"
+  - "docs/index.md"
+  - "docs/core/development_plan.md"
+purpose: "EduCanvas 프로젝트 메인 소개 및 설정 가이드"
+audience: ["developers", "stakeholders", "new-users"]
+framework: ["nextjs", "supabase", "shadcn-ui"]
+---
+
 # 🎓 EduCanvas
 
 **혁신적인 드래그앤드롭 기반 학원 관리 시스템**
 
 EduCanvas는 교육기관(학원/academy)을 위한 차세대 학생 관리 시스템으로, 업계 최초의 **ClassFlow** 드래그앤드롭 인터페이스를 통해 직관적이고 효율적인 학생 관리를 제공합니다.
+
+> **현재 단계**: v1→v2 UI/UX 완전 리뉴얼 진행 중 (2025-08-26 시작)
 
 ---
 
