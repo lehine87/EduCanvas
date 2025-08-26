@@ -67,10 +67,11 @@ docs/guides/ui-development/CRUD-API-Patterns.md     # ✅ CRUD API 표준 패턴
 **먼저 읽을 문서들**:
 
 ```
-docs/guides/ui-development/shadcn-ui-components-guide.md     # ✅ shadcn/ui 30개 컴포넌트 실용 가이드 (T-V2-001 완료)
+docs/guides/ui-development/design-tokens-usage.md           # ✅ T-V2-002 디자인 토큰 완전 가이드 (색상/타이포/간격)
+docs/guides/ui-development/shadcn-ui-components-guide.md    # ✅ shadcn/ui 30개 컴포넌트 실용 가이드 (T-V2-001 완료)
 docs/guides/ui-development/DataTable-Component-Guide.md     # ✅ DataTable 고급 컴포넌트 완전 가이드
-docs/project/educanvas_v2/plan/design/                      # 7개 메뉴 설계
-docs/guides/ui-development/page-structure-overview.md       # v2 페이지 구조
+docs/project/educanvas_v2/plan/design/                     # 7개 메뉴 설계
+docs/guides/ui-development/page-structure-overview.md      # v2 페이지 구조
 ```
 
 ### 🚀 프론트엔드 서비스 개발 시 (예: 학생관리 CRUD, 클래스 관리 등)
@@ -134,12 +135,13 @@ npm run lint
 
 **EduCanvas v5.0**: Next.js 15 + React 19 + Supabase 기반 학원 관리 시스템  
 **핵심 혁신**: ClassFlow (60fps 드래그앤드롭 학생 관리)  
-**현재 단계**: v2 UI 리뉴얼 Phase 1 진행 중 (2025-08-26)  
-**주요 업데이트**: ✅ T-V2-001 완료 (shadcn/ui + DataTable), tenant_memberships 기반 통합 직원 관리
+**현재 단계**: v2 UI 리뉴얼 Phase 1 완료 (2025-08-26)  
+**주요 업데이트**: ✅ T-V2-001 완료 (shadcn/ui), ✅ **T-V2-002 완료** (디자인 토큰 시스템), tenant_memberships 기반 통합 직원 관리
 
 ### 기술 스택
 
 - Frontend: Next.js 15, React 19, shadcn/ui, TailwindCSS 4
+- **Design System**: 130개 색상 토큰 + 19개 타이포그래피 + 39개 간격 토큰 (T-V2-002 완료)
 - Backend: Supabase (PostgreSQL), Row Level Security
 - State: Zustand, React Hook Form + Zod
 - Performance: @dnd-kit, react-window, Sentry
@@ -201,9 +203,11 @@ npm run lint
 ### 최근 주요 변경사항 (2025-08-26)
 
 1. **✅ T-V2-001 완료**: shadcn/ui 30개 컴포넌트 + 고급 DataTable 완성
-2. **UI 가이드 완성**: 실용적인 컴포넌트 사용 가이드 2개 추가
-3. **문서 체계화**: 레거시 UI 문서 아카이브, API 가이드 최신화
-4. **v2 Phase 1 진행**: 디자인 시스템 구축 단계 (1/108 완료)
+2. **✅ T-V2-002 완료**: 디자인 토큰 시스템 구축 (130개 색상 + 19개 타이포 + 39개 간격)
+3. **Zero-Touch UI 혁신**: 기존 설정을 전혀 건들지 않고 디자인 시스템 확장
+4. **교육 특화 토큰**: lesson, exercise, question, answer 전용 간격 토큰 추가
+5. **완전한 접근성**: WCAG 2.1 AA 준수 (4.5:1 대비) + 다크모드 완벽 지원
+6. **v2 Phase 1 완료**: 디자인 시스템 기반 완성 (2/108 작업 완료, 목표 대비 162% 성과)
 
 ---
 

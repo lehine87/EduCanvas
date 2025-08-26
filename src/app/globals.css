@@ -1,8 +1,33 @@
+/*
+ * ================================================================
+ * EduCanvas v2 Global Styles & Design System
+ * ================================================================
+ * 
+ * 이 파일은 EduCanvas 프로젝트의 전체 디자인 시스템을 정의합니다.
+ * shadcn/ui 기반으로 구성되었으며, 다음과 같은 구조를 가집니다:
+ * 
+ * 1. Base Imports & Setup + T-V2-002 Design Tokens
+ * 2. shadcn/ui Core Theme (HSL Color Space)
+ * 3. Extended Design Tokens (HEX Color Space)
+ * 4. OKLCH Modern Color Space (Future-ready)
+ * 5. Component Styles (Pure CSS Classes)
+ * 6. Utility Classes & Animations
+ * 7. Responsive & Accessibility
+ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/design-tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ================================================================
+ * 2. shadcn/ui Core Theme (HSL Color Space)
+ * ================================================================
+ * 
+ * shadcn/ui 표준 색상 토큰들입니다.
+ * HSL 색상 공간을 사용하여 Tailwind CSS와 완벽 호환됩니다.
+ */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -33,10 +58,16 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --font-sans: Inter, system-ui, sans-serif;
+    --font-sans: Inter, system-ui, sans-serif; /* 중복 주의: Line 180에도 정의됨 */
   }
 
-  /* 탭 트리거 강제 스타일 */
+  /* ================================================================
+   * shadcn/ui Tabs Component 커스터마이징
+   * ================================================================ 
+   * 
+   * 탭 컴포넌트의 하단 보더 스타일을 강제 적용합니다.
+   * data-slot 속성을 통해 정확한 타겟팅을 보장합니다.
+   */
   [data-slot="tabs-trigger"] {
     border-bottom: 2px solid transparent !important;
   }
@@ -53,6 +84,13 @@
     border-bottom-color: hsl(var(--primary)) !important;
   }
 
+  /* ================================================================
+   * Dark Mode Theme Variables (HSL)
+   * ================================================================
+   * 
+   * 다크 모드용 색상 정의입니다.
+   * 밝기와 채도를 조정하여 어두운 배경에서 최적의 가독성을 제공합니다.
+   */
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -84,6 +122,19 @@
   }
 }
 
+/* ================================================================
+ * 3. Extended Design Tokens (HEX Color Space)
+ * ================================================================
+ * 
+ * EduCanvas 커스텀 확장 색상 시스템입니다.
+ * HEX 색상으로 정의되어 디자인 도구와의 호환성을 보장합니다.
+ * 
+ * Primary: 메인 브랜드 색상 (파란색 계열) - HSL 테마와 일부 중복 (호환성 보장용)
+ * Secondary: 보조 색상 (회색 계열)  
+ * Semantic: 상태를 나타내는 색상 (Success, Warning, Error)
+ * 
+ * 중복 정의 이유: HEX 색상은 디자인 도구 호환성, HSL은 Tailwind 호환성을 위함
+ */
 @layer theme {
   :root {
     --color-primary-50: #eff6ff;
@@ -123,8 +174,13 @@
     --color-error-600: #dc2626;
     --color-error-700: #b91c1c;
 
-    /* Additional design system variables */
-    --font-sans: Inter, system-ui, sans-serif;
+    /* ================================================================
+     * System Design Variables
+     * ================================================================
+     * 
+     * 폰트, 그림자, 기타 시스템 전반에 사용되는 디자인 토큰들입니다.
+     */
+    --font-sans: Inter, system-ui, sans-serif; /* 중복 주의: Line 60에도 정의됨 */
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
@@ -134,7 +190,13 @@
   }
 }
 
-/* Base styles */
+/* ================================================================
+ * 4. Base HTML Element Styles
+ * ================================================================
+ * 
+ * HTML 기본 요소들의 베이스 스타일을 정의합니다.
+ * 모든 요소에 일관된 테마 색상과 폰트가 적용됩니다.
+ */
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -151,7 +213,17 @@
   }
 }
 
-/* Custom scrollbar */
+/* ================================================================
+ * 5. Component Styles (Pure CSS Classes)
+ * ================================================================
+ * 
+ * shadcn/ui 컴포넌트와 독립적인 순수 CSS 클래스들입니다.
+ * 레거시 호환성과 특수한 용도로 사용됩니다.
+ */
+
+/* ----------------------------------------------------------------
+ * Custom Scrollbar
+ * ---------------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -170,7 +242,13 @@
   background-color: #94a3b8; /* secondary-400 */
 }
 
-/* Button base styles - pure CSS */
+/* ----------------------------------------------------------------
+ * Button Component (Pure CSS)
+ * ----------------------------------------------------------------
+ * 
+ * shadcn/ui Button 컴포넌트와 독립적인 CSS 버튼 클래스입니다.
+ * 특수한 상황이나 레거시 코드에서 사용됩니다.
+ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -249,7 +327,9 @@
   background-color: #dc2626; /* error-600 */
 }
 
-/* Input styles - pure CSS */
+/* ----------------------------------------------------------------
+ * Input Component (Pure CSS)
+ * ---------------------------------------------------------------- */
 .input {
   display: block;
   width: 100%;
@@ -285,7 +365,9 @@
   box-shadow: 0 0 0 1px #ef4444;
 }
 
-/* Card styles - pure CSS */
+/* ----------------------------------------------------------------
+ * Card Component (Pure CSS)
+ * ---------------------------------------------------------------- */
 .card {
   background-color: white;
   box-shadow: var(--shadow-card);
@@ -310,7 +392,13 @@
   border-bottom-right-radius: 0.5rem;
 }
 
-/* Badge styles - pure CSS */
+/* ----------------------------------------------------------------
+ * Badge Component (Pure CSS)
+ * ---------------------------------------------------------------- 
+ * 
+ * 참고: 이 CSS 클래스들은 shadcn/ui Badge 컴포넌트와 별개입니다.
+ * shadcn/ui Badge는 variants: default, secondary, destructive, outline만 지원합니다.
+ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -345,7 +433,9 @@
   color: #b91c1c; /* error-700 */
 }
 
-/* Alert styles - pure CSS */
+/* ----------------------------------------------------------------
+ * Alert Component (Pure CSS)
+ * ---------------------------------------------------------------- */
 .alert {
   padding: 1rem;
   border-radius: 0.375rem;
@@ -376,7 +466,13 @@
   color: #991b1b; /* error-800 */
 }
 
-/* ClassFlow specific styles - pure CSS */
+/* ----------------------------------------------------------------
+ * ClassFlow Drag & Drop Styles
+ * ---------------------------------------------------------------- 
+ * 
+ * EduCanvas 핵심 기능인 ClassFlow의 60fps 드래그앤드롭을 위한 스타일입니다.
+ * 학생 카드, 드롭존, 클래스 박스의 상호작용을 정의합니다.
+ */
 .student-card {
   background-color: white;
   border-radius: 0.5rem;
@@ -437,7 +533,17 @@
   border-color: #94a3b8; /* secondary-400 */
 }
 
-/* Utility classes */
+/* ================================================================
+ * 6. Utility Classes & Animations
+ * ================================================================
+ * 
+ * 범용적으로 사용되는 유틸리티 클래스들입니다.
+ * 로딩 스피너, 애니메이션, 텍스트 처리 등을 포함합니다.
+ */
+
+/* ----------------------------------------------------------------
+ * Loading & Animation Utilities
+ * ---------------------------------------------------------------- */
 .loading-spinner {
   display: inline-block;
   width: 1rem;
@@ -492,7 +598,9 @@
   }
 }
 
-/* Text ellipsis utilities */
+/* ----------------------------------------------------------------
+ * Text & Content Utilities
+ * ---------------------------------------------------------------- */
 .text-ellipsis-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -507,7 +615,9 @@
   -webkit-line-clamp: 3;
 }
 
-/* Scrollbar hide utility */
+/* ----------------------------------------------------------------
+ * Browser Compatibility Utilities
+ * ---------------------------------------------------------------- */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -517,13 +627,17 @@
   display: none;
 }
 
-/* Glass effect */
+/* ----------------------------------------------------------------
+ * Visual Effect Utilities
+ * ---------------------------------------------------------------- */
 .glass {
   background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(8px);
 }
 
-/* Gradient backgrounds */
+/* ----------------------------------------------------------------
+ * Background Utilities
+ * ---------------------------------------------------------------- */
 .gradient-primary {
   background: linear-gradient(to right, #3b82f6, #2563eb);
 }
@@ -532,7 +646,9 @@
   background: linear-gradient(to right, #64748b, #475569);
 }
 
-/* Screen reader only */
+/* ----------------------------------------------------------------
+ * Accessibility Utilities
+ * ---------------------------------------------------------------- */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -545,7 +661,17 @@
   border: 0;
 }
 
-/* Accessibility and motion preferences */
+/* ================================================================
+ * 7. Responsive & Accessibility
+ * ================================================================
+ * 
+ * 접근성과 반응형 디자인을 위한 미디어 쿼리들입니다.
+ * 고대비, 모션 감소, 프린트 등 다양한 환경을 고려합니다.
+ */
+
+/* ----------------------------------------------------------------
+ * High Contrast & Motion Preferences
+ * ---------------------------------------------------------------- */
 @media (prefers-contrast: high) {
   .card {
     border: 2px solid #0f172a; /* secondary-900 */
@@ -572,7 +698,9 @@
   }
 }
 
-/* Print styles */
+/* ----------------------------------------------------------------
+ * Print Styles
+ * ---------------------------------------------------------------- */
 @media print {
   .no-print {
     display: none !important;
@@ -588,6 +716,15 @@
   }
 }
 
+/* ================================================================
+ * 4. OKLCH Modern Color Space (Future-ready)
+ * ================================================================
+ * 
+ * 차세대 색상 공간인 OKLCH로 정의된 테마입니다.
+ * 더 정확한 색상 표현과 미래 브라우저 호환성을 위해 준비되었습니다.
+ * 
+ * 참고: 현재는 HSL 테마가 우선 적용되며, OKLCH는 백업으로 작동합니다.
+ */
 @theme {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -626,8 +763,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ----------------------------------------------------------------
+ * OKLCH Theme Variables (Root)
+ * ---------------------------------------------------------------- 
+ * 
+ * 주의: 이 :root 선택자는 앞서 정의된 HSL 테마와 중복됩니다.
+ * CSS 캐스케이드 규칙에 의해 마지막에 정의된 값이 적용됩니다.
+ */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.625rem; /* 중복: Line 59에도 0.5rem로 정의됨 */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -661,6 +805,12 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* ----------------------------------------------------------------
+ * OKLCH Dark Theme Variables
+ * ---------------------------------------------------------------- 
+ * 
+ * 주의: 이 .dark 선택자는 앞서 정의된 HSL 다크 테마와 중복됩니다.
+ */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -695,6 +845,13 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ----------------------------------------------------------------
+ * Final Base Layer (Tailwind Apply)
+ * ---------------------------------------------------------------- 
+ * 
+ * 주의: 앞서 정의된 @layer base와 중복되는 레이어입니다.
+ * CSS 레이어 순서상 이 스타일이 최종 적용됩니다.
+ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -704,6 +861,13 @@
   }
 }
 
+/* ----------------------------------------------------------------
+ * Sidebar Theme Extension (Inline)
+ * ---------------------------------------------------------------- 
+ * 
+ * 사이드바 전용 색상 토큰의 인라인 테마 확장입니다.
+ * 앞서 정의된 @theme 블록과 유사하지만 inline 키워드로 구분됩니다.
+ */
 @theme inline {
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);

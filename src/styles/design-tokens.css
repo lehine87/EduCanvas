@@ -1,0 +1,456 @@
+/**
+ * EduCanvas v2 Design Tokens
+ * 통합 디자인 토큰 정의 - 색상, 타이포그래피, 간격
+ * @version 2.0
+ * @date 2025-08-26
+ * 
+ * T-V2-002: v2 디자인 토큰 정의 완료
+ * 이 파일은 globals.css와 분리되어 독립적으로 관리됩니다.
+ */
+
+:root {
+  /* =================================
+     EduCanvas 브랜드 색상 (Primary)
+     ================================= */
+  --color-educanvas-50: #f0f7ff;
+  --color-educanvas-100: #e0efff;
+  --color-educanvas-200: #bbd9ff;
+  --color-educanvas-300: #7fb8ff;
+  --color-educanvas-400: #3b94ff;
+  --color-educanvas-500: #0070f3; /* Primary Brand Color */
+  --color-educanvas-600: #0761d1;
+  --color-educanvas-700: #0952a5;
+  --color-educanvas-800: #0d4488;
+  --color-educanvas-900: #133a70;
+  --color-educanvas-950: #0a1f3a;
+
+  /* =================================
+     교육 테마 보조 색상 (Secondary)
+     ================================= */
+  --color-wisdom-50: #ecfeff;   /* 지혜 - 청록색 계열 */
+  --color-wisdom-100: #cffafe;
+  --color-wisdom-200: #a5f3fc;
+  --color-wisdom-300: #67e8f9;
+  --color-wisdom-400: #22d3ee;
+  --color-wisdom-500: #06b6d4;
+  --color-wisdom-600: #0891b2;
+  --color-wisdom-700: #0e7490;
+  --color-wisdom-800: #155e75;
+  --color-wisdom-900: #164e63;
+
+  --color-growth-50: #f0fdf4;   /* 성장 - 녹색 계열 */
+  --color-growth-100: #dcfce7;
+  --color-growth-200: #bbf7d0;
+  --color-growth-300: #86efac;
+  --color-growth-400: #4ade80;
+  --color-growth-500: #22c55e;
+  --color-growth-600: #16a34a;
+  --color-growth-700: #15803d;
+  --color-growth-800: #166534;
+  --color-growth-900: #14532d;
+
+  /* =================================
+     의미적 색상 (Semantic Colors)
+     ================================= */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e; /* 성공 기본 색상 */
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b; /* 경고 기본 색상 */
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444; /* 오류 기본 색상 */
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6; /* 정보 기본 색상 */
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+
+  /* =================================
+     뉴트럴 색상 (Neutral/Gray Scale)
+     ================================= */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373; /* 중성 회색 */
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  /* =================================
+     타이포그래피 토큰
+     ================================= */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* 타이포그래피 스케일 */
+  --font-size-xs: 0.75rem;        /* 12px - 캡션, 라벨 */
+  --font-size-sm: 0.875rem;       /* 14px - 보조 텍스트 */
+  --font-size-base: 1rem;         /* 16px - 기본 본문 */
+  --font-size-lg: 1.125rem;       /* 18px - 중요 본문 */
+  --font-size-xl: 1.25rem;        /* 20px - 소제목 */
+  --font-size-2xl: 1.5rem;        /* 24px - 컴포넌트 제목 */
+  --font-size-3xl: 1.875rem;      /* 30px - 서브 섹션 */
+  --font-size-4xl: 2.25rem;       /* 36px - 섹션 제목 */
+  --font-size-5xl: 3rem;          /* 48px - 페이지 제목 */
+  --font-size-6xl: 4rem;          /* 64px - 메인 디스플레이 */
+
+  /* 줄간격 */
+  --line-height-tight: 1.2;       /* 제목용 */
+  --line-height-snug: 1.375;      /* 서브타이틀용 */
+  --line-height-normal: 1.5;      /* 기본 본문용 */
+  --line-height-relaxed: 1.625;   /* 긴 텍스트용 */
+  --line-height-loose: 1.75;      /* 여유로운 텍스트용 */
+
+  /* 글자간격 */
+  --letter-spacing-tight: -0.025em;  /* 큰 제목용 */
+  --letter-spacing-normal: 0;        /* 기본값 */
+  --letter-spacing-wide: 0.025em;    /* 소제목용 */
+  --letter-spacing-wider: 0.05em;    /* 캡션, 라벨용 */
+
+  /* =================================
+     간격 시스템 (Spacing Scale)
+     ================================= */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0_5: 0.125rem;     /* 2px */
+  --space-1: 0.25rem;        /* 4px - 기본 단위 */
+  --space-1_5: 0.375rem;     /* 6px */
+  --space-2: 0.5rem;         /* 8px */
+  --space-2_5: 0.625rem;     /* 10px */
+  --space-3: 0.75rem;        /* 12px */
+  --space-3_5: 0.875rem;     /* 14px */
+  --space-4: 1rem;           /* 16px - 표준 간격 */
+  --space-5: 1.25rem;        /* 20px */
+  --space-6: 1.5rem;         /* 24px */
+  --space-7: 1.75rem;        /* 28px */
+  --space-8: 2rem;           /* 32px */
+  --space-10: 2.5rem;        /* 40px */
+  --space-12: 3rem;          /* 48px */
+  --space-14: 3.5rem;        /* 56px */
+  --space-16: 4rem;          /* 64px */
+  --space-20: 5rem;          /* 80px */
+  --space-24: 6rem;          /* 96px */
+  --space-28: 7rem;          /* 112px */
+  --space-32: 8rem;          /* 128px */
+  --space-36: 9rem;          /* 144px */
+  --space-40: 10rem;         /* 160px */
+  --space-44: 11rem;         /* 176px */
+  --space-48: 12rem;         /* 192px */
+  --space-52: 13rem;         /* 208px */
+  --space-56: 14rem;         /* 224px */
+  --space-60: 15rem;         /* 240px */
+  --space-64: 16rem;         /* 256px */
+  --space-72: 18rem;         /* 288px */
+  --space-80: 20rem;         /* 320px */
+  --space-96: 24rem;         /* 384px */
+
+  /* =================================
+     교육 특화 간격 시스템 (24단위 완성)
+     ================================= */
+  --spacing-content: 2rem;    /* 32px - 콘텐츠 간격 */
+  --spacing-section: 3rem;    /* 48px - 섹션 간격 */
+  --spacing-lesson: 1.5rem;   /* 24px - 레슨 간격 */
+  --spacing-exercise: 1rem;   /* 16px - 연습문제 간격 */
+  --spacing-question: 0.75rem;/* 12px - 문제 간격 */
+  --spacing-answer: 0.5rem;   /* 8px - 답변 간격 */
+
+  /* 컴포넌트별 간격 */
+  --spacing-card-padding: 1.5rem;      /* 카드 내부 패딩 */
+  --spacing-button-padding: 0.75rem;   /* 버튼 내부 패딩 */
+  --spacing-form-gap: 1rem;            /* 폼 요소 간격 */
+  --spacing-list-gap: 0.5rem;          /* 리스트 아이템 간격 */
+  --spacing-nav-gap: 2rem;             /* 네비게이션 간격 */
+
+  /* 반응형 간격 (모바일 최적화) */
+  --spacing-mobile-section: 2rem;      /* 모바일 섹션 간격 */
+  --spacing-mobile-content: 1.5rem;    /* 모바일 콘텐츠 간격 */
+  --spacing-mobile-padding: 1rem;      /* 모바일 패딩 */
+
+  /* =================================
+     Border Radius (모서리 둥글기)
+     ================================= */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;      /* 2px */
+  --radius-base: 0.25rem;     /* 4px */
+  --radius-md: 0.375rem;      /* 6px */
+  --radius-lg: 0.5rem;        /* 8px - 기본값 */
+  --radius-xl: 0.75rem;       /* 12px */
+  --radius-2xl: 1rem;         /* 16px */
+  --radius-3xl: 1.5rem;       /* 24px */
+  --radius-full: 9999px;      /* 완전한 원형 */
+
+  /* =================================
+     그림자 (Box Shadow)
+     ================================= */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 6px 16px -6px rgb(0 0 0 / 0.1), 0 0 0 1px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* =================================
+     타이포그래피 시스템 (12레벨)
+     ================================= */
+  --font-size-display: 4rem;        /* 64px - 메인 타이틀 */
+  --font-size-heading-1: 3rem;      /* 48px - 페이지 제목 */
+  --font-size-heading-2: 2.25rem;   /* 36px - 섹션 제목 */
+  --font-size-heading-3: 1.75rem;   /* 28px - 서브 섹션 */
+  --font-size-heading-4: 1.5rem;    /* 24px - 컴포넌트 제목 */
+  --font-size-heading-5: 1.25rem;   /* 20px - 소제목 */
+  --font-size-body-large: 1.125rem; /* 18px - 중요 본문 */
+  --font-size-body: 1rem;           /* 16px - 기본 본문 */
+  --font-size-body-small: 0.875rem; /* 14px - 보조 텍스트 */
+  --font-size-caption: 0.75rem;     /* 12px - 라벨, 설명 */
+  --font-size-overline: 0.6875rem;  /* 11px - 카테고리, 태그 */
+  --font-size-tiny: 0.625rem;       /* 10px - 매우 작은 텍스트 */
+
+  /* 줄간격 (Line Heights) */
+  --line-height-display: 1.1;       /* Display용 타이트한 줄간격 */
+  --line-height-heading: 1.2;       /* 제목용 줄간격 */
+  --line-height-body: 1.5;          /* 본문용 표준 줄간격 */
+  --line-height-relaxed: 1.7;       /* 읽기 편한 줄간격 */
+
+  /* 글자 간격 (Letter Spacing) */
+  --letter-spacing-tight: -0.025em;  /* 제목용 */
+  --letter-spacing-normal: 0;        /* 기본 */
+  --letter-spacing-wide: 0.025em;    /* 강조용 */
+
+  /* =================================
+     Z-Index 레이어
+     ================================= */
+  --z-0: 0;
+  --z-10: 10;      /* Dropdown, Tooltip */
+  --z-20: 20;      /* Sticky Elements */
+  --z-30: 30;      /* Modal Backdrop */
+  --z-40: 40;      /* Modal, Dialog */
+  --z-50: 50;      /* Popover, Toast */
+
+  /* =================================
+     애니메이션 Duration & Easing
+     ================================= */
+  --duration-75: 75ms;
+  --duration-100: 100ms;
+  --duration-150: 150ms;
+  --duration-200: 200ms;
+  --duration-300: 300ms;
+  --duration-500: 500ms;
+  --duration-700: 700ms;
+  --duration-1000: 1000ms;
+
+  /* Easing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);    /* 스프링 효과 */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 바운스 효과 */
+}
+
+/* =================================
+   shadcn/ui 호환 색상 매핑 - 라이트 모드
+   ================================= */
+:root {
+  /* Background & Foreground */
+  --color-background: var(--color-neutral-50);
+  --color-foreground: var(--color-neutral-900);
+  
+  /* Primary */
+  --color-primary: var(--color-educanvas-500);
+  --color-primary-foreground: var(--color-neutral-50);
+  
+  /* Secondary */
+  --color-secondary: var(--color-neutral-100);
+  --color-secondary-foreground: var(--color-neutral-900);
+  
+  /* Card */
+  --color-card: var(--color-neutral-50);
+  --color-card-foreground: var(--color-neutral-900);
+  
+  /* Muted */
+  --color-muted: var(--color-neutral-100);
+  --color-muted-foreground: var(--color-neutral-600);
+  
+  /* Accent (강조) */
+  --color-accent: var(--color-neutral-100);
+  --color-accent-foreground: var(--color-neutral-900);
+  
+  /* 구조적 요소 */
+  --color-border: var(--color-neutral-200);
+  --color-input: var(--color-neutral-200);
+  --color-ring: var(--color-educanvas-400);
+  
+  /* Popover */
+  --color-popover: var(--color-neutral-50);
+  --color-popover-foreground: var(--color-neutral-900);
+  
+  /* Destructive */
+  --color-destructive: var(--color-error-500);
+  --color-destructive-foreground: var(--color-neutral-50);
+  
+  /* Chart colors for data visualization */
+  --color-chart-1: var(--color-educanvas-500);
+  --color-chart-2: var(--color-wisdom-500);
+  --color-chart-3: var(--color-growth-500);
+  --color-chart-4: var(--color-warning-500);
+  --color-chart-5: var(--color-info-500);
+}
+
+/* =================================
+   shadcn/ui 호환 색상 매핑 - 다크 모드
+   ================================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Background & Foreground */
+    --color-background: var(--color-neutral-950);
+    --color-foreground: var(--color-neutral-50);
+    
+    /* Primary */
+    --color-primary: var(--color-educanvas-400);
+    --color-primary-foreground: var(--color-neutral-950);
+    
+    /* Secondary */
+    --color-secondary: var(--color-neutral-800);
+    --color-secondary-foreground: var(--color-neutral-200);
+    
+    /* Card */
+    --color-card: var(--color-neutral-950);
+    --color-card-foreground: var(--color-neutral-50);
+    
+    /* Muted */
+    --color-muted: var(--color-neutral-800);
+    --color-muted-foreground: var(--color-neutral-400);
+    
+    /* Accent (강조) */
+    --color-accent: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-neutral-200);
+    
+    /* 구조적 요소 */
+    --color-border: var(--color-neutral-800);
+    --color-input: var(--color-neutral-800);
+    --color-ring: var(--color-educanvas-400);
+    
+    /* Popover */
+    --color-popover: var(--color-neutral-950);
+    --color-popover-foreground: var(--color-neutral-50);
+    
+    /* Destructive */
+    --color-destructive: var(--color-error-400);
+    --color-destructive-foreground: var(--color-neutral-950);
+    
+    /* Chart colors for data visualization (darker variants) */
+    --color-chart-1: var(--color-educanvas-400);
+    --color-chart-2: var(--color-wisdom-400);
+    --color-chart-3: var(--color-growth-400);
+    --color-chart-4: var(--color-warning-400);
+    --color-chart-5: var(--color-info-400);
+  }
+}
+
+/* =================================
+   다크 모드 클래스 기반 (shadcn/ui 호환)
+   ================================= */
+.dark {
+  /* Background & Foreground */
+  --color-background: var(--color-neutral-950);
+  --color-foreground: var(--color-neutral-50);
+  
+  /* Primary */
+  --color-primary: var(--color-educanvas-400);
+  --color-primary-foreground: var(--color-neutral-950);
+  
+  /* Secondary */
+  --color-secondary: var(--color-neutral-800);
+  --color-secondary-foreground: var(--color-neutral-200);
+  
+  /* Card */
+  --color-card: var(--color-neutral-950);
+  --color-card-foreground: var(--color-neutral-50);
+  
+  /* Muted */
+  --color-muted: var(--color-neutral-800);
+  --color-muted-foreground: var(--color-neutral-400);
+  
+  /* Accent (강조) */
+  --color-accent: var(--color-neutral-800);
+  --color-accent-foreground: var(--color-neutral-200);
+  
+  /* 구조적 요소 */
+  --color-border: var(--color-neutral-800);
+  --color-input: var(--color-neutral-800);
+  --color-ring: var(--color-educanvas-400);
+  
+  /* Popover */
+  --color-popover: var(--color-neutral-950);
+  --color-popover-foreground: var(--color-neutral-50);
+  
+  /* Destructive */
+  --color-destructive: var(--color-error-400);
+  --color-destructive-foreground: var(--color-neutral-950);
+  
+  /* Chart colors for data visualization (darker variants) */
+  --color-chart-1: var(--color-educanvas-400);
+  --color-chart-2: var(--color-wisdom-400);
+  --color-chart-3: var(--color-growth-400);
+  --color-chart-4: var(--color-warning-400);
+  --color-chart-5: var(--color-info-400);
+}
+
+/* =================================
+   글로벌 베이스 스타일
+   ================================= */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-variation-settings: 'wght' 400;
+  }
+}
