@@ -206,15 +206,15 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
-        return <Badge variant="warning">관리자</Badge>
+        return <Badge variant="destructive">관리자</Badge>
       case 'instructor':
-        return <Badge variant="info">강사</Badge>
+        return <Badge variant="outline">강사</Badge>
       case 'staff':
-        return <Badge variant="success">스태프</Badge>
+        return <Badge variant="secondary">스태프</Badge>
       case 'viewer':
         return <Badge variant="secondary">뷰어</Badge>
       case 'pending':
-        return <Badge variant="warning">대기</Badge>
+        return <Badge variant="destructive">대기</Badge>
       default:
         return <Badge variant="secondary">{role}</Badge>
     }
@@ -223,13 +223,13 @@ export function MemberManagementTable({ tenantId, members: externalMembers, onMe
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="success">활성</Badge>
+        return <Badge variant="secondary">활성</Badge>
       case 'inactive':
-        return <Badge variant="error">비활성</Badge>
+        return <Badge variant="destructive">비활성</Badge>
       case 'pending_approval':
-        return <Badge variant="warning">승인 대기</Badge>
+        return <Badge variant="destructive">승인 대기</Badge>
       case 'rejected':
-        return <Badge variant="error">거부됨</Badge>
+        return <Badge variant="destructive">거부됨</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }

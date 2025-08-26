@@ -112,21 +112,21 @@ export function TenantListTable({ tenants: initialTenants, isLoading, onRefresh,
 
   const getSubscriptionBadge = (tier: string, status: string) => {
     if (tier === 'trial') {
-      return <Badge variant="warning">체험</Badge>
+      return <Badge variant="destructive">체험</Badge>
     }
     if (tier === 'basic') {
-      return <Badge variant="info">베이직</Badge>
+      return <Badge variant="outline">베이직</Badge>
     }
     if (tier === 'premium') {
-      return <Badge variant="success">프리미엄</Badge>
+      return <Badge variant="secondary">프리미엄</Badge>
     }
     return <Badge variant="default">{tier}</Badge>
   }
 
   const getStatusBadge = (isActive: boolean) => {
     return isActive 
-      ? <Badge variant="success">활성</Badge>
-      : <Badge variant="error">비활성</Badge>
+      ? <Badge variant="secondary">활성</Badge>
+      : <Badge variant="destructive">비활성</Badge>
   }
 
   if (isLoading) {

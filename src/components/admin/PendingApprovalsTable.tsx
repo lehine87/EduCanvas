@@ -128,11 +128,11 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'instructor':
-        return <Badge variant="info">강사</Badge>
+        return <Badge variant="outline">강사</Badge>
       case 'staff':
-        return <Badge variant="success">스태프</Badge>
+        return <Badge variant="secondary">스태프</Badge>
       case 'admin':
-        return <Badge variant="warning">관리자</Badge>
+        return <Badge variant="destructive">관리자</Badge>
       default:
         return <Badge variant="secondary">{role}</Badge>
     }
