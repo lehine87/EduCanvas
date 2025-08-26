@@ -683,7 +683,7 @@ export default function ShadcnUITestPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="/placeholder-user.jpg" alt="사용자" />
+                  <AvatarImage src="/placeholder-user.svg" alt="사용자" />
                   <AvatarFallback>김영수</AvatarFallback>
                 </Avatar>
                 <Avatar>
