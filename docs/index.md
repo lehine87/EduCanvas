@@ -17,8 +17,8 @@ reorganized_date: "2025-08-25"
 
 # 📚 EduCanvas 문서 인덱스
 
-**최종 업데이트**: 2025-08-25 (v2 구조 완전 개편)  
-**문서 총 개수**: 70+ 개  
+**최종 업데이트**: 2025-08-26 (T-V2-001 문서화 완료)  
+**문서 총 개수**: 72+ 개 (새 문서 +2)  
 **분류 기준**: 사용 빈도 및 중요도 기반 폴더 구조화  
 **새로운 구조**: 📚 core → 📖 reference → 📋 guides → 🔧 maintenance → 🗃️ archive
 
@@ -81,11 +81,12 @@ reorganized_date: "2025-08-25"
 
 | 문서명 | 핵심 내용 | 경로 |
 |--------|-----------|------|
-| **UI-Components-Manual.md** | shadcn/ui 컴포넌트 라이브러리 사용법 | `guides/ui-development/` |
+| **shadcn-ui-components-guide.md** | ✅ shadcn/ui 30개 컴포넌트 실용 가이드 (T-V2-001 완료) | `guides/ui-development/` |
+| **DataTable-Component-Guide.md** | ✅ DataTable 고급 컴포넌트 완전 가이드 (리사이징, 토글 등) | `guides/ui-development/` |
+| **CRUD-API-Patterns.md** | ✅ CRUD API 표준 패턴 가이드 (2025-08-18 검증 완료) | `guides/ui-development/` |
+| **Quick-API-Reference.md** | ✅ 빠른 API 참조 가이드 (Copy&Paste 템플릿) | `guides/ui-development/` |
 | **class_management_implementation.md** | ClassFlow 구현 상세 가이드 | `guides/ui-development/` |
 | **page-structure-overview.md** | v2 페이지 구조 및 라우팅 설계 | `guides/ui-development/` |
-| **CRUD-API-Patterns.md** | CRUD API 표준 패턴 가이드 | `guides/ui-development/` |
-| **Quick-API-Reference.md** | 빠른 API 참조 가이드 | `guides/ui-development/` |
 
 ### Database 개발 가이드 (`guides/database/`)
 
@@ -160,6 +161,7 @@ reorganized_date: "2025-08-25"
 | **구버전 스키마** | database_schema_v2.sql, v3.sql, v4.sql | v5.0으로 업데이트 완료 |
 | **과거 기획서** | competitor_manual, phase1_detailed_spec | 현재 기능요구서.md로 통합 |
 | **구조 개선 문서** | educanvas_structure_improvement.md | 2025-08-25 완료 |
+| **레거시 UI 가이드** | UI-Components-Manual-legacy.md | → shadcn-ui-components-guide.md로 대체 |
 
 ### 레거시 (`legacy/`)
 
@@ -194,9 +196,10 @@ docs/reference/api/api_specification.md   # API 명세 확인
 
 ### 📋 UI/UX 개발 시 (guides/ui-development/)
 ```bash
-# UI 개발 가이드 순서
-docs/guides/ui-development/UI-Components-Manual.md     # shadcn/ui 사용법
-docs/guides/ui-development/page-structure-overview.md  # v2 페이지 구조
+# UI 개발 가이드 순서 (T-V2-001 완료 기준)
+docs/guides/ui-development/shadcn-ui-components-guide.md     # ✅ shadcn/ui 30개 컴포넌트 실사용 가이드
+docs/guides/ui-development/DataTable-Component-Guide.md     # ✅ DataTable 고급 기능 완전 가이드
+docs/guides/ui-development/page-structure-overview.md       # v2 페이지 구조
 docs/guides/ui-development/class_management_implementation.md  # ClassFlow 가이드
 ```
 

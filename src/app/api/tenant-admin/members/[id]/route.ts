@@ -64,7 +64,7 @@ export async function PUT(
         name: validatedData.full_name,
         phone: validatedData.phone || null,
       })
-      .eq('id', existingMembership.user_id)
+      .eq('id', existingMembership.user_id || '')
 
     if (userProfileError) {
       console.error('❌ 사용자 프로필 업데이트 실패:', userProfileError)

@@ -45,5 +45,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/jest-dom.d.ts"],
-  "exclude": ["node_modules", "UI_TEMPLATE", "vitest.config.ts"]
+  "exclude": ["node_modules", "UI_TEMPLATE", "vitest.config.ts", "_archive"]
 }

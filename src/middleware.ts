@@ -17,6 +17,7 @@ const MIDDLEWARE_EXCLUDE_PATTERNS = [
   '/_next',
   '/api',
   '/monitoring',
+  '/test',  // 테스트 페이지 인증 우회
   '/test-',
   '/debug-',
   '/seed-',

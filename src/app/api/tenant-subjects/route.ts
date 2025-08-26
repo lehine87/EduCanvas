@@ -82,7 +82,9 @@ export async function GET(request: NextRequest) {
       }
 
       // 중복 제거된 과목 목록 생성
-      const uniqueSubjects = [...new Set(classSubjects?.map(c => c.subject).filter(Boolean))] || []
+      const uniqueSubjects = classSubjects ? 
+        [...new Set(classSubjects.map((c: {subject: string | null}) => c.subject).filter((s: string | null): s is string => s !== null))] : 
+        []
       const subjects = uniqueSubjects.map((name, index) => ({
         id: `${params.tenantId}-${name}`,
         name,

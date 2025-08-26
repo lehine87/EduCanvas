@@ -112,7 +112,10 @@ export async function GET(request: NextRequest) {
     const { data: classes, error } = await query
       .order('name', { ascending: true })
       .limit(params.limit)
-      .range(params.offset, params.offset + params.limit - 1)
+      .range(params.offset, params.offset + params.limit - 1) as {
+        data: Array<{id: string; [key: string]: unknown}> | null;
+        error: Error | null;
+      }
 
     console.log('📊 쿼리 결과:', { classes: classes?.length, error })
 
@@ -122,7 +125,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 모든 클래스의 학생 수를 한 번에 조회 (더 효율적)
-    const classIds = (classes || []).map(cls => cls.id).filter(Boolean)
+    const classIds = (classes || []).filter((cls): cls is NonNullable<typeof cls> => cls !== null)
+      .map(cls => cls.id).filter((id): id is string => id !== null)
     let studentCounts: Record<string, number> = {}
     
     if (classIds.length > 0) {
@@ -157,9 +161,13 @@ export async function GET(request: NextRequest) {
     // 클래스 정보에 학생 수 추가
     const classesWithStats = (classes || [])
       .filter((cls): cls is NonNullable<typeof cls> => cls !== null && cls !== undefined)
-      .map(cls => Object.assign({}, cls, {
-        student_count: studentCounts[cls.id] || 0
-      }))
+      .map(cls => {
+        const id = cls.id;
+        if (!id) return cls;
+        return Object.assign({}, cls, {
+          student_count: studentCounts[id] || 0
+        })
+      })
 
     const result = {
       classes: classesWithStats,
