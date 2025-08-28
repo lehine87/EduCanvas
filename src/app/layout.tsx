@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { Toaster } from "react-hot-toast";
 import { toastConfig } from "@/lib/toast/toastConfig";
 import { ClientInitializer } from "@/components/ClientInitializer";
+import SearchProvider from "@/components/search/SearchProvider";
 
 
 const geistSans = Geist({
@@ -47,9 +48,11 @@ export default function RootLayout({
             showDetails={process.env.NODE_ENV === 'development'}
           >
             <ClientInitializer />
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <SearchProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </SearchProvider>
             
             {/* Toast 알림 시스템 */}
             <Toaster

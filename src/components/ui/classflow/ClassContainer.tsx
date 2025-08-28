@@ -4,7 +4,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { StudentCard, StudentCardData } from '../StudentCard';
+import { StudentCard, StudentCardData } from './StudentCard';
 import { User, MapPin, Calendar, Users, Plus } from 'lucide-react';
 
 /**

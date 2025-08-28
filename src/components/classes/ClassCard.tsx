@@ -50,7 +50,7 @@ export interface ClassCardProps {
 const ClassStatusBadge = memo<{ isActive?: boolean; compact?: boolean }>(({ isActive, compact }) => (
   <Badge 
     variant={isActive ? 'default' : 'destructive'} 
-    className={`${compact ? 'text-xs px-1 py-0' : 'text-sm px-2 py-1'} ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+    className={`${compact ? 'text-xs px-1 py-0' : 'text-sm px-2 py-1'} ${isActive ? 'bg-success-100 text-success-800' : 'bg-error-100 text-error-800'}`}
   >
     {compact ? (
       isActive ? (
@@ -91,7 +91,7 @@ const ClassCapacityIndicator = memo<{
       compact ? 'space-x-1' : 'space-x-2'
     )}>
       <UsersIcon className={cn(
-        'text-gray-400',
+        'text-neutral-400',
         compact ? 'w-3 h-3' : 'w-4 h-4'
       )} />
       <span className={cn(
@@ -99,13 +99,13 @@ const ClassCapacityIndicator = memo<{
         compact ? 'text-xs' : 'text-sm',
         isFull && 'text-error-600',
         isNearFull && !isFull && 'text-warning-600',
-        !isNearFull && 'text-gray-700'
+        !isNearFull && 'text-neutral-700'
       )}>
         {current}{max ? ` / ${max}` : ''}
       </span>
       
       {!compact && max && max > 0 && (
-        <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
           <div 
             className={cn(
               'h-full transition-all duration-300 rounded-full',
@@ -193,7 +193,7 @@ export const ClassCard = memo<ClassCardProps>(({
     // 호버 효과
     'hover:shadow-card-hover hover:-translate-y-0.5',
     // 선택 상태
-    isSelected && 'ring-2 ring-brand-500 border-brand-300',
+    isSelected && 'ring-2 ring-educanvas-500 border-educanvas-300',
     // 비활성 상태
     !classData.is_active && 'opacity-75',
     // 컴팩트 모드
@@ -210,7 +210,7 @@ export const ClassCard = memo<ClassCardProps>(({
             type="checkbox"
             checked={isSelected}
             onChange={(e) => handleSelect(e as any)}
-            className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
+            className="w-4 h-4 text-educanvas-600 border-neutral-300 rounded focus:ring-educanvas-500"
             aria-label={`${classData.name} 클래스 선택`}
           />
         </div>
@@ -247,14 +247,14 @@ export const ClassCard = memo<ClassCardProps>(({
 
         <div className="flex-1 min-w-0">
           <h3 className={cn(
-            'font-semibold text-gray-900 truncate',
+            'font-semibold text-neutral-900 truncate',
             compact ? 'text-sm' : 'text-lg'
           )}>
             {classData.name}
           </h3>
           
           {!compact && classData.description && (
-            <p className="text-sm text-gray-500 truncate mt-1">
+            <p className="text-sm text-neutral-500 truncate mt-1">
               {classData.description}
             </p>
           )}
@@ -271,7 +271,7 @@ export const ClassCard = memo<ClassCardProps>(({
         {/* 학년/과정 */}
         {(classData.grade || classData.course) && (
           <div className={cn(
-            'flex items-center text-gray-600',
+            'flex items-center text-neutral-600',
             compact ? 'text-xs' : 'text-sm'
           )}>
             <BookOpenIcon className={cn(
@@ -287,7 +287,7 @@ export const ClassCard = memo<ClassCardProps>(({
         {/* 강사 */}
         {classData.instructor && (
           <div className={cn(
-            'flex items-center text-gray-600',
+            'flex items-center text-neutral-600',
             compact ? 'text-xs' : 'text-sm'
           )}>
             <UserIcon className={cn(
@@ -304,7 +304,7 @@ export const ClassCard = memo<ClassCardProps>(({
         {/* 교재 정보 */}
         {((classData as any).main_textbook || (classData as any).supplementary_textbook) && (
           <div className={cn(
-            'text-gray-600',
+            'text-neutral-600',
             compact ? 'text-xs' : 'text-sm'
           )}>
             {(classData as any).main_textbook && (
@@ -334,7 +334,7 @@ export const ClassCard = memo<ClassCardProps>(({
 
         {/* 생성일 */}
         {!compact && classData.created_at && (
-          <div className="flex items-center text-gray-500 text-xs">
+          <div className="flex items-center text-neutral-500 text-xs">
             <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0" />
             <span>
               {new Date(classData.created_at).toLocaleDateString('ko-KR')}
@@ -365,7 +365,7 @@ export const ClassCard = memo<ClassCardProps>(({
               variant="ghost"
               size="sm"
               onClick={handleView}
-              className="text-gray-500 hover:text-brand-600"
+              className="text-neutral-500 hover:text-educanvas-600"
               aria-label={`${classData.name} 클래스 상세보기`}
             >
               <EyeIcon className="w-4 h-4" />
@@ -377,7 +377,7 @@ export const ClassCard = memo<ClassCardProps>(({
               variant="ghost"
               size="sm"
               onClick={handleEdit}
-              className="text-gray-500 hover:text-brand-600"
+              className="text-neutral-500 hover:text-educanvas-600"
               aria-label={`${classData.name} 클래스 수정`}
             >
               <PencilIcon className="w-4 h-4" />
@@ -389,7 +389,7 @@ export const ClassCard = memo<ClassCardProps>(({
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="text-gray-500 hover:text-error-600"
+              className="text-neutral-500 hover:text-error-600"
               aria-label={`${classData.name} 클래스 삭제`}
             >
               <TrashIcon className="w-4 h-4" />

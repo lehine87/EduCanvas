@@ -124,11 +124,11 @@ export default function ShadcnUITestPage() {
       cell: ({ row }) => {
         const status = row.getValue("status") as string
         const statusColor = {
-          '우수': 'bg-green-500',
-          '양호': 'bg-blue-500', 
-          '보통': 'bg-yellow-500',
-          '주의': 'bg-red-500'
-        }[status] || 'bg-gray-500'
+          '우수': 'bg-success-500',
+          '양호': 'bg-info-500', 
+          '보통': 'bg-warning-500',
+          '주의': 'bg-error-500'
+        }[status] || 'bg-neutral-500'
         
         return <Badge className={statusColor}>{status}</Badge>
       },
@@ -195,7 +195,7 @@ export default function ShadcnUITestPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <CheckCircle2 className="w-5 h-5 text-success-500" />
                 설치된 컴포넌트
               </h3>
               <ul className="space-y-1 text-sm grid grid-cols-2 gap-1">
@@ -232,7 +232,7 @@ export default function ShadcnUITestPage() {
             </div>
             <div>
               <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <Info className="w-5 h-5 text-blue-500" />
+                <Info className="w-5 h-5 text-info-500" />
                 테스트 환경
               </h3>
               <ul className="space-y-1 text-sm">
@@ -691,7 +691,7 @@ export default function ShadcnUITestPage() {
                   <AvatarFallback>이미나</AvatarFallback>
                 </Avatar>
                 <Avatar>
-                  <AvatarFallback className="bg-blue-500">박준호</AvatarFallback>
+                  <AvatarFallback className="bg-info-500">박준호</AvatarFallback>
                 </Avatar>
               </div>
               
@@ -730,10 +730,10 @@ export default function ShadcnUITestPage() {
               </div>
               
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="bg-green-500">성공</Badge>
-                <Badge className="bg-yellow-500">대기중</Badge>
-                <Badge className="bg-blue-500">진행중</Badge>
-                <Badge className="bg-purple-500">완료</Badge>
+                <Badge className="bg-success-500">성공</Badge>
+                <Badge className="bg-warning-500">대기중</Badge>
+                <Badge className="bg-info-500">진행중</Badge>
+                <Badge className="bg-educanvas-500">완료</Badge>
               </div>
               
               <div className="flex items-center gap-2">

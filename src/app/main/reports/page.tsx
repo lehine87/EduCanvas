@@ -1,24 +1,27 @@
 'use client'
 
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
-import { MainLayout } from '@/components/layout'
+import { PageHeader } from '@/components/layout/Header'
 
 export default function ReportsPage() {
   const breadcrumbs = [
-    { label: '홈', href: '/main' },
-    { label: '통계 및 리포트', href: '/main/reports' }
+    { name: '홈', href: '/main' },
+    { name: '통계 및 리포트', href: '/main/reports' }
   ]
 
   return (
-    <MainLayout 
-      title="통계 및 리포트" 
-      breadcrumbs={breadcrumbs}
-      actions={
-        <Button>
-          리포트 생성
-        </Button>
-      }
-    >
+    <>
+      <PageHeader 
+        title="통계 및 리포트" 
+        breadcrumbs={breadcrumbs}
+        description="학원 운영 데이터를 분석하고 리포트를 생성하세요"
+        actions={
+          <Button>
+            리포트 생성
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <Card>
         <CardHeader>
           <CardTitle>통계 및 리포트</CardTitle>
@@ -30,6 +33,7 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
-    </MainLayout>
+      </div>
+    </>
   )
 }

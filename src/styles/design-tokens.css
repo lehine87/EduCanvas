@@ -8,6 +8,7 @@
  * 이 파일은 globals.css와 분리되어 독립적으로 관리됩니다.
  */
 
+/* 최우선 순위로 색상 변수 정의 */
 :root {
   /* =================================
      EduCanvas 브랜드 색상 (Primary)
@@ -37,6 +38,7 @@
   --color-wisdom-700: #0e7490;
   --color-wisdom-800: #155e75;
   --color-wisdom-900: #164e63;
+  --color-wisdom-950: #0a2e35;
 
   --color-growth-50: #f0fdf4;   /* 성장 - 녹색 계열 */
   --color-growth-100: #dcfce7;
@@ -48,53 +50,12 @@
   --color-growth-700: #15803d;
   --color-growth-800: #166534;
   --color-growth-900: #14532d;
+  --color-growth-950: #0a1f0f;
 
   /* =================================
      의미적 색상 (Semantic Colors)
      ================================= */
-  --color-success-50: #f0fdf4;
-  --color-success-100: #dcfce7;
-  --color-success-200: #bbf7d0;
-  --color-success-300: #86efac;
-  --color-success-400: #4ade80;
-  --color-success-500: #22c55e; /* 성공 기본 색상 */
-  --color-success-600: #16a34a;
-  --color-success-700: #15803d;
-  --color-success-800: #166534;
-  --color-success-900: #14532d;
-
-  --color-warning-50: #fffbeb;
-  --color-warning-100: #fef3c7;
-  --color-warning-200: #fde68a;
-  --color-warning-300: #fcd34d;
-  --color-warning-400: #fbbf24;
-  --color-warning-500: #f59e0b; /* 경고 기본 색상 */
-  --color-warning-600: #d97706;
-  --color-warning-700: #b45309;
-  --color-warning-800: #92400e;
-  --color-warning-900: #78350f;
-
-  --color-error-50: #fef2f2;
-  --color-error-100: #fee2e2;
-  --color-error-200: #fecaca;
-  --color-error-300: #fca5a5;
-  --color-error-400: #f87171;
-  --color-error-500: #ef4444; /* 오류 기본 색상 */
-  --color-error-600: #dc2626;
-  --color-error-700: #b91c1c;
-  --color-error-800: #991b1b;
-  --color-error-900: #7f1d1d;
-
-  --color-info-50: #eff6ff;
-  --color-info-100: #dbeafe;
-  --color-info-200: #bfdbfe;
-  --color-info-300: #93c5fd;
-  --color-info-400: #60a5fa;
-  --color-info-500: #3b82f6; /* 정보 기본 색상 */
-  --color-info-600: #2563eb;
-  --color-info-700: #1d4ed8;
-  --color-info-800: #1e40af;
-  --color-info-900: #1e3a8a;
+  /* 라이트모드는 globals.css @theme에서 정의됨 - Tailwind 클래스 생성용 */
 
   /* =================================
      뉴트럴 색상 (Neutral/Gray Scale)
@@ -184,10 +145,10 @@
      ================================= */
   --spacing-content: 2rem;    /* 32px - 콘텐츠 간격 */
   --spacing-section: 3rem;    /* 48px - 섹션 간격 */
-  --spacing-lesson: 1.5rem;   /* 24px - 레슨 간격 */
-  --spacing-exercise: 1rem;   /* 16px - 연습문제 간격 */
-  --spacing-question: 0.75rem;/* 12px - 문제 간격 */
-  --spacing-answer: 0.5rem;   /* 8px - 답변 간격 */
+  --spacing-lesson: 2rem;     /* 32px - 레슨 간격 (일반보다 넓게) */
+  --spacing-exercise: 1.25rem; /* 20px - 연습문제 간격 (일반보다 넓게) */
+  --spacing-question: 1rem;   /* 16px - 문제 간격 (일반보다 넓게) */
+  --spacing-answer: 0.75rem;  /* 12px - 답변 간격 */
 
   /* 컴포넌트별 간격 */
   --spacing-card-padding: 1.5rem;      /* 카드 내부 패딩 */
@@ -431,6 +392,239 @@
   --color-chart-3: var(--color-growth-400);
   --color-chart-4: var(--color-warning-400);
   --color-chart-5: var(--color-info-400);
+  
+  /* =================================
+     브랜드 색상 다크모드 정의
+     ================================= */
+  /* EduCanvas 다크모드 - 완전 반전 */
+  --color-educanvas-50: #0a1f3a;
+  --color-educanvas-100: #133a70;
+  --color-educanvas-200: #0d4488;
+  --color-educanvas-300: #0952a5;
+  --color-educanvas-400: #0761d1;
+  --color-educanvas-500: #3b94ff;
+  --color-educanvas-600: #7fb8ff;
+  --color-educanvas-700: #bbd9ff;
+  --color-educanvas-800: #e0efff;
+  --color-educanvas-900: #f0f7ff;
+  --color-educanvas-950: #f8fbff;
+
+  /* Wisdom 다크모드 */
+  --color-wisdom-50: #0a2e35;
+  --color-wisdom-100: #164e63;
+  --color-wisdom-200: #155e75;
+  --color-wisdom-300: #0e7490;
+  --color-wisdom-400: #0891b2;
+  --color-wisdom-500: #22d3ee;
+  --color-wisdom-600: #67e8f9;
+  --color-wisdom-700: #a5f3fc;
+  --color-wisdom-800: #cffafe;
+  --color-wisdom-900: #ecfeff;
+  --color-wisdom-950: #f0feff;
+
+  /* Growth 다크모드 */
+  --color-growth-50: #052e16;
+  --color-growth-100: #14532d;
+  --color-growth-200: #166534;
+  --color-growth-300: #15803d;
+  --color-growth-400: #16a34a;
+  --color-growth-500: #4ade80;
+  --color-growth-600: #86efac;
+  --color-growth-700: #bbf7d0;
+  --color-growth-800: #dcfce7;
+  --color-growth-900: #f0fdf4;
+  --color-growth-950: #f7fef8;
+
+  /* =================================
+     의미적 색상 다크모드 정의
+     ================================= */
+  /* Success 다크모드 */
+  --color-success-50: #14532d;
+  --color-success-100: #166534;
+  --color-success-200: #15803d;
+  --color-success-300: #16a34a;
+  --color-success-400: #22c55e;
+  --color-success-500: #4ade80;
+  --color-success-600: #86efac;
+  --color-success-700: #bbf7d0;
+  --color-success-800: #dcfce7;
+  --color-success-900: #f0fdf4;
+
+  /* Warning 다크모드 */
+  --color-warning-50: #78350f;
+  --color-warning-100: #92400e;
+  --color-warning-200: #b45309;
+  --color-warning-300: #d97706;
+  --color-warning-400: #f59e0b;
+  --color-warning-500: #fbbf24;
+  --color-warning-600: #fcd34d;
+  --color-warning-700: #fde68a;
+  --color-warning-800: #fef3c7;
+  --color-warning-900: #fffbeb;
+
+  /* Error 다크모드 */
+  --color-error-50: #7f1d1d;
+  --color-error-100: #991b1b;
+  --color-error-200: #b91c1c;
+  --color-error-300: #dc2626;
+  --color-error-400: #ef4444;
+  --color-error-500: #f87171;
+  --color-error-600: #fca5a5;
+  --color-error-700: #fecaca;
+  --color-error-800: #fee2e2;
+  --color-error-900: #fef2f2;
+
+  /* Info 다크모드 */
+  --color-info-50: #1e3a8a;
+  --color-info-100: #1e40af;
+  --color-info-200: #1d4ed8;
+  --color-info-300: #2563eb;
+  --color-info-400: #3b82f6;
+  --color-info-500: #60a5fa;
+  --color-info-600: #93c5fd;
+  --color-info-700: #bfdbfe;
+  --color-info-800: #dbeafe;
+  --color-info-900: #eff6ff;
+  
+  /* 다크모드 텍스트 색상: 밝은 배경에는 밝은 글자 */
+  .text-educanvas-contrast {
+    color: var(--color-educanvas-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-wisdom-contrast {
+    color: var(--color-wisdom-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-growth-contrast {
+    color: var(--color-growth-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-success-contrast {
+    color: var(--color-success-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-info-contrast {
+    color: var(--color-info-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-warning-contrast {
+    color: var(--color-warning-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-error-contrast {
+    color: var(--color-error-50); /* 다크모드: 매우 밝은 글자 */
+  }
+  
+  .text-test-contrast {
+    color: var(--color-neutral-50); /* 다크모드: 매우 밝은 글자 */
+  }
+}
+
+/* =================================
+   교육 특화 유틸리티 클래스
+   ================================= */
+@layer utilities {
+  /* 교육 특화 패딩 클래스 */
+  .p-lesson {
+    padding: var(--spacing-lesson);
+  }
+  
+  .p-exercise {
+    padding: var(--spacing-exercise);
+  }
+  
+  .p-question {
+    padding: var(--spacing-question);
+  }
+  
+  .p-answer {
+    padding: var(--spacing-answer);
+  }
+  
+  /* 교육 특화 마진 클래스 */
+  .m-lesson {
+    margin: var(--spacing-lesson);
+  }
+  
+  .m-exercise {
+    margin: var(--spacing-exercise);
+  }
+  
+  .m-question {
+    margin: var(--spacing-question);
+  }
+  
+  .m-answer {
+    margin: var(--spacing-answer);
+  }
+  
+  /* 교육 특화 갭 클래스 */
+  .gap-lesson {
+    gap: var(--spacing-lesson);
+  }
+  
+  .gap-exercise {
+    gap: var(--spacing-exercise);
+  }
+  
+  .gap-question {
+    gap: var(--spacing-question);
+  }
+  
+  .gap-answer {
+    gap: var(--spacing-answer);
+  }
+  
+  /* 그라데이션 유틸리티 */
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-educanvas-500), var(--color-wisdom-500));
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, var(--color-wisdom-500), var(--color-growth-500));
+  }
+  
+  
+  /* Tailwind backdrop-blur 기본 설정 (glassmorphism 최적화) */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+  }
+
+
+  /* 브랜드 색상에 최적화된 텍스트 색상 (라이트모드) */
+  .text-educanvas-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-wisdom-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-growth-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  /* 의미적 색상에 최적화된 텍스트 색상 (라이트모드) */
+  .text-success-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-info-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-warning-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-error-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
+  
+  .text-test-contrast {
+    color: var(--color-neutral-50); /* 라이트모드: 흰색 */
+  }
 }
 
 /* =================================

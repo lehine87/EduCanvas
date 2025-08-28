@@ -9,6 +9,7 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  // T-V2-002: Tailwind CSS v4에서는 @theme 디렉티브 사용으로 safelist 불필요
   prefix: "",
   theme: {
     container: {
@@ -56,46 +57,7 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // T-V2-002: EduCanvas 커스텀 색상 토큰 추가
-        educanvas: {
-          50: "var(--color-educanvas-50)",
-          100: "var(--color-educanvas-100)",
-          200: "var(--color-educanvas-200)",
-          300: "var(--color-educanvas-300)",
-          400: "var(--color-educanvas-400)",
-          500: "var(--color-educanvas-500)",
-          600: "var(--color-educanvas-600)",
-          700: "var(--color-educanvas-700)",
-          800: "var(--color-educanvas-800)",
-          900: "var(--color-educanvas-900)",
-          950: "var(--color-educanvas-950)",
-        },
-        wisdom: {
-          50: "var(--color-wisdom-50)",
-          100: "var(--color-wisdom-100)",
-          200: "var(--color-wisdom-200)",
-          300: "var(--color-wisdom-300)",
-          400: "var(--color-wisdom-400)",
-          500: "var(--color-wisdom-500)",
-          600: "var(--color-wisdom-600)",
-          700: "var(--color-wisdom-700)",
-          800: "var(--color-wisdom-800)",
-          900: "var(--color-wisdom-900)",
-          950: "var(--color-wisdom-950)",
-        },
-        growth: {
-          50: "var(--color-growth-50)",
-          100: "var(--color-growth-100)",
-          200: "var(--color-growth-200)",
-          300: "var(--color-growth-300)",
-          400: "var(--color-growth-400)",
-          500: "var(--color-growth-500)",
-          600: "var(--color-growth-600)",
-          700: "var(--color-growth-700)",
-          800: "var(--color-growth-800)",
-          900: "var(--color-growth-900)",
-          950: "var(--color-growth-950)",
-        },
+        // T-V2-002: 커스텀 색상은 @theme 디렉티브에서 정의됨 (globals.css)
       },
       fontSize: {
         // T-V2-002: 타이포그래피 12레벨 시스템

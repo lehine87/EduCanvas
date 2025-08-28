@@ -4,7 +4,7 @@
  */
 
 // 메인 레이아웃
-export { MainLayout, MinimalLayout, FullscreenLayout } from './MainLayout'
+export { MainLayout } from './MainLayout'
 export { AdminLayout } from './AdminLayout'
 
 // 헤더 및 네비게이션
@@ -13,7 +13,7 @@ export { Sidebar, useFilteredNavigation, QuickNavigation } from './Sidebar'
 export { SidebarItem, SidebarItemGroup } from './SidebarItem'
 
 // 브레드크럼
-export { Breadcrumbs, generateBreadcrumbs, MobileBreadcrumbs } from './Breadcrumbs'
+// Breadcrumbs moved to ui folder
 
 // 드롭다운 컴포넌트
 export { NotificationDropdown, generateSampleNotifications } from './NotificationDropdown'

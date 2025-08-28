@@ -1,84 +1,64 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { NotificationDropdown, generateSampleNotifications } from './NotificationDropdown'
-import { UserProfileDropdown } from './UserProfileDropdown'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import { Bars3Icon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import type { HeaderProps } from './types'
+import { useAuth } from '@/store/useAuthStore'
+import { useVisibleTabs } from '@/lib/stores/navigationStore'
+import { TabNavigation } from '@/components/navigation/TabNavigation'
+import { UserMenu } from '@/components/navigation/UserMenu'
+
+interface MainHeaderProps {
+  className?: string
+}
 
 /**
- * 헤더 컴포넌트
- * @description 애플리케이션 상단 헤더
+ * 메인 헤더 컴포넌트
+ * 학원 브랜딩 + 탭 네비게이션 + 사용자 메뉴
+ * 브랜드 컬러 배경 + 흰색 텍스트
  */
-
-export function Header({ 
-  title, 
-  sidebarCollapsed = false, 
-  onToggleSidebar,
-  showSidebarToggle = true,
-  actions,
-  showNotifications = true,
-  showUserMenu = true
-}: HeaderProps) {
-  // 샘플 알림 데이터 (개발용)
-  const [notifications] = useState(() => generateSampleNotifications())
-  const unreadCount = notifications.filter(n => !n.read).length
+export function Header({ className }: MainHeaderProps) {
+  const { profile } = useAuth()
+  const visibleTabs = useVisibleTabs()
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-3">
-      <div className="flex items-center justify-between">
-        {/* 좌측: 사이드바 토글 + 제목 */}
-        <div className="flex items-center space-x-4">
-          {/* 사이드바 토글 버튼 */}
-          {showSidebarToggle && onToggleSidebar && (
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-            >
-              <Bars3Icon className="h-5 w-5" />
-            </button>
-          )}
-
-          {/* 페이지 제목 */}
-          {title && (
-            <h1 className="text-xl font-semibold text-gray-900">
-              {title}
-            </h1>
-          )}
+    <header className={cn(
+      'sticky top-0 z-30',
+      'bg-educanvas-500 border-b border-educanvas-600 shadow-sm',
+      className
+    )}>
+      <div className="flex items-center justify-between h-16 px-6">
+        {/* 학원 브랜딩 */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-white/20 text-white text-sm font-bold">
+              {profile?.tenants?.name?.charAt(0) || profile?.tenant_id?.slice(0, 1)?.toUpperCase() || 'A'}
+            </AvatarFallback>
+          </Avatar>
+          <h1 className="text-lg font-bold text-white">
+            {profile?.tenants?.name || '학원명'}
+          </h1>
         </div>
-
-        {/* 우측: 액션 + 알림 + 사용자 메뉴 */}
-        <div className="flex items-center space-x-4">
-          {/* 커스텀 액션 */}
-          {actions && (
-            <div className="flex items-center space-x-2">
-              {actions}
+        
+        {/* 구분선 */}
+        <div className="h-6 w-px bg-white/30 mx-6" />
+        
+        {/* 탭 네비게이션 */}
+        <div className="flex-1">
+          <TabNavigation />
+        </div>
+        
+        {/* 사용자 메뉴 */}
+        <div className="flex items-center gap-4 ml-6">
+          {/* 키보드 단축키 힌트 (개발 환경에서만) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="hidden lg:block px-2 py-1 bg-white/20 rounded text-xs text-white/70">
+              Ctrl+1~{visibleTabs.length}
             </div>
           )}
-
-          {/* 알림 드롭다운 */}
-          {showNotifications && (
-            <NotificationDropdown
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={(id) => {
-                console.log('Mark as read:', id)
-              }}
-              onMarkAllAsRead={() => {
-                console.log('Mark all as read')
-              }}
-              onViewAll={() => {
-                console.log('View all notifications')
-              }}
-            />
-          )}
-
-          {/* 사용자 프로필 드롭다운 */}
-          {showUserMenu && (
-            <UserProfileDropdown />
-          )}
+          
+          {/* 현업 SaaS 스타일 사용자 메뉴 */}
+          <UserMenu />
         </div>
       </div>
     </header>

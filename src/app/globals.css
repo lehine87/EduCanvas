@@ -17,7 +17,146 @@
 
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "../styles/design-tokens.css";
+
+/* T-V2-002: Tailwind v4 올바른 패턴 - @theme과 @layer theme 통합 */
+@theme {
+  /* EduCanvas 브랜드 색상 */
+  --color-educanvas-50: #f0f7ff;
+  --color-educanvas-100: #e0efff;
+  --color-educanvas-200: #bbd9ff;
+  --color-educanvas-300: #7fb8ff;
+  --color-educanvas-400: #3b94ff;
+  --color-educanvas-500: #0070f3;
+  --color-educanvas-600: #0761d1;
+  --color-educanvas-700: #0952a5;
+  --color-educanvas-800: #0d4488;
+  --color-educanvas-900: #133a70;
+  --color-educanvas-950: #0a1f3a;
+
+  /* Wisdom - 지혜 */
+  --color-wisdom-50: #ecfeff;
+  --color-wisdom-100: #cffafe;
+  --color-wisdom-200: #a5f3fc;
+  --color-wisdom-300: #67e8f9;
+  --color-wisdom-400: #22d3ee;
+  --color-wisdom-500: #06b6d4;
+  --color-wisdom-600: #0891b2;
+  --color-wisdom-700: #0e7490;
+  --color-wisdom-800: #155e75;
+  --color-wisdom-900: #164e63;
+  --color-wisdom-950: #0a2e35;
+
+  /* Growth - 성장 */
+  --color-growth-50: #f0fdf4;
+  --color-growth-100: #dcfce7;
+  --color-growth-200: #bbf7d0;
+  --color-growth-300: #86efac;
+  --color-growth-400: #4ade80;
+  --color-growth-500: #22c55e;
+  --color-growth-600: #16a34a;
+  --color-growth-700: #15803d;
+  --color-growth-800: #166534;
+  --color-growth-900: #14532d;
+  --color-growth-950: #052e16;
+
+  /* Semantic Colors - 라이트모드 (Tailwind 클래스 생성용) */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+
+  /* 매우 간단한 테스트 색상 */
+  --color-test-red: #ff0000;
+}
+
+/* T-V2-002: 기본 Tailwind 패턴과 동일한 다크모드 오버라이드 */
+@layer theme {
+  .dark {
+    /* EduCanvas 다크모드 - 완전 반전 */
+    --color-educanvas-50: #0a1f3a;
+    --color-educanvas-100: #133a70;
+    --color-educanvas-200: #0d4488;
+    --color-educanvas-300: #0952a5;
+    --color-educanvas-400: #0761d1;
+    --color-educanvas-500: #3b94ff;
+    --color-educanvas-600: #7fb8ff;
+    --color-educanvas-700: #bbd9ff;
+    --color-educanvas-800: #e0efff;
+    --color-educanvas-900: #f0f7ff;
+    --color-educanvas-950: #f8fbff;
+
+    /* Wisdom 다크모드 */
+    --color-wisdom-50: #0a2e35;
+    --color-wisdom-100: #164e63;
+    --color-wisdom-200: #155e75;
+    --color-wisdom-300: #0e7490;
+    --color-wisdom-400: #0891b2;
+    --color-wisdom-500: #22d3ee;
+    --color-wisdom-600: #67e8f9;
+    --color-wisdom-700: #a5f3fc;
+    --color-wisdom-800: #cffafe;
+    --color-wisdom-900: #ecfeff;
+    --color-wisdom-950: #f0feff;
+
+    /* Growth 다크모드 */
+    --color-growth-50: #052e16;
+    --color-growth-100: #14532d;
+    --color-growth-200: #166534;
+    --color-growth-300: #15803d;
+    --color-growth-400: #16a34a;
+    --color-growth-500: #4ade80;
+    --color-growth-600: #86efac;
+    --color-growth-700: #bbf7d0;
+    --color-growth-800: #dcfce7;
+    --color-growth-900: #f0fdf4;
+    --color-growth-950: #f7fef8;
+
+    /* Semantic Colors 다크모드는 design-tokens.css에서 정의됨 - 중복 제거 */
+
+    /* 매우 간단한 테스트 색상 - 다크모드 */
+    --color-test-red: #00ff00;  /* 다크모드에서는 초록색으로 변경 */
+  }
+}
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -36,9 +175,9 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 213 100% 48%;  /* EduCanvas 브랜드 색상 #0070f3 */
     --primary-foreground: 210 40% 98%;
-    --primary-hover: 221.2 83.2% 47.3%;
+    --primary-hover: 213 100% 42%;  /* EduCanvas 브랜드 색상 hover */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --secondary-hover: 210 40% 88%;
@@ -98,9 +237,9 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 213 100% 70%;  /* EduCanvas 브랜드 색상 다크모드 */
     --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-hover: 217.2 91.2% 65.8%;
+    --primary-hover: 213 100% 76%;  /* EduCanvas 브랜드 색상 다크모드 hover */
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --secondary-hover: 217.2 32.6% 25%;
@@ -159,20 +298,7 @@
     --color-secondary-800: #1e293b;
     --color-secondary-900: #0f172a;
 
-    --color-success-50: #f0fdf4;
-    --color-success-500: #10b981;
-    --color-success-600: #059669;
-    --color-success-700: #047857;
-
-    --color-warning-50: #fffbeb;
-    --color-warning-500: #f59e0b;
-    --color-warning-600: #d97706;
-    --color-warning-700: #b45309;
-
-    --color-error-50: #fef2f2;
-    --color-error-500: #ef4444;
-    --color-error-600: #dc2626;
-    --color-error-700: #b91c1c;
+    /* Semantic colors는 design-tokens.css에서 정의됨 - 중복 제거 */
 
     /* ================================================================
      * System Design Variables
@@ -877,4 +1003,13 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* 마지막에 design-tokens.css import하여 최우선 적용 */
+@import "../styles/design-tokens.css";
+
+/* 테스트용 CSS 클래스 - safelist가 작동하는지 확인 */
+.test-color {
+  background-color: var(--color-educanvas-500) !important;
+  color: white !important;
 }

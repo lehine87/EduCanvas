@@ -305,7 +305,7 @@ export function ClassDetailSheet({
                   className={cn(
                     classData.is_active 
                       ? 'bg-success-100 text-success-700' 
-                      : 'bg-gray-100 text-gray-700'
+                      : 'bg-neutral-100 text-neutral-700'
                   )}
                 >
                   {classData.is_active ? '활성' : '비활성'}
@@ -394,10 +394,10 @@ export function ClassDetailSheet({
               <TabsContent value="info" className="space-y-6 mt-0">
                 {/* 기본 정보 섹션 */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">기본 정보</h3>
+                  <h3 className="text-sm font-medium text-neutral-700 mb-3">기본 정보</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-xs text-gray-500">과목</Label>
+                      <Label className="text-xs text-neutral-500">과목</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.subject || ''}
@@ -412,7 +412,7 @@ export function ClassDetailSheet({
                     </div>
                     
                     <div>
-                      <Label className="text-xs text-gray-500">학년</Label>
+                      <Label className="text-xs text-neutral-500">학년</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.grade || ''}
@@ -427,7 +427,7 @@ export function ClassDetailSheet({
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-500">과정</Label>
+                      <Label className="text-xs text-neutral-500">과정</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.course || ''}
@@ -442,7 +442,7 @@ export function ClassDetailSheet({
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-500">레벨</Label>
+                      <Label className="text-xs text-neutral-500">레벨</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.level || ''}
@@ -457,7 +457,7 @@ export function ClassDetailSheet({
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-500">개강일</Label>
+                      <Label className="text-xs text-neutral-500">개강일</Label>
                       {isEditing ? (
                         <Input
                           type="date"
@@ -472,7 +472,7 @@ export function ClassDetailSheet({
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-500">교실</Label>
+                      <Label className="text-xs text-neutral-500">교실</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.classroom_id || ''}
@@ -490,7 +490,7 @@ export function ClassDetailSheet({
                   {/* 교재 정보 */}
                   <div className="grid grid-cols-1 gap-4 mt-4">
                     <div>
-                      <Label className="text-xs text-gray-500">주교재</Label>
+                      <Label className="text-xs text-neutral-500">주교재</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.main_textbook || ''}
@@ -505,7 +505,7 @@ export function ClassDetailSheet({
                     </div>
                     
                     <div>
-                      <Label className="text-xs text-gray-500">부교재</Label>
+                      <Label className="text-xs text-neutral-500">부교재</Label>
                       {isEditing ? (
                         <Input
                           value={editedData.supplementary_textbook || ''}
@@ -525,10 +525,10 @@ export function ClassDetailSheet({
 
                 {/* 강사 정보 섹션 */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">강사 정보</h3>
+                  <h3 className="text-sm font-medium text-neutral-700 mb-3">강사 정보</h3>
                   {isEditing ? (
                     <div>
-                      <Label className="text-xs text-gray-500 mb-1">담당 강사</Label>
+                      <Label className="text-xs text-neutral-500 mb-1">담당 강사</Label>
                       <Select
                         value={editedData.instructor_id || ''}
                         onValueChange={(value) => handleInputChange('instructor_id', value === 'none' ? null : value)}
@@ -549,12 +549,12 @@ export function ClassDetailSheet({
                             instructors.map((instructor) => (
                               <SelectItem key={instructor.id} value={instructor.id}>
                                 <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 bg-brand-100 rounded-full flex items-center justify-center">
-                                    <UserIcon className="w-3 h-3 text-brand-600" />
+                                  <div className="w-6 h-6 bg-educanvas-100 rounded-full flex items-center justify-center">
+                                    <UserIcon className="w-3 h-3 text-educanvas-600" />
                                   </div>
                                   <div className="flex flex-col">
                                     <span className="text-sm font-medium">{instructor.name}</span>
-                                    <span className="text-xs text-gray-500">{instructor.email}</span>
+                                    <span className="text-xs text-neutral-500">{instructor.email}</span>
                                   </div>
                                 </div>
                               </SelectItem>
@@ -562,23 +562,23 @@ export function ClassDetailSheet({
                           )}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-neutral-400 mt-1">
                         현재 강사: {classData.instructor ? classData.instructor.name : '미배정'}
                       </p>
                     </div>
                   ) : (
                     classData.instructor ? (
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 text-brand-600" />
+                        <div className="w-10 h-10 bg-educanvas-100 rounded-full flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 text-educanvas-600" />
                         </div>
                         <div>
                           <p className="text-sm font-medium">{classData.instructor.name}</p>
-                          <p className="text-xs text-gray-500">{classData.instructor.email}</p>
+                          <p className="text-xs text-neutral-500">{classData.instructor.email}</p>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">강사 미배정</p>
+                      <p className="text-sm text-neutral-500">강사 미배정</p>
                     )
                   )}
                 </div>
@@ -587,7 +587,7 @@ export function ClassDetailSheet({
 
                 {/* 설명 섹션 */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">설명</h3>
+                  <h3 className="text-sm font-medium text-neutral-700 mb-3">설명</h3>
                   {isEditing ? (
                     <textarea
                       value={editedData.description || ''}
@@ -597,25 +597,25 @@ export function ClassDetailSheet({
                       placeholder="클래스 설명 입력"
                     />
                   ) : (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-neutral-600">
                       {classData.description || '설명이 없습니다.'}
                     </p>
                   )}
                 </div>
 
                 {/* 통계 요약 */}
-                <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 p-4 bg-neutral-50 rounded-lg">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalStudents}</p>
-                    <p className="text-xs text-gray-500">현재 학생</p>
+                    <p className="text-2xl font-bold text-neutral-900">{stats.totalStudents}</p>
+                    <p className="text-xs text-neutral-500">현재 학생</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stats.capacity}</p>
-                    <p className="text-xs text-gray-500">최대 인원</p>
+                    <p className="text-2xl font-bold text-neutral-900">{stats.capacity}</p>
+                    <p className="text-xs text-neutral-500">최대 인원</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stats.occupancyRate}%</p>
-                    <p className="text-xs text-gray-500">수용률</p>
+                    <p className="text-2xl font-bold text-neutral-900">{stats.occupancyRate}%</p>
+                    <p className="text-xs text-neutral-500">수용률</p>
                   </div>
                 </div>
               </TabsContent>
@@ -647,7 +647,7 @@ export function ClassDetailSheet({
               <TabsContent value="schedule" className="mt-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">주간 스케줄</h3>
+                    <h3 className="text-sm font-medium text-neutral-700">주간 스케줄</h3>
                     {!loadingSchedules && (
                       <Button size="sm" variant="outline" className="text-xs">
                         <PlusIcon className="w-3 h-3 mr-1" />
@@ -658,26 +658,26 @@ export function ClassDetailSheet({
 
                   {loadingSchedules ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                      <span className="ml-2 text-sm text-gray-500">시간표 로딩 중...</span>
+                      <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+                      <span className="ml-2 text-sm text-neutral-500">시간표 로딩 중...</span>
                     </div>
                   ) : schedules.length > 0 ? (
                     <div className="space-y-3">
                       {schedules.map((schedule) => (
                         <div 
                           key={schedule.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                          className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-brand-500 rounded-full"></div>
+                            <div className="w-2 h-2 bg-educanvas-500 rounded-full"></div>
                             <div className="flex items-center gap-4">
-                              <span className="text-sm font-medium text-gray-900 min-w-[60px]">
+                              <span className="text-sm font-medium text-neutral-900 min-w-[60px]">
                                 {getDayName(schedule.day_of_week)}
                               </span>
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-neutral-600">
                                 {schedule.time_slot?.start_time || '--:--'}-{schedule.time_slot?.end_time || '--:--'}
                               </span>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-neutral-500">
                                 {schedule.classroom?.name || '교실 미배정'}
                               </span>
                             </div>
@@ -694,8 +694,8 @@ export function ClassDetailSheet({
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-sm text-gray-500 mb-3">아직 등록된 수업 시간이 없습니다</p>
+                      <CalendarIcon className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                      <p className="text-sm text-neutral-500 mb-3">아직 등록된 수업 시간이 없습니다</p>
                       <Button size="sm" variant="outline">
                         <PlusIcon className="w-4 h-4 mr-2" />
                         첫 수업 시간 추가
@@ -708,19 +708,19 @@ export function ClassDetailSheet({
               {/* 통계 탭 */}
               <TabsContent value="stats" className="mt-0">
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-700">클래스 통계</h3>
+                  <h3 className="text-sm font-medium text-neutral-700">클래스 통계</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="p-4 bg-neutral-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <ChartBarIcon className="w-4 h-4 text-gray-500" />
-                        <p className="text-xs text-gray-500">평균 출석률</p>
+                        <ChartBarIcon className="w-4 h-4 text-neutral-500" />
+                        <p className="text-xs text-neutral-500">평균 출석률</p>
                       </div>
                       <p className="text-2xl font-bold">-</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="p-4 bg-neutral-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <AcademicCapIcon className="w-4 h-4 text-gray-500" />
-                        <p className="text-xs text-gray-500">평균 성적</p>
+                        <AcademicCapIcon className="w-4 h-4 text-neutral-500" />
+                        <p className="text-xs text-neutral-500">평균 성적</p>
                       </div>
                       <p className="text-2xl font-bold">-</p>
                     </div>
@@ -741,11 +741,11 @@ export function ClassDetailSheet({
                 </div>
                 <div className="ml-3">
                   <h3 className="text-lg font-semibold">클래스 삭제</h3>
-                  <p className="text-sm text-gray-500">이 작업은 되돌릴 수 없습니다</p>
+                  <p className="text-sm text-neutral-500">이 작업은 되돌릴 수 없습니다</p>
                 </div>
               </div>
               
-              <p className="text-sm text-gray-700 mb-6">
+              <p className="text-sm text-neutral-700 mb-6">
                 "{classData.name}" 클래스를 삭제하시겠습니까?
                 {classData.student_count && classData.student_count > 0 && (
                   <span className="block mt-2 text-error-600">

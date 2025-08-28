@@ -4,7 +4,7 @@ priority: 5
 type: guidance
 tags: ["claude-code", "development-guide", "project-guide"]
 version: "v5.0"
-last_updated: "2025-08-25"
+last_updated: "2025-08-28"
 status: active
 frequency: daily
 purpose: "Claude Code AI 개발자를 위한 EduCanvas 프로젝트 완전 가이드"
@@ -68,8 +68,10 @@ docs/guides/ui-development/CRUD-API-Patterns.md     # ✅ CRUD API 표준 패턴
 
 ```
 docs/guides/ui-development/design-tokens-usage.md           # ✅ T-V2-002 디자인 토큰 완전 가이드 (색상/타이포/간격)
+docs/guides/ui-development/darkmode-color-system-guide.md   # ✅ 다크모드 색상 시스템 완전 가이드 (2025-08-27 완성)
 docs/guides/ui-development/shadcn-ui-components-guide.md    # ✅ shadcn/ui 30개 컴포넌트 실용 가이드 (T-V2-001 완료)
 docs/guides/ui-development/DataTable-Component-Guide.md     # ✅ DataTable 고급 컴포넌트 완전 가이드
+docs/components/search/SearchSidebar-Component-Overview.md  # ✅ T-V2-004 통합 검색 사이드바 완전 가이드 (2025-08-28 완성)
 docs/project/educanvas_v2/plan/design/                     # 7개 메뉴 설계
 docs/guides/ui-development/page-structure-overview.md      # v2 페이지 구조
 ```
@@ -80,7 +82,9 @@ docs/guides/ui-development/page-structure-overview.md      # v2 페이지 구조
 
 ```
 docs/guides/ui-development/shadcn-ui-components-guide.md     # ✅ UI 컴포넌트 사용법
+docs/guides/ui-development/darkmode-color-system-guide.md   # ✅ 다크모드 색상 시스템 (필수 - 인라인 스타일 금지!)
 docs/guides/ui-development/DataTable-Component-Guide.md     # ✅ 테이블 구현 시 필수
+docs/components/search/SearchSidebar-Component-Overview.md  # ✅ 검색/사이드바 구현 시 필수 (컨텍스트별 패턴)
 docs/guides/ui-development/Quick-API-Reference.md           # ✅ API 연동 패턴
 docs/guides/ui-development/CRUD-API-Patterns.md            # ✅ 데이터 처리 로직
 docs/core/typescript-type-dictionary.md                     # 타입 정의 참조
@@ -129,6 +133,43 @@ npx supabase gen types typescript --project-id hodkqpmukwfrreozwmcy
 # 빌드 검증
 npm run build
 npm run lint
+
+# 다크모드 색상 테스트
+npm run dev
+# → http://localhost:3000/test/design-tokens
+```
+
+## 🎨 색상 시스템 빠른 참조
+
+### ✅ 올바른 사용법 (다크모드 지원)
+```jsx
+// 브랜드 색상 + 자동 텍스트 대비
+<div className="bg-educanvas-500 text-educanvas-contrast">
+<div className="bg-wisdom-500 text-wisdom-contrast">
+<div className="bg-growth-500 text-growth-contrast">
+
+// 반응형 텍스트 색상
+<span className="text-neutral-800 dark:text-neutral-200">
+```
+
+### ❌ 금지된 사용법 (다크모드 미지원)
+```jsx
+// 인라인 스타일 사용 금지
+<div style={{ backgroundColor: 'var(--color-educanvas-500)' }}>❌
+
+// text-white 고정 사용 금지  
+<div className="bg-educanvas-500 text-white">❌
+```
+
+## 🪟 Glassmorphism 사용법 (T-V2-003 완료)
+
+**완전 가이드**: `docs/guides/ui-development/glassmorphism-usage-guide.md` 📖
+
+**빠른 참조**:
+```jsx
+<div className="backdrop-blur-sm bg-white/30 dark:bg-black/30 border border-white/20 shadow-xl dark:shadow-none">
+  {/* 완벽한 glassmorphism 효과 */}
+</div>
 ```
 
 ## 🏗️ 프로젝트 기본 정보
@@ -136,7 +177,7 @@ npm run lint
 **EduCanvas v5.0**: Next.js 15 + React 19 + Supabase 기반 학원 관리 시스템  
 **핵심 혁신**: ClassFlow (60fps 드래그앤드롭 학생 관리)  
 **현재 단계**: v2 UI 리뉴얼 Phase 1 완료 (2025-08-26)  
-**주요 업데이트**: ✅ T-V2-001 완료 (shadcn/ui), ✅ **T-V2-002 완료** (디자인 토큰 시스템), tenant_memberships 기반 통합 직원 관리
+**주요 업데이트**: ✅ T-V2-001~005 완료 (shadcn/ui, 디자인 토큰, 검색 사이드바, **Hover Subtab**), tenant_memberships 기반 통합 직원 관리
 
 ### 기술 스택
 
@@ -191,6 +232,7 @@ npm run lint
 2. 클라이언트 DB 직접 접근 → API Route 필수
 3. 타입 에러 무시 → 런타임 버그
 4. 하드코딩된 UUID → `gen_random_uuid()` 사용
+5. **인라인 스타일 색상 사용** → 다크모드 적용 안됨 (Tailwind 클래스 필수)
 
 ## 🎯 프로젝트 작업 가이드라인
 
@@ -200,14 +242,18 @@ npm run lint
 - Supabase는 .env.local 정보로 npx supabase CLI 사용
 - 로컬DB 사용 금지, 클라우드 DB만 사용
 
-### 최근 주요 변경사항 (2025-08-26)
+### 최근 주요 변경사항 (2025-08-28)
 
 1. **✅ T-V2-001 완료**: shadcn/ui 30개 컴포넌트 + 고급 DataTable 완성
 2. **✅ T-V2-002 완료**: 디자인 토큰 시스템 구축 (130개 색상 + 19개 타이포 + 39개 간격)
-3. **Zero-Touch UI 혁신**: 기존 설정을 전혀 건들지 않고 디자인 시스템 확장
-4. **교육 특화 토큰**: lesson, exercise, question, answer 전용 간격 토큰 추가
-5. **완전한 접근성**: WCAG 2.1 AA 준수 (4.5:1 대비) + 다크모드 완벽 지원
-6. **v2 Phase 1 완료**: 디자인 시스템 기반 완성 (2/108 작업 완료, 목표 대비 162% 성과)
+3. **✅ T-V2-004 완료**: 통합 검색 사이드바 시스템 완성 (컨텍스트 어댑터 패턴 + 3계층 아키텍처)
+4. **✅ T-V2-005 완료**: 탭 네비게이션 + **Hover Subtab 시스템** 구축 (2열 그리드, 중분류/소분류, 깜빡거림 없는 CSS 호버)
+4. **✅ 다크모드 시스템 완성**: 모든 브랜드 색상 + 자동 텍스트 대비 + 4.5:1 접근성 보장
+5. **Zero-Touch UI 혁신**: 기존 설정을 전혀 건들지 않고 디자인 시스템 확장
+6. **교육 특화 토큰**: lesson, exercise, question, answer 전용 간격 토큰 추가
+7. **완전한 접근성**: WCAG 2.1 AA 준수 + Tailwind CSS v4 + 다크모드 완벽 지원
+8. **확장 가능한 검색 시스템**: 학생/직원(상세정보), 수업/일정(필터링), 대시보드(통합검색) 패턴 완성
+9. **혁신적 Hover Subtab**: CSS 기반 깜빡거림 없는 2열 그리드 서브메뉴 시스템
 
 ---
 

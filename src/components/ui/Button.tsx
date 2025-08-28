@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-slate-900 text-white shadow-sm hover:bg-slate-800 hover:text-white hover:shadow-lg hover:scale-[1.02] dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200 dark:hover:text-slate-900",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02]",
         destructive:
           "bg-destructive text-white shadow-sm hover:bg-[hsl(var(--destructive-hover))] hover:text-white hover:shadow-lg hover:scale-[1.02] focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "bg-slate-100 text-slate-900 shadow-sm hover:bg-slate-200 hover:text-slate-900 hover:shadow-md hover:scale-[1.02] dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-slate-100",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md hover:scale-[1.02]",
         ghost:
           "hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline hover:scale-[1.02]",

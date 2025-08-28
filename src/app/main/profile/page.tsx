@@ -1,19 +1,25 @@
 'use client'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
-import { MainLayout } from '@/components/layout'
+import { PageHeader } from '@/components/layout/Header'
 import { useAuth } from '@/store/useAuthStore'
 
 export default function ProfilePage() {
   const { profile } = useAuth()
 
   const breadcrumbs = [
-    { label: '홈', href: '/main' },
-    { label: '프로필', href: '/main/profile' }
+    { name: '홈', href: '/main' },
+    { name: '프로필', href: '/main/profile' }
   ]
 
   return (
-    <MainLayout title="프로필" breadcrumbs={breadcrumbs}>
+    <>
+      <PageHeader 
+        title="프로필" 
+        breadcrumbs={breadcrumbs}
+        description="사용자 프로필 정보를 확인하세요"
+      />
+      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <Card>
         <CardHeader>
           <CardTitle>사용자 프로필</CardTitle>
@@ -44,6 +50,7 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-    </MainLayout>
+      </div>
+    </>
   )
 }

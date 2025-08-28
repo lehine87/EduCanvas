@@ -1,24 +1,27 @@
 'use client'
 
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
-import { MainLayout } from '@/components/layout'
+import { PageHeader } from '@/components/layout/Header'
 
 export default function EnrollmentsPage() {
   const breadcrumbs = [
-    { label: '홈', href: '/main' },
-    { label: '수강 등록', href: '/main/enrollments' }
+    { name: '홈', href: '/main' },
+    { name: '수강 등록', href: '/main/enrollments' }
   ]
 
   return (
-    <MainLayout 
-      title="수강 등록" 
-      breadcrumbs={breadcrumbs}
-      actions={
-        <Button>
-          새 수강 등록
-        </Button>
-      }
-    >
+    <>
+      <PageHeader 
+        title="수강 등록" 
+        breadcrumbs={breadcrumbs}
+        description="학생 수강 등록을 관리하고 처리하세요"
+        actions={
+          <Button>
+            새 수강 등록
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <Card>
         <CardHeader>
           <CardTitle>수강 등록</CardTitle>
@@ -30,6 +33,7 @@ export default function EnrollmentsPage() {
           </div>
         </CardContent>
       </Card>
-    </MainLayout>
+      </div>
+    </>
   )
 }

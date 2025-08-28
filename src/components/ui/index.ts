@@ -14,7 +14,7 @@ export { Loading } from './Loading';
 export { Modal } from './Modal';
 
 // Student Components
-export { StudentCard } from './StudentCard';
+export { StudentCard } from './classflow/StudentCard';
 export { VirtualizedStudentList } from './VirtualizedStudentList';
 
 // Other Custom Components
@@ -54,7 +54,7 @@ export { ScrollArea, ScrollBar } from './scroll-area';
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './select';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 export { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from './navigation-menu';
-export { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './breadcrumb';
+export { Breadcrumbs, generateBreadcrumbs, MobileBreadcrumbs } from './Breadcrumbs';
 export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './pagination';
 
 // Feedback Components
@@ -62,8 +62,7 @@ export { Alert, AlertDescription, AlertTitle } from './alert';
 export { Badge, badgeVariants } from './badge';
 export { Progress } from './progress';
 export { Skeleton } from './skeleton';
-// Sonner component temporarily disabled due to export issues
-// export { Sonner } from './sonner';
+export { Toaster } from './sonner';
 
 // Overlay Components
 export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
@@ -82,8 +81,7 @@ export { Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarLabel
 export { Avatar, AvatarFallback, AvatarImage } from './avatar';
 export { Calendar } from './calendar';
 export { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './carousel';
-// Chart components temporarily disabled due to export issues
-// export { Chart, ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from './chart';
+export { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from './chart';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './table';
 
 // Interaction Components
@@ -95,8 +93,7 @@ export { ToggleGroup, ToggleGroupItem } from './toggle-group';
 export { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerPortal, DrawerTitle, DrawerTrigger } from './drawer';
 
 // Layout & Sizing
-// Resizable components temporarily disabled due to export issues
-// export { Resizable, ResizableHandle, ResizablePanel, ResizablePanelGroup } from './resizable';
+export { ResizablePanelGroup as ResizablePanelGroup, ResizablePanel, ResizableHandle } from './resizable';
 export { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuAction, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSkeleton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarSeparator, SidebarTrigger, useSidebar } from './sidebar';
 
 // Forms  

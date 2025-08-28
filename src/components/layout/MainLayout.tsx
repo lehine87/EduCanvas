@@ -1,223 +1,88 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { AdaptiveSidebar } from './AdaptiveSidebar'
-import { Header } from './Header'
-import { Breadcrumbs } from './Breadcrumbs'
-import { AuthGuard } from '@/components/auth/AuthGuard'
+import { useEffect } from 'react'
+import { useAuth } from '@/store/useAuthStore'
+import { useNavigationStore, validatePageAccess } from '@/lib/stores/navigationStore'
+import { usePathname, useRouter } from 'next/navigation'
+import SearchSidebar from '@/components/search/SearchSidebar'
+import { Header } from '@/components/layout/Header'
 import { cn } from '@/lib/utils'
-import type { LayoutProps } from './types'
-import type { UserRole } from '@/types/auth.types'
+
+interface MainLayoutProps {
+  children: React.ReactNode
+  className?: string
+}
 
 /**
  * 메인 레이아웃 컴포넌트
- * @description 애플리케이션의 기본 레이아웃 구조를 제공
+ * TabNavigation + SearchSidebar 조합으로 구성된 현대적 레이아웃
+ * T-V2-005: 레거시 MainLayout을 완전 대체
  */
-interface MainLayoutProps extends LayoutProps {
-  requireAuth?: boolean
-  allowedRoles?: UserRole[]
-}
+export function MainLayout({ children, className }: MainLayoutProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { profile } = useAuth()
+  const { currentTab, userRole, updateVisibleTabs, syncWithSearchContext } = useNavigationStore()
 
-export function MainLayout({ 
-  children, 
-  title,
-  description,
-  breadcrumbs,
-  actions,
-  sidebar = true,
-  sidebarCollapsed: initialCollapsed = false,
-  showHeader = true,
-  containerClassName,
-  mainClassName,
-  requireAuth = true,
-  allowedRoles = ['system_admin', 'tenant_admin', 'instructor', 'staff', 'viewer']
-}: MainLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-
-  // 모바일 감지
+  // 사용자 권한 변경시 탭 메뉴 업데이트
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
-      if (window.innerWidth >= 1024) {
-        setMobileMenuOpen(false)
-      }
+    if (profile?.role && profile.role !== userRole) {
+      updateVisibleTabs(profile.role as any)
     }
+  }, [profile?.role, userRole, updateVisibleTabs])
 
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // 모바일에서 메뉴 열릴 때 스크롤 방지
+  // 페이지 접근 권한 검증 및 리다이렉트
   useEffect(() => {
-    if (mobileMenuOpen && isMobile) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
+    if (!profile?.role) return
+
+    const hasAccess = validatePageAccess(pathname, profile.role as any)
+    
+    if (!hasAccess) {
+      // 권한 없는 페이지 접근시 대시보드로 리다이렉트
+      router.replace('/admin')
     }
+  }, [pathname, profile?.role, router])
 
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileMenuOpen, isMobile])
-
-  const toggleSidebar = useCallback(() => {
-    if (isMobile) {
-      setMobileMenuOpen(prev => !prev)
-    } else {
-      setSidebarCollapsed(prev => !prev)
-    }
-  }, [isMobile])
-
-  const closeMobileMenu = useCallback(() => {
-    setMobileMenuOpen(false)
-  }, [])
-
-  // ESC 키로 모바일 메뉴 닫기
+  // SearchSidebar 컨텍스트 동기화
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileMenuOpen) {
-        closeMobileMenu()
-      }
-    }
+    syncWithSearchContext()
+  }, [currentTab, syncWithSearchContext])
 
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [mobileMenuOpen, closeMobileMenu])
-
-  const content = (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* 모바일 오버레이 */}
-      {isMobile && mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity lg:hidden"
-          onClick={closeMobileMenu}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* 사이드바 */}
-      {sidebar && (
-        <>
-          {/* 데스크톱 사이드바 */}
-          <div className={cn(
-            'hidden lg:flex transition-all duration-300 ease-in-out',
-            sidebarCollapsed ? 'w-16' : 'w-64'
-          )}>
-            <AdaptiveSidebar 
-              collapsed={sidebarCollapsed}
-              onToggle={toggleSidebar}
-              className="h-full"
-            />
-          </div>
-
-          {/* 모바일 사이드바 */}
-          {isMobile && (
-            <div className={cn(
-              'fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden',
-              mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-            )}>
-              <AdaptiveSidebar 
-                collapsed={false}
-                onToggle={closeMobileMenu}
-                className="h-full bg-white shadow-xl"
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      {/* 메인 콘텐츠 영역 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* 헤더 */}
-        {showHeader && (
-          <Header 
-            title={title}
-            sidebarCollapsed={sidebarCollapsed}
-            onToggleSidebar={toggleSidebar}
-            showSidebarToggle={sidebar}
-            actions={actions}
-          />
-        )}
-
-        {/* 브레드크럼 */}
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <Breadcrumbs items={breadcrumbs} />
-        )}
-
-        {/* 페이지 설명 */}
-        {description && (
-          <div className="bg-white border-b border-gray-200 px-4 py-2 sm:px-6">
-            <p className="text-sm text-gray-600">{description}</p>
-          </div>
-        )}
-
-        {/* 메인 콘텐츠 */}
-        <main className={cn(
-          'flex-1 overflow-y-auto',
-          mainClassName
-        )}>
-          <div className={cn(
-            'container mx-auto px-4 py-6 sm:px-6 lg:px-8',
-            containerClassName
-          )}>
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-  )
-
-  // 인증이 필요한 경우 AuthGuard로 감싸기
-  if (requireAuth) {
+  // 사용자가 로그인하지 않은 경우
+  if (!profile) {
     return (
-      <AuthGuard 
-        requireAuth={true}
-        allowedRoles={allowedRoles}
-      >
-        {content}
-      </AuthGuard>
+      <div className="flex h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-900">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-educanvas-500 border-t-transparent mx-auto mb-2" />
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            사용자 정보를 불러오는 중...
+          </p>
+        </div>
+      </div>
     )
   }
 
-  return content
-}
-
-/**
- * 간소화된 레이아웃 (사이드바 없음)
- */
-export function MinimalLayout({ 
-  children, 
-  title,
-  containerClassName,
-  mainClassName
-}: Pick<LayoutProps, 'children' | 'title' | 'containerClassName' | 'mainClassName'>) {
   return (
-    <MainLayout
-      sidebar={false}
-      showHeader={true}
-      title={title}
-      containerClassName={containerClassName}
-      mainClassName={mainClassName}
-      requireAuth={false}
-    >
-      {children}
-    </MainLayout>
-  )
-}
-
-/**
- * 전체 화면 레이아웃 (헤더/사이드바 없음)
- */
-export function FullscreenLayout({ 
-  children,
-  containerClassName
-}: Pick<LayoutProps, 'children' | 'containerClassName'>) {
-  return (
-    <div className={cn('h-screen w-screen overflow-hidden', containerClassName)}>
-      {children}
+    <div className={cn(
+      'flex h-screen bg-background',
+      className
+    )}>
+      {/* SearchSidebar - 컨텍스트별 자동 설정 */}
+      <SearchSidebar 
+        context={currentTab as any}
+        className="flex-shrink-0"
+      />
+      
+      {/* 메인 영역 */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* 메인 헤더 */}
+        <Header />
+        
+        {/* 페이지 콘텐츠 */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
