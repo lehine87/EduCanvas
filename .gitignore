@@ -68,3 +68,13 @@ supabase/schema_setup.sql
 # PostgreSQL binaries (too large for GitHub)
 postgresql/
 postgresql-binaries.zip
+
+# 민감한 정보가 포함된 문서들
+docs/quick-reference/troubleshooting-cheatsheet.md
+docs/guides/architecture/multitenant_architecture_design.md
+docs/archive/project_setup_guide.md
+docs/guides/database/supabase-connection-guide.md
+
+# SQL 테스트 데이터 파일들 (민감한 정보 포함 가능)
+*.sql
+!supabase/migrations/*.sql
