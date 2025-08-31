@@ -42,7 +42,10 @@
       "Bash(del:*)",
       "Bash(powershell:*)",
       "Bash(git add:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(set SUPABASE_ACCESS_TOKEN=sbp_7643e87755caf9b38f704231d7619ac55293e083)",
+      "Bash(echo:*)",
+      "Bash(winget install:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

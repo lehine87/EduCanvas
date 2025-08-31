@@ -17,10 +17,27 @@ reorganized_date: "2025-08-25"
 
 # 📚 EduCanvas 문서 인덱스
 
-**최종 업데이트**: 2025-08-26 (T-V2-001 문서화 완료)  
-**문서 총 개수**: 72+ 개 (새 문서 +2)  
+**최종 업데이트**: 2025-08-28 (T-V2-006 컴포넌트 문서화 완료)  
+**문서 총 개수**: 78+ 개 (Quick Reference +3)  
 **분류 기준**: 사용 빈도 및 중요도 기반 폴더 구조화  
-**새로운 구조**: 📚 core → 📖 reference → 📋 guides → 🔧 maintenance → 🗃️ archive
+**새로운 구조**: ⚡ quick-reference → 📚 core → 📖 reference → 📋 guides → 🔧 maintenance  
+**최신 추가**: 🎨 components/ (T-V2-006) + ⚡ quick-reference/ (컨텍스트 최적화)
+
+---
+
+## ⚡ quick-reference/ - 🚀 **최우선 확인** (1-2분 내 즉시 해결)
+
+**위치**: `docs/quick-reference/`  
+**목적**: 컨텍스트 오염 방지 + 즉시 답변 제공  
+**업데이트**: 2025-08-28
+
+| Quick Reference 카드 | 핵심 내용 | 적용 상황 |
+|---------------------|-----------|-----------|
+| **component-cheatsheet.md** | Top 10 컴포넌트 사용법 + 다크모드 스타일링 | 🎨 컴포넌트 개발 시 |
+| **api-patterns-cheatsheet.md** | CRUD API + 인증 + 폼 처리 패턴 | 🚀 API 개발 시 |
+| **troubleshooting-cheatsheet.md** | TypeScript/DB/환경 문제 즉시 해결 | 🔧 문제 해결 시 |
+
+**💡 사용법**: 개발 작업 시작 전 해당 Quick Reference 카드부터 확인하세요!
 
 ---
 
@@ -61,6 +78,13 @@ reorganized_date: "2025-08-25"
 |--------|-----------|------|
 | **api_specification.md** | 완전한 API 명세서 v5.0 (v2 UI 통합, Staff Management) | `reference/api/` |
 
+### 컴포넌트 참조 (`reference/components/`) - ✨ T-V2-006 완성
+
+| 문서명 | 핵심 내용 | 경로 |
+|--------|-----------|------|
+| **component-usage-analysis.md** | ✅ 151개 컴포넌트 사용 빈도 분석 리포트 (Top 3: Button-75회, Badge-50회, Input-34회) | `reference/components/` |
+| **component-usage-data.json** | ✅ 컴포넌트 사용 통계 JSON 데이터 (분석 도구용) | `reference/components/` |
+
 ### 프로젝트 관리 (`project/`)
 
 | 문서명 | 핵심 내용 | 경로 |
@@ -77,12 +101,23 @@ reorganized_date: "2025-08-25"
 **위치**: `docs/guides/`  
 **특정 작업 수행 시 참조하는 가이드 문서들**
 
+### 컴포넌트 개발 가이드 (`guides/components/`) - ✨ T-V2-006 완성
+
+| 문서명 | 핵심 내용 | 경로 |
+|--------|-----------|------|
+| **component-catalog.md** | ✅ 60+ 컴포넌트 완전 카탈로그 (사용법/Props/예제) | `guides/components/` |
+| **component-usage-guide.md** | ✅ 컴포넌트 사용 가이드 (패턴/성능/최적화) | `guides/components/` |
+| **component-patterns.md** | ✅ 컴포넌트 베스트 프랙티스 (설계패턴/아키텍처) | `guides/components/` |
+
 ### UI 개발 가이드 (`guides/ui-development/`)
 
 | 문서명 | 핵심 내용 | 경로 |
 |--------|-----------|------|
+| **design-tokens-usage.md** | ✅ T-V2-002 디자인 토큰 완전 가이드 (색상/타이포/간격) | `guides/ui-development/` |
+| **darkmode-color-system-guide.md** | ✅ 다크모드 색상 시스템 완전 가이드 | `guides/ui-development/` |
 | **shadcn-ui-components-guide.md** | ✅ shadcn/ui 30개 컴포넌트 실용 가이드 (T-V2-001 완료) | `guides/ui-development/` |
 | **DataTable-Component-Guide.md** | ✅ DataTable 고급 컴포넌트 완전 가이드 (리사이징, 토글 등) | `guides/ui-development/` |
+| **glassmorphism-usage-guide.md** | ✅ T-V2-003 Glassmorphism 완전 가이드 | `guides/ui-development/` |
 | **CRUD-API-Patterns.md** | ✅ CRUD API 표준 패턴 가이드 (2025-08-18 검증 완료) | `guides/ui-development/` |
 | **Quick-API-Reference.md** | ✅ 빠른 API 참조 가이드 (Copy&Paste 템플릿) | `guides/ui-development/` |
 | **class_management_implementation.md** | ClassFlow 구현 상세 가이드 | `guides/ui-development/` |
@@ -194,9 +229,16 @@ docs/reference/database/database-schema-actual.md  # 실제 스키마 확인
 docs/reference/api/api_specification.md   # API 명세 확인
 ```
 
-### 📋 UI/UX 개발 시 (guides/ui-development/)
+### 📋 UI/UX 개발 시 (guides/components/ + ui-development/)
 ```bash
-# UI 개발 가이드 순서 (T-V2-001 완료 기준)
+# 컴포넌트 개발 가이드 순서 (T-V2-006 완료 기준) ✨
+docs/guides/components/component-catalog.md                 # ✅ 60+ 컴포넌트 완전 카탈로그 (필수!)
+docs/guides/components/component-usage-guide.md            # ✅ 컴포넌트 패턴 및 성능 최적화
+docs/guides/components/component-patterns.md               # ✅ 베스트 프랙티스 및 설계 패턴
+
+# UI 시스템 개발 가이드
+docs/guides/ui-development/design-tokens-usage.md           # ✅ T-V2-002 디자인 토큰 완전 가이드
+docs/guides/ui-development/darkmode-color-system-guide.md   # ✅ 다크모드 색상 시스템
 docs/guides/ui-development/shadcn-ui-components-guide.md     # ✅ shadcn/ui 30개 컴포넌트 실사용 가이드
 docs/guides/ui-development/DataTable-Component-Guide.md     # ✅ DataTable 고급 기능 완전 가이드
 docs/guides/ui-development/page-structure-overview.md       # v2 페이지 구조

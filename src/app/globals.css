@@ -18,6 +18,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ================================================================
+ * Background System Classes Force Include (Tailwind v4 Solution)
+ * ================================================================ */
+@source inline("w-full h-full absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950 from-neutral-50 to-blue-50 dark:from-neutral-900 dark:to-blue-900 from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 from-purple-50 via-pink-50 to-indigo-50 dark:from-purple-950 dark:via-pink-950 dark:to-indigo-950 animate-pulse relative min-h-full bg-cover bg-center bg-no-repeat pointer-events-none");
+
 /* T-V2-002: Tailwind v4 올바른 패턴 - @theme과 @layer theme 통합 */
 @theme {
   /* EduCanvas 브랜드 색상 */
@@ -1012,4 +1017,67 @@
 .test-color {
   background-color: var(--color-educanvas-500) !important;
   color: white !important;
+}
+
+/* ================================================================
+ * Background Animations for Dynamic Patterns
+ * ================================================================ */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes wave {
+  0% {
+    background-position: 0% 50%, 100% 50%;
+  }
+  50% {
+    background-position: 100% 50%, 0% 50%;
+  }
+  100% {
+    background-position: 0% 50%, 100% 50%;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes morphing {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    border-radius: 40% 60% 70% 30% / 70% 40% 60% 30%;
+    transform: translate(10px, -5px) scale(1.1);
+  }
+  50% {
+    border-radius: 70% 30% 40% 60% / 30% 70% 40% 60%;
+    transform: translate(-5px, 10px) scale(0.9);
+  }
+  75% {
+    border-radius: 30% 70% 60% 40% / 40% 60% 30% 70%;
+    transform: translate(-10px, -10px) scale(1.05);
+  }
+}
+
+@keyframes pulse-gradient {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
 }

@@ -7,6 +7,9 @@ import { useAuth } from '@/store/useAuthStore'
 import { useVisibleTabs } from '@/lib/stores/navigationStore'
 import { TabNavigation } from '@/components/navigation/TabNavigation'
 import { UserMenu } from '@/components/navigation/UserMenu'
+import { useTheme } from 'next-themes'
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 
 interface MainHeaderProps {
   className?: string
@@ -20,6 +23,11 @@ interface MainHeaderProps {
 export function Header({ className }: MainHeaderProps) {
   const { profile } = useAuth()
   const visibleTabs = useVisibleTabs()
+  const { theme, setTheme } = useTheme()
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
 
   return (
     <header className={cn(
@@ -56,6 +64,27 @@ export function Header({ className }: MainHeaderProps) {
               Ctrl+1~{visibleTabs.length}
             </div>
           )}
+          
+          {/* 다크모드 토글 버튼 */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200 group"
+            title={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+          >
+            <motion.div
+              initial={false}
+              animate={{ rotate: theme === 'dark' ? 0 : 180 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              {theme === 'dark' ? (
+                <SunIcon className="w-5 h-5 text-white group-hover:text-yellow-200" />
+              ) : (
+                <MoonIcon className="w-5 h-5 text-white group-hover:text-blue-200" />
+              )}
+            </motion.div>
+          </motion.button>
           
           {/* 현업 SaaS 스타일 사용자 메뉴 */}
           <UserMenu />

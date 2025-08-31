@@ -1,0 +1,3609 @@
+{
+  "timestamp": "2025-08-28T15:28:45.964Z",
+  "total": 291,
+  "components": [
+    {
+      "name": "Button",
+      "category": "shadcn",
+      "importCount": 75,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\app\\page.tsx",
+        "src\\app\\not-found.tsx",
+        "src\\app\\global-error.tsx",
+        "src\\app\\error.tsx",
+        "src\\components\\students\\StudentListItem.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\StudentCard.tsx",
+        "src\\components\\students\\GroupedStudentView.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\components\\ui\\theme-toggle.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\pagination.tsx",
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\EnhancedSearchBox.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\ui\\carousel.tsx",
+        "src\\components\\ui\\calendar.tsx",
+        "src\\components\\staff\\StaffListItem.tsx",
+        "src\\components\\staff\\StaffCard.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\search\\SearchSidebar.tsx",
+        "src\\components\\search\\SearchResults.tsx",
+        "src\\components\\search\\SearchResultCard.tsx",
+        "src\\components\\search\\SearchInput.tsx",
+        "src\\components\\search\\SearchFilters.tsx",
+        "src\\components\\search\\RecentSearches.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\main\\SystemAdminSection.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\components\\error\\ErrorFallback.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageListItem.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\courses\\CoursePackageCard.tsx",
+        "src\\components\\classes\\GroupedClassView.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\classes\\ClassStudentManager.tsx",
+        "src\\components\\classes\\ClassListItem.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\classes\\ClassCard.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\pending-approval\\page.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "button"
+      ]
+    },
+    {
+      "name": "Badge",
+      "category": "shadcn",
+      "importCount": 50,
+      "files": [
+        "src\\components\\students\\StudentListItem.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\StudentCard.tsx",
+        "src\\components\\students\\GroupedStudentView.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\EnhancedSearchBox.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\StaffListItem.tsx",
+        "src\\components\\staff\\StaffCard.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchResults.tsx",
+        "src\\components\\search\\SearchResultCard.tsx",
+        "src\\components\\search\\RecentSearches.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\components\\navigation\\TabItem.tsx",
+        "src\\components\\layout\\UserProfileDropdown.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageListItem.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\courses\\CoursePackageCard.tsx",
+        "src\\components\\classes\\GroupedClassView.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\classes\\ClassStudentManager.tsx",
+        "src\\components\\classes\\ClassListItem.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\classes\\ClassCard.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\components\\ui\\classflow\\ClassContainer.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "badge"
+      ]
+    },
+    {
+      "name": "Input",
+      "category": "shadcn",
+      "importCount": 34,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\EnhancedSearchBox.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchInput.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "input"
+      ]
+    },
+    {
+      "name": "Card",
+      "category": "shadcn",
+      "importCount": 33,
+      "files": [
+        "src\\app\\page.tsx",
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\components\\ui\\EnhancedSearchBox.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\main\\SystemAdminSection.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\app\\pending-approval\\page.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\components\\ui\\classflow\\ClassContainer.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\profile\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "CardContent",
+      "category": "shadcn",
+      "importCount": 32,
+      "files": [
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\components\\ui\\EnhancedSearchBox.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\main\\SystemAdminSection.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\app\\pending-approval\\page.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\components\\ui\\classflow\\ClassContainer.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\profile\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "CardHeader",
+      "category": "shadcn",
+      "importCount": 24,
+      "files": [
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\main\\SystemAdminSection.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\components\\ui\\classflow\\ClassContainer.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\profile\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "CardTitle",
+      "category": "shadcn",
+      "importCount": 23,
+      "files": [
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\main\\SystemAdminSection.tsx",
+        "src\\components\\auth\\UpdatePasswordForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\ResetPasswordForm.tsx",
+        "src\\components\\auth\\OnboardingForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\profile\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx",
+        "src\\app\\main\\students\\smart\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "Select",
+      "category": "shadcn",
+      "importCount": 16,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectContent",
+      "category": "shadcn",
+      "importCount": 16,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectItem",
+      "category": "shadcn",
+      "importCount": 16,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectTrigger",
+      "category": "shadcn",
+      "importCount": 16,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectValue",
+      "category": "shadcn",
+      "importCount": 16,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\classes\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "Separator",
+      "category": "shadcn",
+      "importCount": 15,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\GroupedStudentView.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\GroupedClassView.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\test\\search-sidebar\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "separator"
+      ]
+    },
+    {
+      "name": "",
+      "category": "feature",
+      "importCount": 13,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "Label",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\form.tsx",
+        "src\\components\\search\\SearchFilters.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "label"
+      ]
+    },
+    {
+      "name": "Sheet",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "SheetContent",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "SheetDescription",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "SheetHeader",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "SheetTitle",
+      "category": "shadcn",
+      "importCount": 12,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "Checkbox",
+      "category": "shadcn",
+      "importCount": 11,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\students\\StudentListItem.tsx",
+        "src\\components\\students\\StudentCard.tsx",
+        "src\\components\\staff\\StaffListItem.tsx",
+        "src\\components\\staff\\StaffCard.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageListItem.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\courses\\CoursePackageCard.tsx",
+        "src\\components\\classes\\ClassListItem.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "checkbox"
+      ]
+    },
+    {
+      "name": "Loading",
+      "category": "custom",
+      "importCount": 10,
+      "files": [
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\main\\TenantAdminSection.tsx",
+        "src\\components\\classes\\ClassStudentManager.tsx",
+        "src\\components\\auth\\AuthGuard.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\pending-approval\\page.tsx",
+        "src\\app\\onboarding\\page.tsx"
+      ],
+      "exports": [
+        "Loading"
+      ]
+    },
+    {
+      "name": "Textarea",
+      "category": "feature",
+      "importCount": 10,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\courses\\CreateCoursePackageSheet.tsx",
+        "src\\components\\courses\\CoursePackageDetailSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "textarea"
+      ]
+    },
+    {
+      "name": "Alert",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "alert"
+      ]
+    },
+    {
+      "name": "AlertDescription",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "alert"
+      ]
+    },
+    {
+      "name": "Table",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "TableBody",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "TableCell",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "TableHead",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "TableHeader",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "TableRow",
+      "category": "shadcn",
+      "importCount": 9,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\classes\\ClassTable.tsx",
+        "src\\components\\admin\\TenantListTable.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx",
+        "src\\components\\admin\\MemberManagementTable.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "ScrollArea",
+      "category": "shadcn",
+      "importCount": 8,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\GroupedStudentView.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchSidebar.tsx",
+        "src\\components\\classes\\GroupedClassView.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "scroll-area"
+      ]
+    },
+    {
+      "name": "Avatar",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchResultCard.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\components\\layout\\Header.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "avatar"
+      ]
+    },
+    {
+      "name": "AvatarFallback",
+      "category": "feature",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchResultCard.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\components\\layout\\Header.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "avatar"
+      ]
+    },
+    {
+      "name": "Form",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "FormControl",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "FormField",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "FormItem",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "FormLabel",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "FormMessage",
+      "category": "shadcn",
+      "importCount": 7,
+      "files": [
+        "src\\components\\staff\\InstructorDetailSheet.tsx",
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\components\\classes\\ClassForm.tsx",
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\components\\auth\\LoginForm.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "Tabs",
+      "category": "shadcn",
+      "importCount": 6,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "tabs"
+      ]
+    },
+    {
+      "name": "TabsList",
+      "category": "feature",
+      "importCount": 6,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "tabs"
+      ]
+    },
+    {
+      "name": "TabsTrigger",
+      "category": "feature",
+      "importCount": 6,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx",
+        "src\\app\\main\\courses\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "tabs"
+      ]
+    },
+    {
+      "name": "SheetFooter",
+      "category": "shadcn",
+      "importCount": 6,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\students\\CreateStudentSheet.tsx",
+        "src\\components\\ui\\StudentSearchSelector.tsx",
+        "src\\components\\ui\\ClassSearchSelector.tsx",
+        "src\\components\\classes\\CreateClassSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "Modal",
+      "category": "custom",
+      "importCount": 5,
+      "files": [
+        "src\\components\\classes\\EditClassModal.tsx",
+        "src\\components\\classes\\CreateClassModal.tsx",
+        "src\\components\\auth\\TenantSearchModal.tsx",
+        "src\\components\\admin\\TenantCreateModal.tsx",
+        "src\\components\\admin\\PendingApprovalsTable.tsx"
+      ],
+      "exports": [
+        "Modal"
+      ]
+    },
+    {
+      "name": "CardDescription",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\staff\\CreateInstructorSheet.tsx",
+        "src\\app\\test\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\test\\tab-navigation\\page.tsx",
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "Skeleton",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\components\\search\\SearchSkeleton.tsx",
+        "src\\app\\main\\page.tsx",
+        "src\\components\\ui\\classflow\\LoadingPlaceholder.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "skeleton"
+      ]
+    },
+    {
+      "name": "DialogTitle",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\components\\classes\\EditClassModal.tsx",
+        "src\\components\\classes\\CreateClassModal.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "DropdownMenu",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuContent",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuItem",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuTrigger",
+      "category": "shadcn",
+      "importCount": 5,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\page.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "AvatarImage",
+      "category": "feature",
+      "importCount": 5,
+      "files": [
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchResultCard.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "avatar"
+      ]
+    },
+    {
+      "name": "TabsContent",
+      "category": "feature",
+      "importCount": 4,
+      "files": [
+        "src\\components\\students\\StudentDetailSheet.tsx",
+        "src\\components\\classes\\ClassDetailSheet.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx",
+        "src\\app\\main\\students\\[id]\\page.tsx"
+      ],
+      "exports": [
+        "tabs"
+      ]
+    },
+    {
+      "name": "PageHeader",
+      "category": "feature",
+      "importCount": 4,
+      "files": [
+        "src\\app\\main\\schedules\\page.tsx",
+        "src\\app\\main\\reports\\page.tsx",
+        "src\\app\\main\\profile\\page.tsx",
+        "src\\app\\main\\enrollments\\page.tsx"
+      ],
+      "exports": [
+        "layout/Header"
+      ]
+    },
+    {
+      "name": "buttonVariants",
+      "category": "feature",
+      "importCount": 3,
+      "files": [
+        "src\\components\\ui\\pagination.tsx",
+        "src\\components\\ui\\calendar.tsx",
+        "src\\components\\ui\\alert-dialog.tsx"
+      ],
+      "exports": [
+        "button"
+      ]
+    },
+    {
+      "name": "ScrollBar",
+      "category": "feature",
+      "importCount": 3,
+      "files": [
+        "src\\components\\students\\GroupedStudentView.tsx",
+        "src\\components\\classes\\GroupedClassView.tsx",
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "scroll-area"
+      ]
+    },
+    {
+      "name": "Dialog",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "DialogContent",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "DialogDescription",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "DialogHeader",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\components\\ui\\command.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "DropdownMenuLabel",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuSeparator",
+      "category": "shadcn",
+      "importCount": 3,
+      "files": [
+        "src\\components\\data-table.tsx",
+        "src\\components\\navigation\\UserMenu.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "ErrorBoundary",
+      "category": "feature",
+      "importCount": 3,
+      "files": [
+        "src\\app\\layout.tsx",
+        "src\\components\\ui\\VirtualizedStudentList.tsx",
+        "src\\app\\main\\students\\dashboard\\page.tsx"
+      ],
+      "exports": [
+        "error/ErrorBoundary"
+      ]
+    },
+    {
+      "name": "LoadingPlaceholder",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "classflow/LoadingPlaceholder"
+      ]
+    },
+    {
+      "name": "AlertTitle",
+      "category": "shadcn",
+      "importCount": 2,
+      "files": [
+        "src\\app\\test\\page.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert"
+      ]
+    },
+    {
+      "name": "DialogTrigger",
+      "category": "shadcn",
+      "importCount": 2,
+      "files": [
+        "src\\components\\ui\\Modal.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "Popover",
+      "category": "shadcn",
+      "importCount": 2,
+      "files": [
+        "src\\components\\search\\SearchFilters.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "popover"
+      ]
+    },
+    {
+      "name": "PopoverContent",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\search\\SearchFilters.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "popover"
+      ]
+    },
+    {
+      "name": "PopoverTrigger",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\search\\SearchFilters.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "popover"
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "category": "shadcn",
+      "importCount": 2,
+      "files": [
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "tooltip"
+      ]
+    },
+    {
+      "name": "TooltipContent",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "tooltip"
+      ]
+    },
+    {
+      "name": "TooltipProvider",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "tooltip"
+      ]
+    },
+    {
+      "name": "TooltipTrigger",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\ui\\sidebar.tsx",
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "tooltip"
+      ]
+    },
+    {
+      "name": "FormDescription",
+      "category": "shadcn",
+      "importCount": 2,
+      "files": [
+        "src\\components\\auth\\SignUpForm.tsx",
+        "src\\app\\main\\students\\[id]\\edit\\page.tsx"
+      ],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "useDebounce",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\search\\SpotlightSearch.tsx",
+        "src\\components\\search\\SearchInput.tsx"
+      ],
+      "exports": [
+        "search/hooks/useDebounce"
+      ]
+    },
+    {
+      "name": "AuthGuard",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\components\\layout\\AdminLayout.tsx",
+        "src\\app\\auth\\layout.tsx"
+      ],
+      "exports": [
+        "auth/AuthGuard"
+      ]
+    },
+    {
+      "name": "ClassSearchSelector",
+      "category": "custom",
+      "importCount": 2,
+      "files": [
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "ClassSearchResult",
+      "category": "feature",
+      "importCount": 2,
+      "files": [
+        "src\\app\\main\\students\\[id]\\page.tsx",
+        "src\\app\\main\\students\\new\\page.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "VirtualizedStudentList",
+      "category": "custom",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\students\\smart\\page.tsx"
+      ],
+      "exports": [
+        "VirtualizedStudentList"
+      ]
+    },
+    {
+      "name": "RadioGroup",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "radio-group"
+      ]
+    },
+    {
+      "name": "RadioGroupItem",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "radio-group"
+      ]
+    },
+    {
+      "name": "Switch",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "switch"
+      ]
+    },
+    {
+      "name": "Slider",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "slider"
+      ]
+    },
+    {
+      "name": "CardFooter",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "card"
+      ]
+    },
+    {
+      "name": "Progress",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "progress"
+      ]
+    },
+    {
+      "name": "Toaster",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "sonner"
+      ]
+    },
+    {
+      "name": "DialogFooter",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\components\\ui\\Modal.tsx"
+      ],
+      "exports": [
+        "dialog"
+      ]
+    },
+    {
+      "name": "AlertDialog",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogAction",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogCancel",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogContent",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogDescription",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogFooter",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogHeader",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogTitle",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "AlertDialogTrigger",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "alert-dialog"
+      ]
+    },
+    {
+      "name": "SheetTrigger",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "sheet"
+      ]
+    },
+    {
+      "name": "DropdownMenuCheckboxItem",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\components\\data-table.tsx"
+      ],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "Calendar",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\components\\search\\SearchFilters.tsx"
+      ],
+      "exports": [
+        "calendar"
+      ]
+    },
+    {
+      "name": "type ChartConfig",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "ChartContainer",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "ChartTooltip",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "ChartTooltipContent",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "TableCaption",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "Accordion",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "accordion"
+      ]
+    },
+    {
+      "name": "AccordionContent",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "accordion"
+      ]
+    },
+    {
+      "name": "AccordionItem",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "accordion"
+      ]
+    },
+    {
+      "name": "AccordionTrigger",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "accordion"
+      ]
+    },
+    {
+      "name": "Toggle",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "toggle"
+      ]
+    },
+    {
+      "name": "toggleVariants",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\ui\\toggle-group.tsx"
+      ],
+      "exports": [
+        "toggle"
+      ]
+    },
+    {
+      "name": "ToggleGroup",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "toggle-group"
+      ]
+    },
+    {
+      "name": "ToggleGroupItem",
+      "category": "shadcn",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "toggle-group"
+      ]
+    },
+    {
+      "name": "ResizablePanelGroup",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "resizable"
+      ]
+    },
+    {
+      "name": "ResizablePanel",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "resizable"
+      ]
+    },
+    {
+      "name": "ResizableHandle",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\design-tokens\\page.tsx"
+      ],
+      "exports": [
+        "resizable"
+      ]
+    },
+    {
+      "name": "AuthProvider",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\layout.tsx"
+      ],
+      "exports": [
+        "auth/AuthProvider"
+      ]
+    },
+    {
+      "name": "ThemeProvider",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\layout.tsx"
+      ],
+      "exports": [
+        "providers/ThemeProvider"
+      ]
+    },
+    {
+      "name": "ClientInitializer",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\layout.tsx"
+      ],
+      "exports": [
+        "ClientInitializer"
+      ]
+    },
+    {
+      "name": "MemberManagementTable",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\main\\TenantAdminSection.tsx"
+      ],
+      "exports": [
+        "admin/MemberManagementTable"
+      ]
+    },
+    {
+      "name": "PendingApprovalsTable",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\main\\TenantAdminSection.tsx"
+      ],
+      "exports": [
+        "admin/PendingApprovalsTable"
+      ]
+    },
+    {
+      "name": "TenantCreateModal",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\main\\SystemAdminSection.tsx"
+      ],
+      "exports": [
+        "admin/TenantCreateModal"
+      ]
+    },
+    {
+      "name": "TenantListTable",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\main\\SystemAdminSection.tsx"
+      ],
+      "exports": [
+        "admin/TenantListTable"
+      ]
+    },
+    {
+      "name": "ThemeToggle",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\UserProfileDropdown.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "RoleGuard",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\Sidebar.tsx"
+      ],
+      "exports": [
+        "auth/PermissionGuard"
+      ]
+    },
+    {
+      "name": "PermissionGuard",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\Sidebar.tsx"
+      ],
+      "exports": [
+        "auth/PermissionGuard"
+      ]
+    },
+    {
+      "name": "Header",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\MainLayout.tsx"
+      ],
+      "exports": [
+        "layout/Header"
+      ]
+    },
+    {
+      "name": "TabNavigation",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\Header.tsx"
+      ],
+      "exports": [
+        "navigation/TabNavigation"
+      ]
+    },
+    {
+      "name": "UserMenu",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\layout\\Header.tsx"
+      ],
+      "exports": [
+        "navigation/UserMenu"
+      ]
+    },
+    {
+      "name": "StudentSearchSelector",
+      "category": "custom",
+      "importCount": 1,
+      "files": [
+        "src\\components\\classes\\ClassStudentManager.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "StudentSearchResult",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\components\\classes\\ClassStudentManager.tsx"
+      ],
+      "exports": []
+    },
+    {
+      "name": "OnboardingForm",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\onboarding\\page.tsx"
+      ],
+      "exports": [
+        "auth/OnboardingForm"
+      ]
+    },
+    {
+      "name": "SystemAdminSection",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\page.tsx"
+      ],
+      "exports": [
+        "main/SystemAdminSection"
+      ]
+    },
+    {
+      "name": "TenantAdminSection",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\page.tsx"
+      ],
+      "exports": [
+        "main/TenantAdminSection"
+      ]
+    },
+    {
+      "name": "MainLayout",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\layout.tsx"
+      ],
+      "exports": [
+        "layout"
+      ]
+    },
+    {
+      "name": "DataTable",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "data-table"
+      ]
+    },
+    {
+      "name": "SortableHeader",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\shadcn-ui\\page.tsx"
+      ],
+      "exports": [
+        "data-table"
+      ]
+    },
+    {
+      "name": "TabItem",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\tab-navigation\\page.tsx"
+      ],
+      "exports": [
+        "navigation"
+      ]
+    },
+    {
+      "name": "StudentSearchSidebar",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "StaffSearchSidebar",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "ClassSearchSidebar",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "ScheduleSearchSidebar",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "DashboardSearchSidebar",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "SearchSidebarUsageGuide",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/context/SearchSidebarContexts"
+      ]
+    },
+    {
+      "name": "useGlobalSearch",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\test\\search-sidebar\\page.tsx"
+      ],
+      "exports": [
+        "search/SearchProvider"
+      ]
+    },
+    {
+      "name": "UpdatePasswordForm",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\auth\\update-password\\page.tsx"
+      ],
+      "exports": [
+        "auth/UpdatePasswordForm"
+      ]
+    },
+    {
+      "name": "SignUpForm",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\auth\\signup\\page.tsx"
+      ],
+      "exports": [
+        "auth/SignUpForm"
+      ]
+    },
+    {
+      "name": "ResetPasswordForm",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\auth\\reset-password\\page.tsx"
+      ],
+      "exports": [
+        "auth/ResetPasswordForm"
+      ]
+    },
+    {
+      "name": "LoginForm",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\auth\\login\\page.tsx"
+      ],
+      "exports": [
+        "auth/LoginForm"
+      ]
+    },
+    {
+      "name": "CreateStudentSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\students\\page.tsx"
+      ],
+      "exports": [
+        "students/CreateStudentSheet"
+      ]
+    },
+    {
+      "name": "StudentDetailSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\students\\page.tsx"
+      ],
+      "exports": [
+        "students/StudentDetailSheet"
+      ]
+    },
+    {
+      "name": "GroupedStudentView",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\students\\page.tsx"
+      ],
+      "exports": [
+        "students/GroupedStudentView"
+      ]
+    },
+    {
+      "name": "CreateInstructorSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "staff/CreateInstructorSheet"
+      ]
+    },
+    {
+      "name": "InstructorDetailSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "staff/InstructorDetailSheet"
+      ]
+    },
+    {
+      "name": "StaffCard",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "staff/StaffCard"
+      ]
+    },
+    {
+      "name": "StaffListItem",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\staff\\page.tsx"
+      ],
+      "exports": [
+        "staff/StaffListItem"
+      ]
+    },
+    {
+      "name": "CoursePackageCard",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\courses\\page.tsx"
+      ],
+      "exports": [
+        "courses/CoursePackageCard"
+      ]
+    },
+    {
+      "name": "CoursePackageListItem",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\courses\\page.tsx"
+      ],
+      "exports": [
+        "courses/CoursePackageListItem"
+      ]
+    },
+    {
+      "name": "CreateCoursePackageSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\courses\\page.tsx"
+      ],
+      "exports": [
+        "courses/CreateCoursePackageSheet"
+      ]
+    },
+    {
+      "name": "CoursePackageDetailSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\courses\\page.tsx"
+      ],
+      "exports": [
+        "courses/CoursePackageDetailSheet"
+      ]
+    },
+    {
+      "name": "ClassTable",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\classes\\page.tsx"
+      ],
+      "exports": [
+        "classes/ClassTable"
+      ]
+    },
+    {
+      "name": "ClassCard",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\classes\\page.tsx"
+      ],
+      "exports": [
+        "classes/ClassCard"
+      ]
+    },
+    {
+      "name": "CreateClassSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\classes\\page.tsx"
+      ],
+      "exports": [
+        "classes/CreateClassSheet"
+      ]
+    },
+    {
+      "name": "ClassDetailSheet",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\classes\\page.tsx"
+      ],
+      "exports": [
+        "classes/ClassDetailSheet"
+      ]
+    },
+    {
+      "name": "GroupedClassView",
+      "category": "feature",
+      "importCount": 1,
+      "files": [
+        "src\\app\\main\\classes\\page.tsx"
+      ],
+      "exports": [
+        "classes/GroupedClassView"
+      ]
+    },
+    {
+      "name": "StudentCard",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "classflow/StudentCard"
+      ]
+    },
+    {
+      "name": "EnhancedSearchBox",
+      "category": "custom",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "EnhancedSearchBox"
+      ]
+    },
+    {
+      "name": "DropZone",
+      "category": "custom",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "DropZone"
+      ]
+    },
+    {
+      "name": "SkipLinks",
+      "category": "custom",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "SkipLinks"
+      ]
+    },
+    {
+      "name": "FocusManager",
+      "category": "custom",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "FocusManager"
+      ]
+    },
+    {
+      "name": "ClassContainer",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "classflow/ClassContainer"
+      ]
+    },
+    {
+      "name": "DragHandle",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "classflow/DragHandle"
+      ]
+    },
+    {
+      "name": "AspectRatio",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "aspect-ratio"
+      ]
+    },
+    {
+      "name": "SelectGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectLabel",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "SelectSeparator",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "select"
+      ]
+    },
+    {
+      "name": "NavigationMenu",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "NavigationMenuContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "NavigationMenuItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "NavigationMenuLink",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "NavigationMenuList",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "NavigationMenuTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "navigationMenuTriggerStyle",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "navigation-menu"
+      ]
+    },
+    {
+      "name": "Breadcrumbs",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "Breadcrumbs"
+      ]
+    },
+    {
+      "name": "generateBreadcrumbs",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "Breadcrumbs"
+      ]
+    },
+    {
+      "name": "MobileBreadcrumbs",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "Breadcrumbs"
+      ]
+    },
+    {
+      "name": "Pagination",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationEllipsis",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationLink",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationNext",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "PaginationPrevious",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "pagination"
+      ]
+    },
+    {
+      "name": "badgeVariants",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "badge"
+      ]
+    },
+    {
+      "name": "HoverCard",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "hover-card"
+      ]
+    },
+    {
+      "name": "HoverCardContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "hover-card"
+      ]
+    },
+    {
+      "name": "HoverCardTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "hover-card"
+      ]
+    },
+    {
+      "name": "DropdownMenuGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuPortal",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuRadioGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuRadioItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuShortcut",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuSub",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuSubContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "DropdownMenuSubTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "dropdown-menu"
+      ]
+    },
+    {
+      "name": "ContextMenu",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuCheckboxItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuLabel",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuRadioGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuRadioItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuSeparator",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuShortcut",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuSub",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuSubContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuSubTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "ContextMenuTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "context-menu"
+      ]
+    },
+    {
+      "name": "Menubar",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarCheckboxItem",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarContent",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarItem",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarLabel",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarMenu",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarRadioGroup",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarRadioItem",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarSeparator",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarShortcut",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarSub",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarSubContent",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarSubTrigger",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "MenubarTrigger",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "menubar"
+      ]
+    },
+    {
+      "name": "Carousel",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "carousel"
+      ]
+    },
+    {
+      "name": "CarouselContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "carousel"
+      ]
+    },
+    {
+      "name": "CarouselItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "carousel"
+      ]
+    },
+    {
+      "name": "CarouselNext",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "carousel"
+      ]
+    },
+    {
+      "name": "CarouselPrevious",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "carousel"
+      ]
+    },
+    {
+      "name": "ChartLegend",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "ChartLegendContent",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "chart"
+      ]
+    },
+    {
+      "name": "TableFooter",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "table"
+      ]
+    },
+    {
+      "name": "Command",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandDialog",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandEmpty",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandGroup",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandInput",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandItem",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandList",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandSeparator",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "CommandShortcut",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "command"
+      ]
+    },
+    {
+      "name": "Collapsible",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "collapsible"
+      ]
+    },
+    {
+      "name": "CollapsibleContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "collapsible"
+      ]
+    },
+    {
+      "name": "CollapsibleTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "collapsible"
+      ]
+    },
+    {
+      "name": "Drawer",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerClose",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerDescription",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerFooter",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerHeader",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerOverlay",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerPortal",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerTitle",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "DrawerTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "drawer"
+      ]
+    },
+    {
+      "name": "Sidebar",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarFooter",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarGroupAction",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarGroupContent",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarGroupLabel",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarHeader",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarInset",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenu",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuAction",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuBadge",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuButton",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuSkeleton",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuSub",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuSubButton",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarMenuSubItem",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarProvider",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarRail",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarSeparator",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "SidebarTrigger",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "useSidebar",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "sidebar"
+      ]
+    },
+    {
+      "name": "useFormField",
+      "category": "feature",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "form"
+      ]
+    },
+    {
+      "name": "InputOTP",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "input-otp"
+      ]
+    },
+    {
+      "name": "InputOTPGroup",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "input-otp"
+      ]
+    },
+    {
+      "name": "InputOTPSeparator",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "input-otp"
+      ]
+    },
+    {
+      "name": "InputOTPSlot",
+      "category": "shadcn",
+      "importCount": 0,
+      "files": [],
+      "exports": [
+        "input-otp"
+      ]
+    }
+  ]
+}

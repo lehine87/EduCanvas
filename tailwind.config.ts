@@ -10,6 +10,19 @@ const config = {
     './src/**/*.{ts,tsx}',
   ],
   // T-V2-002: Tailwind CSS v4에서는 @theme 디렉티브 사용으로 safelist 불필요
+  // 하지만 동적 배경 패턴을 위해 safelist 추가
+  safelist: [
+    'w-full', 'h-full', 'absolute', 'inset-0', 
+    'bg-gradient-to-br', 'from-white', 'via-blue-50', 'to-purple-50',
+    'dark:from-slate-900', 'dark:via-blue-950', 'dark:to-purple-950',
+    'from-neutral-50', 'to-blue-50', 'dark:from-neutral-900', 'dark:to-blue-900',
+    'from-slate-50', 'to-gray-50', 'dark:from-slate-900', 'dark:to-gray-900',
+    'from-blue-50', 'via-indigo-50', 'to-purple-50', 
+    'dark:from-blue-950', 'dark:via-indigo-950', 'dark:to-purple-950',
+    'from-purple-50', 'via-pink-50', 'to-indigo-50',
+    'dark:from-purple-950', 'dark:via-pink-950', 'dark:to-indigo-950',
+    'animate-pulse'
+  ],
   prefix: "",
   theme: {
     container: {
@@ -123,6 +136,43 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  safelist: [
+    // 배경 시스템에 필요한 클래스들
+    'w-full',
+    'h-full',
+    'absolute',
+    'inset-0',
+    'relative',
+    'pointer-events-none',
+    'overflow-hidden',
+    'animate-pulse',
+    // 그라디언트 클래스들
+    'bg-gradient-to-br',
+    'from-white',
+    'via-blue-50',
+    'to-purple-50',
+    'dark:from-slate-900',
+    'dark:via-blue-950',
+    'dark:to-purple-950',
+    'from-neutral-50',
+    'to-blue-50',
+    'dark:from-neutral-900',
+    'dark:to-blue-900',
+    'from-slate-50',
+    'to-gray-50',
+    'dark:from-slate-900',
+    'dark:to-gray-900',
+    'from-blue-50',
+    'via-indigo-50',
+    'dark:from-blue-950',
+    'dark:via-indigo-950',
+    'from-purple-50',
+    'via-pink-50',
+    'to-indigo-50',
+    'dark:from-purple-950',
+    'dark:via-pink-950',
+    'dark:to-indigo-950',
+  ],
 } satisfies Config
 
 export default config
