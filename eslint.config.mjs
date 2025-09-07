@@ -23,10 +23,11 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",  // any 사용 금지로 복원
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",
-      "prefer-const": "warn",
+      "@typescript-eslint/no-explicit-any": "error",  // any 사용 금지 (보안 중요)
+      "@typescript-eslint/no-unused-vars": "warn",     // 개발 중이므로 경고만
+      "@typescript-eslint/no-empty-object-type": "warn", // 경고만
+      "@typescript-eslint/no-unsafe-declaration-merging": "warn", // Supabase 자동생성 파일 경고만
+      "prefer-const": "warn",                          // 경고만
       "@typescript-eslint/no-require-imports": "off",
       "react-hooks/exhaustive-deps": "warn",
       "@next/next/no-img-element": "warn",

@@ -160,7 +160,7 @@ export async function GET(
         payment_count: includePayments && 'payments' in enrollment && Array.isArray(enrollment.payments) ? enrollment.payments.length : 0
       })
 
-      logApiSuccess('get-enrollment', { enrollmentId: (enrollment as any).id })
+      logApiSuccess('get-enrollment', { enrollmentId: enrollment && typeof enrollment === 'object' && 'id' in enrollment && typeof (enrollment as Record<string, unknown>).id === 'string' ? (enrollment as Record<string, unknown>).id as string : params.id })
 
       return createSuccessResponse({ enrollment: result })
     },

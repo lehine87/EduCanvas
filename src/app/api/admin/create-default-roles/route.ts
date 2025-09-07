@@ -70,8 +70,9 @@ export async function POST(request: NextRequest) {
       roles: defaultRoles.map(r => ({ name: r.name, display_name: r.display_name }))
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('기본 역할 생성 오류:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'An unknown error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
