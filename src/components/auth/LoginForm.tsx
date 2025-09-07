@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingStep, setLoadingStep] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
@@ -108,6 +109,7 @@ export function LoginForm() {
         })
       }
       
+      setLoadingStep('로그인 중...')
       const authData = await authClient.signIn(data)
       const { user, session } = authData
       
@@ -123,6 +125,7 @@ export function LoginForm() {
       }
       
       if (user && session) {
+        setLoadingStep('사용자 정보 조회 중...')
         const profile = await authClient.getUserProfile()
         
         if (isVercel) {
@@ -148,9 +151,11 @@ export function LoginForm() {
         
         // 쿠키 설정 완료를 위한 대기 (Vercel 환경에서는 더 긴 대기)
         const waitTime = isVercel ? 2000 : 500 // Vercel: 2초, 로컬: 0.5초
+        setLoadingStep(`${waitTime / 1000}초 후 이동...`)
         console.log(`⏰ [LOGIN-DEBUG] ${waitTime}ms 후 리다이렉트 시작...`)
         await new Promise(resolve => setTimeout(resolve, waitTime))
         
+        setLoadingStep('페이지 이동 중...')
         console.log(`🔄 [LOGIN-DEBUG] 리다이렉트 실행 중...`)
         
         // Next.js router navigation 대신 브라우저 네이티브 navigation 사용 (더 안전함)

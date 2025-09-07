@@ -33,6 +33,27 @@ export const createClient = () => {
   }
 
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    global: {
+      // Vercel 환경에서 더 긴 타임아웃 설정
+      fetch: (url, options = {}) => {
+        const timeoutMs = isVercel ? 15000 : 10000; // Vercel: 15초, 로컬: 10초
+        
+        if (isVercel) {
+          console.log(`⏱️ [VERCEL-FETCH] REQUEST TIMEOUT: ${timeoutMs}ms for ${url}`)
+        }
+        
+        return fetch(url, {
+          ...options,
+          signal: AbortSignal.timeout(timeoutMs)
+        }).catch((error) => {
+          if (error.name === 'AbortError') {
+            console.error(`⏱️ [FETCH-TIMEOUT] Request timed out after ${timeoutMs}ms:`, { url })
+            throw new Error(`네트워크 요청이 ${timeoutMs / 1000}초 후 시간 초과되었습니다.`)
+          }
+          throw error
+        })
+      }
+    },
     cookies: {
       get(name: string) {
         // 브라우저에서 쿠키 직접 읽기
