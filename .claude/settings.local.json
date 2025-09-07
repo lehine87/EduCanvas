@@ -97,7 +97,14 @@
       "Bash(git check-ignore:*)",
       "Bash(git hash-object:*)",
       "Bash(git ls-tree:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git pull:*)",
+      "mcp__vercel__get_deployment",
+      "WebFetch(domain:github.com)",
+      "Bash(git config:*)",
+      "Bash(git rm:*)",
+      "Bash(git restore:*)",
+      "mcp__vercel__web_fetch_vercel_url"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
