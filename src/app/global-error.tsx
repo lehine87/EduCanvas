@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import * as Sentry from '@sentry/nextjs'
+// import * as Sentry from '@sentry/nextjs' // 임시 비활성화
 import { Button } from '@/components/ui'
 import { ExclamationTriangleIcon, ArrowPathIcon, HomeIcon } from '@heroicons/react/24/outline'
 
@@ -12,24 +12,22 @@ interface GlobalErrorProps {
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
-    // 글로벌 에러를 Sentry에 리포트
+    // 글로벌 에러를 콘솔에 로그
     console.error('Global Error occurred:', error)
     
-    Sentry.withScope((scope) => {
-      scope.setLevel('fatal') // 글로벌 에러는 치명적 레벨
-      scope.setTag('errorBoundary', 'global')
-      scope.setContext('globalError', {
-        digest: error.digest,
-        timestamp: new Date().toISOString(),
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-        url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-      })
-      
-      // 에러 fingerprint 설정 (그룹핑)
-      scope.setFingerprint(['global-error', error.name, error.message])
-      
-      Sentry.captureException(error)
-    })
+    // Sentry 로직 임시 비활성화
+    // Sentry.withScope((scope) => {
+    //   scope.setLevel('fatal')
+    //   scope.setTag('errorBoundary', 'global')
+    //   scope.setContext('globalError', {
+    //     digest: error.digest,
+    //     timestamp: new Date().toISOString(),
+    //     userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+    //     url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+    //   })
+    //   scope.setFingerprint(['global-error', error.name, error.message])
+    //   Sentry.captureException(error)
+    // })
   }, [error])
 
   const handleReload = () => {
@@ -37,7 +35,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   }
 
   const handleGoHome = () => {
-    window.location.href = '/admin'
+    window.location.href = '/main'
   }
 
   return (

@@ -56,12 +56,8 @@ const updateInstructorSchema = z.object({
       (val) => !val || /^[0-9-+\s()]{8,15}$/.test(val),
       '올바른 전화번호 형식을 입력해주세요'
     ),
-  job_function: z.enum(['instructor', 'general'], {
-    required_error: '직능을 선택해주세요',
-  }),
-  role: z.enum(['admin', 'instructor', 'staff', 'viewer'], {
-    required_error: '직급을 선택해주세요',
-  }),
+  job_function: z.enum(['instructor', 'general']),
+  role: z.enum(['admin', 'instructor', 'staff', 'viewer']),
   hire_date: z.string().optional(),
   specialization: z.string().optional(),
   bio: z.string().optional(),
@@ -111,7 +107,9 @@ export function InstructorDetailSheet({
         full_name: instructor.full_name || '',
         phone: instructor.phone || '',
         job_function: instructor.job_function,
-        role: instructor.role_name || instructor.role || 'staff',
+        role: (['admin', 'instructor', 'staff', 'viewer'].includes(instructor.role_name || '') ? instructor.role_name : 
+               ['admin', 'instructor', 'staff', 'viewer'].includes(instructor.role || '') ? instructor.role : 
+               'staff') as 'admin' | 'instructor' | 'staff' | 'viewer',
         hire_date: instructor.hire_date || '',
         specialization: instructor.specialization || '',
         bio: instructor.bio || '',

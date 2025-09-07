@@ -100,25 +100,25 @@ export function UserMenu({ className }: UserMenuProps) {
         >
           {/* 사용자 아바타 */}
           <Avatar className="h-8 w-8">
-            <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || '사용자'} />
+            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || '사용자'} />
             <AvatarFallback className="bg-white/20 text-white text-sm font-medium">
-              {profile?.full_name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
+              {profile?.name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
 
           {/* 사용자 정보 (데스크톱에서만 표시) */}
           <div className="hidden md:flex flex-col items-start min-w-0">
             <span className="text-sm font-medium text-white truncate">
-              {profile?.full_name || profile?.email?.split('@')[0] || '사용자'}
+              {profile?.name || profile?.email?.split('@')[0] || '사용자'}
             </span>
             <div className="flex items-center gap-1">
               <Badge 
                 className={cn(
-                  getRoleColor(profile?.role),
+                  getRoleColor(profile?.role || ''),
                   'text-white text-xs px-1.5 py-0 h-4'
                 )}
               >
-                {getRoleLabel(profile?.role)}
+                {getRoleLabel(profile?.role || '')}
               </Badge>
               {process.env.NODE_ENV === 'development' && (
                 <span className="text-xs text-white/50">•</span>
@@ -135,25 +135,25 @@ export function UserMenu({ className }: UserMenuProps) {
         <DropdownMenuLabel className="p-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || '사용자'} />
+              <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || '사용자'} />
               <AvatarFallback className="bg-wisdom-500 text-wisdom-contrast font-medium">
-                {profile?.full_name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
+                {profile?.name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0">
               <span className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
-                {profile?.full_name || '사용자'}
+                {profile?.name || '사용자'}
               </span>
               <span className="text-sm text-neutral-500 truncate">
                 {profile?.email}
               </span>
               <Badge 
                 className={cn(
-                  getRoleColor(profile?.role),
+                  getRoleColor(profile?.role || ''),
                   'text-white text-xs px-2 py-0 h-4 w-fit mt-1'
                 )}
               >
-                {getRoleLabel(profile?.role)}
+                {getRoleLabel(profile?.role || '')}
               </Badge>
             </div>
           </div>

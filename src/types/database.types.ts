@@ -532,87 +532,6 @@ export type Database = {
           },
         ]
       }
-      classes_backup_20250825: {
-        Row: {
-          classroom_id: string | null
-          color: string | null
-          course: string | null
-          created_at: string | null
-          created_by: string | null
-          custom_fields: Json | null
-          default_classroom_id: string | null
-          description: string | null
-          end_date: string | null
-          grade: string | null
-          id: string | null
-          instructor_id: string | null
-          is_active: boolean | null
-          level: string | null
-          main_textbook: string | null
-          max_students: number | null
-          min_students: number | null
-          name: string | null
-          schedule_config: Json | null
-          start_date: string | null
-          subject: string | null
-          supplementary_textbook: string | null
-          tenant_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          classroom_id?: string | null
-          color?: string | null
-          course?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields?: Json | null
-          default_classroom_id?: string | null
-          description?: string | null
-          end_date?: string | null
-          grade?: string | null
-          id?: string | null
-          instructor_id?: string | null
-          is_active?: boolean | null
-          level?: string | null
-          main_textbook?: string | null
-          max_students?: number | null
-          min_students?: number | null
-          name?: string | null
-          schedule_config?: Json | null
-          start_date?: string | null
-          subject?: string | null
-          supplementary_textbook?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          classroom_id?: string | null
-          color?: string | null
-          course?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields?: Json | null
-          default_classroom_id?: string | null
-          description?: string | null
-          end_date?: string | null
-          grade?: string | null
-          id?: string | null
-          instructor_id?: string | null
-          is_active?: boolean | null
-          level?: string | null
-          main_textbook?: string | null
-          max_students?: number | null
-          min_students?: number | null
-          name?: string | null
-          schedule_config?: Json | null
-          start_date?: string | null
-          subject?: string | null
-          supplementary_textbook?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       classrooms: {
         Row: {
           area: number | null
@@ -1117,6 +1036,39 @@ export type Database = {
           },
         ]
       }
+      realtime_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          processed_at: string | null
+          record_id: string
+          table_name: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          record_id: string
+          table_name: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          record_id?: string
+          table_name?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       resource_scopes: {
         Row: {
           created_at: string | null
@@ -1592,10 +1544,12 @@ export type Database = {
           name: string
           name_english: string | null
           notes: string | null
-          parent_name: string | null
+          parent_name_1: string | null
+          parent_name_2: string | null
           parent_phone_1: string | null
           parent_phone_2: string | null
           phone: string | null
+          profile_image: string | null
           school_name: string | null
           status: Database["public"]["Enums"]["student_status"] | null
           student_number: string
@@ -1618,10 +1572,12 @@ export type Database = {
           name: string
           name_english?: string | null
           notes?: string | null
-          parent_name?: string | null
+          parent_name_1?: string | null
+          parent_name_2?: string | null
           parent_phone_1?: string | null
           parent_phone_2?: string | null
           phone?: string | null
+          profile_image?: string | null
           school_name?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           student_number: string
@@ -1644,10 +1600,12 @@ export type Database = {
           name?: string
           name_english?: string | null
           notes?: string | null
-          parent_name?: string | null
+          parent_name_1?: string | null
+          parent_name_2?: string | null
           parent_phone_1?: string | null
           parent_phone_2?: string | null
           phone?: string | null
+          profile_image?: string | null
           school_name?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           student_number?: string
@@ -2811,25 +2769,30 @@ export type Database = {
     }
     Functions: {
       can_access_class_textbooks: {
-        Args: { class_id: string; user_tenant_id: string }
+        Args:
+          | { class_id: string; user_tenant_id: string }
+          | { p_class_id: string }
         Returns: boolean
       }
       check_classroom_conflict: {
-        Args: {
-          p_classroom_id: string
-          p_date?: string
-          p_day_of_week: Database["public"]["Enums"]["day_of_week"]
-          p_end_time: string
-          p_exclude_change_id?: string
-          p_exclude_schedule_id?: string
-          p_start_time: string
-          p_tenant_id: string
-        }
-        Returns: {
-          conflict_details: Json
-          conflict_found: boolean
-          conflict_type: string
-        }[]
+        Args:
+          | {
+              p_classroom_id: string
+              p_date?: string
+              p_day_of_week: Database["public"]["Enums"]["day_of_week"]
+              p_end_time: string
+              p_exclude_change_id?: string
+              p_exclude_schedule_id?: string
+              p_start_time: string
+              p_tenant_id: string
+            }
+          | {
+              p_classroom_id: string
+              p_end_time: string
+              p_exclude_class_id?: string
+              p_start_time: string
+            }
+        Returns: boolean
       }
       get_user_tenant_id: {
         Args: Record<PropertyKey, never>
@@ -2838,6 +2801,38 @@ export type Database = {
       is_developer_email: {
         Args: { email_to_check: string }
         Returns: boolean
+      }
+      search_students_autocomplete: {
+        Args: { max_results?: number; prefix: string; tenant_uuid: string }
+        Returns: {
+          id: string
+          match_type: string
+          name: string
+          parent_name_1: string
+          phone: string
+        }[]
+      }
+      search_students_fts: {
+        Args: { max_results: number; search_term: string; tenant_uuid: string }
+        Returns: {
+          grade_level: string
+          id: string
+          name: string
+          parent_name_1: string
+          parent_phone_1: string
+          phone: string
+          search_rank: number
+          status: string
+        }[]
+      }
+      update_video_progress: {
+        Args: {
+          p_last_position: number
+          p_progress: number
+          p_student_id: string
+          p_video_id: string
+        }
+        Returns: undefined
       }
       user_can_access_tenant: {
         Args: { target_tenant_id: string }

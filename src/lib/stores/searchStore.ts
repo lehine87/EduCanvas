@@ -56,8 +56,8 @@ export interface SearchResult {
     schedule?: string
     students_count?: number
     
-    // 확장 가능한 추가 필드
-    [key: string]: any
+    // 확장 가능한 추가 필드 (검색 메타데이터용)
+    [key: string]: string | number | boolean | string[] | undefined
   }
   actions?: {
     label: string
@@ -91,7 +91,7 @@ interface SearchStore {
   setQuery: (query: string) => void
   setContext: (context: SearchContext) => void
   setFilters: (filters: SearchFilters) => void
-  updateFilter: (key: keyof SearchFilters, value: any) => void
+  updateFilter: (key: keyof SearchFilters, value: SearchFilters[keyof SearchFilters]) => void
   clearFilters: () => void
   setResults: (results: SearchResult[]) => void
   setLoading: (loading: boolean) => void

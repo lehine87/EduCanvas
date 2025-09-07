@@ -108,10 +108,9 @@ export function GlassWidget({
       scale: 1,
       filter: 'blur(0px)',
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 200,
-        damping: 25,
-        duration: 0.4
+        damping: 25
       }
     },
     loading: {
@@ -124,7 +123,7 @@ export function GlassWidget({
       y: float ? -3 : 0,
       scale: onClick ? 1.01 : 1, // hover 효과 최소화
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 400,
         damping: 25
       }
@@ -132,7 +131,7 @@ export function GlassWidget({
     tap: {
       scale: 0.99,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 400,
         damping: 25
       }
@@ -145,7 +144,7 @@ export function GlassWidget({
       transition: {
         duration: 2,
         repeat: Infinity,
-        ease: "easeInOut"
+        ease: "easeInOut" as const
       }
     }
   }

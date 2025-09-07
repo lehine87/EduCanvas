@@ -33,7 +33,7 @@ export default function PendingApprovalPage() {
 
         // 이미 활성화된 사용자는 관리자 페이지로
         if (profile.status === 'active') {
-          router.push('/admin')
+          router.push('/main')
           return
         }
 

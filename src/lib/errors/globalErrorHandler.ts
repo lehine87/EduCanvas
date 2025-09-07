@@ -243,11 +243,11 @@ class GlobalErrorHandler {
   /**
    * 스로틀 유틸리티
    */
-  private throttle(func: Function, delay: number) {
+  private throttle<T extends (...args: unknown[]) => unknown>(func: T, delay: number) {
     let timeoutId: NodeJS.Timeout | null = null
     let lastExecTime = 0
     
-    return function (this: any, ...args: any[]) {
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
       const currentTime = Date.now()
       
       if (currentTime - lastExecTime > delay) {

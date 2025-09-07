@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  MessageSquare,
+  UserCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,16 +65,16 @@ function SearchResultCard({ result, isSelected = false }: SearchResultCardProps)
     // Navigate to detail page (implement based on type)
     switch (result.type) {
       case 'student':
-        window.location.href = `/students/${result.id}`
+        window.location.href = `/main/students/${result.id}`
         break
       case 'class':
-        window.location.href = `/classes/${result.id}`
+        window.location.href = `/main/classes/${result.id}`
         break
       case 'staff':
-        window.location.href = `/staff/${result.id}`
+        window.location.href = `/main/staff/${result.id}`
         break
       case 'schedule':
-        window.location.href = `/schedule/${result.id}`
+        window.location.href = `/main/schedule/${result.id}`
         break
     }
   }
@@ -135,32 +137,65 @@ function SearchResultCard({ result, isSelected = false }: SearchResultCardProps)
           </p>
         )}
 
-        {/* Metadata */}
+        {/* Enhanced Metadata for Students */}
         {result.metadata && (
-          <div className="flex items-center gap-3 mt-1">
-            {result.metadata.phone && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <Phone className="h-3 w-3" />
-                {result.metadata.phone}
-              </span>
+          <div className="space-y-1 mt-1">
+            {/* Primary contact info */}
+            <div className="flex items-center gap-3">
+              {result.metadata.phone && (
+                <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  <Phone className="h-3 w-3" />
+                  {result.metadata.phone}
+                </span>
+              )}
+              {result.metadata.email && (
+                <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  <Mail className="h-3 w-3" />
+                  {result.metadata.email}
+                </span>
+              )}
+            </div>
+            
+            {/* Student specific info */}
+            {result.type === 'student' && (
+              <div className="flex items-center gap-3 flex-wrap">
+                {result.metadata.grade_level && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
+                    {result.metadata.grade_level}
+                  </span>
+                )}
+                {result.metadata.school_name && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <MapPin className="h-3 w-3" />
+                    {result.metadata.school_name}
+                  </span>
+                )}
+                {result.metadata.parent_phone_1 && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <Phone className="h-3 w-3" />
+                    <span className="text-neutral-400">학부모</span>
+                    {result.metadata.parent_phone_1}
+                  </span>
+                )}
+              </div>
             )}
-            {result.metadata.email && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <Mail className="h-3 w-3" />
-                {result.metadata.email}
-              </span>
-            )}
-            {result.metadata.location && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <MapPin className="h-3 w-3" />
-                {result.metadata.location}
-              </span>
-            )}
-            {result.metadata.time && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <Clock className="h-3 w-3" />
-                {result.metadata.time}
-              </span>
+            
+            {/* Other types metadata */}
+            {result.type !== 'student' && (
+              <div className="flex items-center gap-3">
+                {result.metadata.location && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <MapPin className="h-3 w-3" />
+                    {result.metadata.location}
+                  </span>
+                )}
+                {result.metadata.time && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <Clock className="h-3 w-3" />
+                    {result.metadata.time}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -176,6 +211,54 @@ function SearchResultCard({ result, isSelected = false }: SearchResultCardProps)
       {/* Actions (visible on hover) */}
       <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <div className="flex items-center gap-1">
+          {/* Student specific quick actions */}
+          {result.type === 'student' && result.metadata && (
+            <>
+              {result.metadata.phone && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(`tel:${result.metadata?.phone}`)
+                  }}
+                  aria-label="전화걸기"
+                >
+                  <Phone className="h-4 w-4" />
+                </Button>
+              )}
+              {result.metadata.parent_phone_1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(`tel:${result.metadata?.parent_phone_1}`)
+                  }}
+                  aria-label="학부모 전화걸기"
+                >
+                  <UserCheck className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // TODO: Open consultation modal
+                  console.log('Open consultation for', result.title)
+                }}
+                aria-label="상담 예약"
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
+          {/* Custom actions from result */}
           {result.actions?.map((action, index) => (
             <Button
               key={index}
@@ -196,7 +279,9 @@ function SearchResultCard({ result, isSelected = false }: SearchResultCardProps)
               )}
             </Button>
           ))}
-          {!result.actions && (
+          
+          {/* Default navigation arrow */}
+          {(!result.actions || result.actions.length === 0) && result.type !== 'student' && (
             <ChevronRight className="h-4 w-4 text-neutral-400" />
           )}
         </div>

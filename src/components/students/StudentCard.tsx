@@ -2,7 +2,8 @@
 
 import React, { memo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Badge, Button } from '@/components/ui'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { Student } from '@/types/student.types'
 import { 
@@ -83,8 +84,8 @@ export interface StudentCardProps {
 /**
  * 학생 상태 배지 컴포넌트
  */
-const StudentStatusBadge = memo<{ status: string; compact?: boolean }>(({ status, compact }) => {
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive
+const StudentStatusBadge = memo<{ status: string | null; compact?: boolean }>(({ status, compact }) => {
+  const config = statusConfig[(status || 'inactive') as keyof typeof statusConfig] || statusConfig.inactive
   const IconComponent = config.icon
 
   return (

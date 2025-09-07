@@ -18,9 +18,9 @@ export const buttonVariants = cva(
       variant: {
         default: "bg-educanvas-500 text-educanvas-contrast hover:bg-educanvas-600",
         destructive: "bg-red-500 text-white hover:bg-red-600",
-        outline: "border border-neutral-300 bg-transparent hover:bg-neutral-50 dark:border-neutral-600 dark:hover:bg-neutral-800",
-        secondary: "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700",
-        ghost: "hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100",
+        outline: "border border-neutral-300 bg-transparent hover:bg-neutral-50",
+        secondary: "bg-neutral-100 text-neutral-900 hover:bg-neutral-200",
+        ghost: "hover:bg-neutral-100 hover:text-neutral-900",
         link: "text-educanvas-500 underline-offset-4 hover:underline",
         success: "bg-green-500 text-white hover:bg-green-600",
         warning: "bg-yellow-500 text-white hover:bg-yellow-600",
@@ -52,14 +52,14 @@ export const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-educanvas-100 text-educanvas-800 dark:bg-educanvas-900 dark:text-educanvas-100",
-        secondary: "border-transparent bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100",
-        destructive: "border-transparent bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-        outline: "text-neutral-950 dark:text-neutral-50",
-        success: "border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-        warning: "border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-        wisdom: "border-transparent bg-wisdom-100 text-wisdom-800 dark:bg-wisdom-900 dark:text-wisdom-100",
-        growth: "border-transparent bg-growth-100 text-growth-800 dark:bg-growth-900 dark:text-growth-100",
+        default: "border-transparent bg-educanvas-100 text-educanvas-800",
+        secondary: "border-transparent bg-neutral-100 text-neutral-900",
+        destructive: "border-transparent bg-red-100 text-red-800",
+        outline: "text-neutral-950",
+        success: "border-transparent bg-green-100 text-green-800",
+        warning: "border-transparent bg-yellow-100 text-yellow-800",
+        wisdom: "border-transparent bg-wisdom-100 text-wisdom-800",
+        growth: "border-transparent bg-growth-100 text-growth-800",
       },
       size: {
         default: "px-2.5 py-0.5 text-xs",
@@ -86,11 +86,11 @@ export const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white border-neutral-200 dark:bg-neutral-950 dark:border-neutral-800",
-        elevated: "bg-white border-neutral-200 shadow-sm dark:bg-neutral-950 dark:border-neutral-800",
-        outlined: "bg-transparent border-2 border-neutral-300 dark:border-neutral-600",
-        filled: "bg-neutral-50 border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800",
-        glass: "backdrop-blur-sm bg-white/30 dark:bg-black/30 border border-white/20 shadow-xl dark:shadow-none",
+        default: "bg-white border-neutral-200",
+        elevated: "bg-white border-neutral-200 shadow-sm",
+        outlined: "bg-transparent border-2 border-neutral-300",
+        filled: "bg-neutral-50 border-neutral-200",
+        glass: "backdrop-blur-sm bg-white/30 border border-white/20 shadow-xl",
       },
       padding: {
         none: "p-0",
@@ -123,8 +123,8 @@ export const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-neutral-300 dark:border-neutral-600",
-        filled: "bg-neutral-50 border-transparent dark:bg-neutral-900",
+        default: "border-neutral-300",
+        filled: "bg-neutral-50 border-transparent",
         outline: "border-2 border-educanvas-200 focus-visible:border-educanvas-400",
       },
       size: {
@@ -160,10 +160,10 @@ export const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-background text-foreground",
-        destructive: "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100 [&>svg]:text-red-600 dark:[&>svg]:text-red-400",
-        success: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100 [&>svg]:text-green-600 dark:[&>svg]:text-green-400",
-        warning: "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100 [&>svg]:text-yellow-600 dark:[&>svg]:text-yellow-400",
-        info: "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400",
+        destructive: "border-red-200 bg-red-50 text-red-900 [&>svg]:text-red-600",
+        success: "border-green-200 bg-green-50 text-green-900 [&>svg]:text-green-600",
+        warning: "border-yellow-200 bg-yellow-50 text-yellow-900 [&>svg]:text-yellow-600",
+        info: "border-blue-200 bg-blue-50 text-blue-900 [&>svg]:text-blue-600",
       },
     },
     defaultVariants: {
@@ -214,12 +214,12 @@ export const statusVariants = cva(
   {
     variants: {
       status: {
-        active: "text-green-700 dark:text-green-400",
-        inactive: "text-neutral-500 dark:text-neutral-400",
-        pending: "text-yellow-700 dark:text-yellow-400",
-        success: "text-green-700 dark:text-green-400",
-        error: "text-red-700 dark:text-red-400",
-        warning: "text-yellow-700 dark:text-yellow-400",
+        active: "text-green-700",
+        inactive: "text-neutral-500",
+        pending: "text-yellow-700",
+        success: "text-green-700",
+        error: "text-red-700",
+        warning: "text-yellow-700",
       },
       showDot: {
         true: "before:content-[''] before:w-2 before:h-2 before:rounded-full before:bg-current",
@@ -246,8 +246,8 @@ export const tableVariants = cva(
     variants: {
       variant: {
         default: "",
-        striped: "[&>tbody>tr:nth-child(odd)]:bg-neutral-50 dark:[&>tbody>tr:nth-child(odd)]:bg-neutral-900",
-        bordered: "border border-neutral-200 dark:border-neutral-800",
+        striped: "[&>tbody>tr:nth-child(odd)]:bg-neutral-50",
+        bordered: "border border-neutral-200",
       },
       size: {
         sm: "[&>thead>tr>th]:px-2 [&>thead>tr>th]:py-2 [&>tbody>tr>td]:px-2 [&>tbody>tr>td]:py-2",
@@ -278,9 +278,9 @@ export const navigationVariants = cva(
         vertical: "flex-col space-y-1",
       },
       variant: {
-        default: "p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg",
+        default: "p-1 bg-neutral-100 rounded-lg",
         pills: "space-x-2",
-        underline: "border-b border-neutral-200 dark:border-neutral-800",
+        underline: "border-b border-neutral-200",
         sidebar: "space-y-1",
       },
     },
@@ -343,16 +343,16 @@ export type AllVariantProps =
   & NavigationVariantProps
   & ModalVariantProps;
 
-/** 변형별 기본값 */
+/** 변형별 기본값 (cva의 defaultVariants는 직접 접근 불가하므로 별도 정의) */
 export const variantDefaults = {
-  button: buttonVariants.defaultVariants,
-  badge: badgeVariants.defaultVariants,
-  card: cardVariants.defaultVariants,
-  input: inputVariants.defaultVariants,
-  alert: alertVariants.defaultVariants,
-  loading: loadingVariants.defaultVariants,
-  status: statusVariants.defaultVariants,
-  table: tableVariants.defaultVariants,
-  navigation: navigationVariants.defaultVariants,
-  modal: modalVariants.defaultVariants,
+  button: { variant: "default" as const, size: "default" as const },
+  badge: { variant: "default" as const, size: "default" as const },
+  card: { variant: "default" as const, padding: "md" as const, hoverable: false as const },
+  input: { variant: "default" as const, size: "default" as const, state: "default" as const },
+  alert: { variant: "default" as const },
+  loading: { size: "default" as const, variant: "spinner" as const },
+  status: { status: "active" as const, showDot: true as const },
+  table: { variant: "default" as const, size: "default" as const },
+  navigation: { orientation: "horizontal" as const, variant: "default" as const },
+  modal: { size: "default" as const, variant: "default" as const },
 } as const;

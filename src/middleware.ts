@@ -6,9 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimiter, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
-import { navigationController } from '@/lib/navigation'
-import type { NavigationContext } from '@/types/navigation.types'
+// 1단계에서는 복잡한 의존성 제거
+// import { rateLimiter, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
+// import { navigationController } from '@/lib/navigation'
+// import type { NavigationContext } from '@/types/navigation.types'
 
 /**
  * 미들웨어 제외 패턴들
@@ -101,22 +102,19 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 }
 
 /**
- * 간소화된 미들웨어 - NavigationController 통합
+ * 간소화된 미들웨어 - 1단계: 보안 헤더만 적용
  */
 export async function middleware(request: NextRequest) {
-  const clientIP = getClientIP(request)
   const currentPath = request.nextUrl.pathname
   const requestId = Math.random().toString(36).substring(7)
   
-  // 디버깅 모드 확인 (환경변수로 명시적 활성화 시에만)
-  const isProduction = process.env.NODE_ENV === 'production'
+  // 디버깅 모드 확인
   const debugMode = process.env.NAVIGATION_DEBUG === 'true'
   
   if (debugMode) {
-    console.log(`🛡️ [MIDDLEWARE-${requestId}] Request:`, {
+    console.log(`🛡️ [MIDDLEWARE-${requestId}] Simple Request:`, {
       method: request.method,
-      path: currentPath,
-      userAgent: request.headers.get('user-agent')?.substring(0, 50)
+      path: currentPath
     })
   }
 
@@ -125,92 +123,25 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(NextResponse.next())
   }
 
-  // 2. Rate Limiting (DDoS 방지)
-  if (isProduction) {
-    const globalRateLimit = rateLimiter.checkAndRecord(
-      `global:${clientIP}`,
-      60, // 분당 60회
-      60 * 1000, // 1분 윈도우
-      5 * 60 * 1000 // 5분 차단
-    )
-
-    if (!globalRateLimit.allowed) {
-      console.warn(`🚨 [MIDDLEWARE-${requestId}] Rate limit exceeded:`, { 
-        ip: clientIP, 
-        path: currentPath
-      })
-      return createRateLimitResponse(
-        globalRateLimit.retryAfter!,
-        '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
-      )
-    }
+  // 2. 보안 헤더만 적용하고 통과
+  if (debugMode) {
+    console.log(`✅ [MIDDLEWARE-${requestId}] Security headers applied:`, currentPath)
   }
-
-  // 3. NavigationController를 통한 중앙집중화된 리디렉션 체크
-  try {
-    const redirectionResult = await navigationController.checkRedirectForRequest(request)
-
-    if (debugMode) {
-      console.log(`🧭 [MIDDLEWARE-${requestId}] Navigation result:`, {
-        shouldRedirect: redirectionResult.shouldRedirect,
-        targetPath: redirectionResult.targetPath,
-        reason: redirectionResult.reason,
-        priority: redirectionResult.priority
-      })
-    }
-
-    // 리디렉션이 필요한 경우
-    if (redirectionResult.shouldRedirect && redirectionResult.targetPath) {
-      const redirectUrl = new URL(redirectionResult.targetPath, request.url)
-      
-      // 현재 경로를 next 파라미터로 추가 (로그인의 경우)
-      if (redirectionResult.targetPath.startsWith('/auth/login')) {
-        redirectUrl.searchParams.set('next', currentPath)
-      }
-      
-      if (debugMode) {
-        console.log(`🔄 [MIDDLEWARE-${requestId}] Redirecting:`, {
-          from: currentPath,
-          to: redirectUrl.toString(),
-          reason: redirectionResult.reason
-        })
-      }
-      
-      return Response.redirect(redirectUrl.toString())
-    }
-
-    // 리디렉션이 필요하지 않은 경우 - 정상 진행
-    if (debugMode) {
-      console.log(`✅ [MIDDLEWARE-${requestId}] Access granted:`, {
-        path: currentPath,
-        reason: redirectionResult.reason
-      })
-    }
-    
-    return applySecurityHeaders(NextResponse.next())
-
-  } catch (error) {
-    console.error(`❌ [MIDDLEWARE-${requestId}] Navigation error:`, error)
-    
-    // 에러 발생 시 안전한 기본 동작
-    const errorUrl = new URL('/auth/login', request.url)
-    errorUrl.searchParams.set('error', 'navigation-error')
-    errorUrl.searchParams.set('next', currentPath)
-    
-    return Response.redirect(errorUrl.toString())
-  }
+  
+  return applySecurityHeaders(NextResponse.next())
 }
 
+// 1단계: 보안 헤더만 활성화 (정적 파일 제외)
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api routes (handled separately)
-     * - static assets
+     * 다음을 제외한 모든 요청에 적용:
+     * - api (API 라우트)
+     * - _next/static (정적 파일)
+     * - _next/image (이미지 최적화)
+     * - favicon.ico (파비콘)
+     * - test 페이지들
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|woff|woff2|ttf|eot|ico|json)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|test).*)',
   ],
 }

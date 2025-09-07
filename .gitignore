@@ -78,3 +78,21 @@ docs/guides/database/supabase-connection-guide.md
 # SQL 테스트 데이터 파일들 (민감한 정보 포함 가능)
 *.sql
 !supabase/migrations/*.sql
+
+# MCP 및 테스트 관련 파일들
+.mcp.json
+.playwright-mcp/
+playwright-profile/
+
+# 백업 파일들
+*.backup
+*.backup-*
+src/**/*.backup
+src/**/*.backup-*
+
+# 임시 스크린샷 및 테스트 파일들
+temp_screenshot/
+"stdentpage기획.txt"
+
+# UI 컴포넌트 스켈레톤
+src/components/ui/skeleton/

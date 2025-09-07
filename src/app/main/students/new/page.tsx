@@ -20,6 +20,7 @@ import { ArrowLeftIcon, UserPlusIcon, AcademicCapIcon, XMarkIcon } from '@heroic
 import { toast } from 'react-hot-toast'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
+import StudentDetailLayout from '@/components/layout/StudentDetailLayout'
 
 // 폼 검증 스키마 - Database 타입과 일치시키기 위해 status를 optional로 수정
 const studentFormSchema = z.object({
@@ -195,7 +196,8 @@ export default function NewStudentPage() {
   }, [isDirty, router])
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <StudentDetailLayout showSearchSidebar={true} searchContext="students">
+      <div className="container mx-auto p-6 max-w-4xl">
       {/* 헤더 */}
       <div className="flex items-center space-x-4 mb-6">
         <Button
@@ -508,5 +510,6 @@ export default function NewStudentPage() {
         description="새로 등록할 학생을 배정할 클래스를 선택하세요"
       />
     </div>
+    </StudentDetailLayout>
   )
 }

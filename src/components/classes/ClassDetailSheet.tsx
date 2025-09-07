@@ -182,7 +182,7 @@ export function ClassDetailSheet({
           return
         }
 
-        setSchedules(data || [])
+        setSchedules((data || []) as any)
       } catch (error) {
         console.error('스케줄 조회 중 오류:', error)
       } finally {
@@ -249,7 +249,7 @@ export function ClassDetailSheet({
   }, [classData, onDelete, onClose])
 
   // 입력값 변경 처리
-  const handleInputChange = useCallback((field: keyof Class, value: any) => {
+  const handleInputChange = useCallback((field: keyof Class, value: Class[keyof Class]) => {
     setEditedData(prev => ({ ...prev, [field]: value }))
   }, [])
 

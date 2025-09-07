@@ -33,7 +33,7 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error])
 
   const handleGoHome = () => {
-    window.location.href = '/admin'
+    window.location.href = '/main'
   }
 
   const handleReload = () => {

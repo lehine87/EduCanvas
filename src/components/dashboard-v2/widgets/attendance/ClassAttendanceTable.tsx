@@ -215,6 +215,7 @@ export function ClassAttendanceTable({
       <div style={{ height: maxHeight }}>
         <List
           height={maxHeight}
+          width="100%"
           itemCount={sortedClasses.length}
           itemSize={64} // 각 행의 높이
           overscanCount={5} // 성능 최적화를 위한 오버스캔

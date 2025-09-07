@@ -59,7 +59,7 @@ const classFormSchema = z.object({
   supplementary_textbook: z.string()
     .max(200, '부교재명은 200자 이하여야 합니다')
     .optional(),
-  is_active: z.boolean().optional().default(true)
+  is_active: z.boolean().default(true)
 }).refine((data) => {
   // 최소 학생 수가 최대 학생 수보다 작아야 함
   if (data.min_students && data.max_students) {
@@ -208,7 +208,7 @@ export const ClassForm = memo<ClassFormProps>(({
   disabled = false
 }) => {
   // 폼 설정
-  const form = useForm<ClassFormData>({
+  const form = useForm({
     resolver: zodResolver(classFormSchema),
     defaultValues: {
       name: initialData?.name || '',
@@ -223,8 +223,8 @@ export const ClassForm = memo<ClassFormProps>(({
       color: initialData?.color || DEFAULT_COLOR_OPTIONS[0],
       start_date: initialData?.start_date ? new Date(initialData.start_date).toISOString().split('T')[0] : '',
       end_date: initialData?.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : '',
-      main_textbook: (initialData as any)?.main_textbook || '',
-      supplementary_textbook: (initialData as any)?.supplementary_textbook || '',
+      main_textbook: (initialData as { main_textbook?: string })?.main_textbook || '',
+      supplementary_textbook: (initialData as { supplementary_textbook?: string })?.supplementary_textbook || '',
       is_active: initialData?.is_active !== null ? (initialData?.is_active || true) : true
     },
     mode: 'onChange'
@@ -280,7 +280,7 @@ export const ClassForm = memo<ClassFormProps>(({
   return (
     <Form {...form}>
       <form 
-        onSubmit={form.handleSubmit(handleFormSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit as any)}
         className={cn('space-y-6', className)}
         noValidate
       >

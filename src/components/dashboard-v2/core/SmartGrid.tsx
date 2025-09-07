@@ -150,10 +150,9 @@ export function GridItem({
       y: 0,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
-        damping: 15,
-        duration: 0.6
+        damping: 15
       }
     }
   }
@@ -200,7 +199,14 @@ export const WidgetSizes = {
   wide: {
     cols: { xs: 1, sm: 2, md: 3, lg: 4, xl: 6, '2xl': 8 },
     rows: 1,
-    minHeight: '180px'
+    minHeight: '320px' // 실시간 출석 위젯을 위해 높이 증가
+  } as WidgetSize,
+  
+  // 초대형 위젯 (실시간 출석 현황 전용)
+  'extra-wide': {
+    cols: { xs: 1, sm: 2, md: 3, lg: 4, xl: 6, '2xl': 8 },
+    rows: 2,
+    minHeight: '480px'
   } as WidgetSize,
   
   // 높은 위젯 (세로 차트, 피드 등)

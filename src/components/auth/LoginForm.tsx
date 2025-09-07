@@ -140,7 +140,7 @@ export function LoginForm() {
         if (isVercel) {
           console.log(`🔄 [VERCEL-LOGIN-${requestId}] REDIRECTING TO ADMIN:`, {
             from: window.location.pathname,
-            to: '/admin',
+            to: '/main',
             cookiesAfterLogin: document.cookie,
             cookieNames: document.cookie.split(';').map(c => c.split('=')[0]?.trim() || '')
           })
@@ -155,9 +155,9 @@ export function LoginForm() {
         
         // Next.js router navigation 대신 브라우저 네이티브 navigation 사용 (더 안전함)
         if (typeof window !== 'undefined') {
-          window.location.href = '/admin'
+          window.location.href = '/main'
         } else {
-          router.push('/admin')
+          router.push('/main')
           router.refresh()
         }
       } else {

@@ -88,7 +88,7 @@ export function AuthGuard({
 
     // 2. 인증된 사용자가 인증 불필요 페이지 접근 (로그인 페이지 등)
     if (!requireAuth && isAuthenticated) {
-      router.push('/admin')
+      router.push('/main')
       return
     }
 

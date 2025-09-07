@@ -43,7 +43,7 @@ export function useNavigation() {
     
     if (!hasAccess) {
       console.warn(`Access denied to ${pathname} for role ${profile.role}`)
-      router.replace('/admin') // 대시보드로 리다이렉트
+      router.replace('/main') // 대시보드로 리다이렉트
     }
   }, [pathname, profile?.role, router])
 
@@ -108,7 +108,7 @@ export function usePageAccessGuard(requiredRoles: UserRole[] = []) {
     
     if (!hasAccess) {
       console.warn(`Page access denied: ${pathname} requires roles [${requiredRoles.join(', ')}], but user has role ${profile.role}`)
-      router.replace('/admin')
+      router.replace('/main')
     }
   }, [profile, requiredRoles, pathname, router])
 

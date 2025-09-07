@@ -3,29 +3,42 @@ import { produce } from 'immer'
 import type { Student, StudentFormData, StudentFilters, StudentStats } from '@/types/student.types'
 import { 
   createApiError, 
-  logError, 
   getErrorMessage,
   DuplicateStudentNumberError,
   StudentNotFoundError 
 } from '@/types/error.types'
 import { createClient } from '@/lib/supabase/client'
 
-// API 응답 타입
-interface ApiResponse<T> {
+// API 응답 타입 (표준 API 응답 구조에 맞게 수정)
+interface StandardApiResponse<T = unknown> {
   success: boolean
-  data: T
-  message?: string
+  data?: T
+  error?: {
+    code: string
+    message: string
+    details?: unknown[]
+  }
+  timestamp: string
+  request_id?: string
 }
 
-interface StudentListResponse {
-  students: Student[]
+interface PaginatedData<T> {
+  items: T[]
   pagination: {
-    total: number
-    limit: number
-    offset: number
-    hasMore: boolean
+    cursor: string | null
+    has_more: boolean
+    total_count?: number
+    per_page: number
+  }
+  metadata: {
+    filters_applied: string[]
+    sort_applied: string
+    search_query?: string
+    execution_time_ms?: number
   }
 }
+
+type StudentListApiResponse = StandardApiResponse<PaginatedData<Student>>
 
 // Store 상태 타입
 interface StudentsState {
@@ -109,6 +122,12 @@ const apiCall = async <T>(
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     
+    console.log('🔐 [API-CALL] 세션 상태:', {
+      hasSession: !!session,
+      hasAccessToken: !!session?.access_token,
+      tokenLength: session?.access_token?.length || 0
+    })
+    
     // 인증 헤더 구성
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -161,10 +180,18 @@ const apiCall = async <T>(
         })
       }
 
-      const result: ApiResponse<T> = await response.json()
+      const result: StandardApiResponse<T> = await response.json()
       
       if (!result.success) {
-        throw createApiError(url, 400, result.message || 'API 호출 실패', {
+        const errorMessage = result.error?.message || 'API 호출 실패'
+        throw createApiError(url, 400, errorMessage, {
+          component: 'studentsStore',
+          action: 'apiCall'
+        })
+      }
+
+      if (!result.data) {
+        throw createApiError(url, 500, 'API 응답 데이터가 없습니다.', {
           component: 'studentsStore',
           action: 'apiCall'
         })
@@ -186,10 +213,7 @@ const apiCall = async <T>(
     }
   } catch (error) {
     // 에러 로깅
-    logError(error, {
-      component: 'studentsStore',
-      action: 'apiCall'
-    })
+    console.error('❌ [API-CALL] 실패:', error)
     throw error
   }
 }
@@ -209,37 +233,64 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
   actions: {
     // 학생 목록 조회
     fetchStudents: async (tenantId?: string, filters?: Partial<StudentFilters>) => {
+      console.log('🚀 [STUDENTS-STORE] fetchStudents 호출:', { tenantId, filters })
       set({ loading: true, error: null })
       
       try {
         const currentFilters = { ...get().filters, ...filters }
+        const currentPagination = get().pagination
+        
+        // 안전한 limit 값 설정
+        const limit = currentPagination.limit || 50
+        
+        console.log('📊 [STUDENTS-STORE] 요청 파라미터:', {
+          currentFilters,
+          limit,
+          pagination: currentPagination
+        })
+        
         const params = new URLSearchParams({
-          // 🔧 시스템 관리자 지원: tenantId가 undefined여도 파라미터에 포함
-          limit: get().pagination.limit.toString(),
+          limit: limit.toString(),
           offset: '0',
           ...(currentFilters.status && currentFilters.status.length > 0 && 
              !['all', ''].includes(currentFilters.status[0] || '') && { status: currentFilters.status[0] }),
           ...(currentFilters.class_id && currentFilters.class_id.length > 0 && 
-             { classId: currentFilters.class_id[0] }),
+             { class_id: currentFilters.class_id[0] }),
           ...(currentFilters.search && { search: currentFilters.search })
         })
-        
-        // tenantId는 별도로 처리 (undefined여도 추가)
-        if (tenantId) {
-          params.set('tenantId', tenantId)
-        }
 
-        const data = await apiCall<StudentListResponse>(`/api/students?${params}`)
+        const response = await apiCall<PaginatedData<Student>>(`/api/students?${params}`)
+        
+        console.log('✅ [STUDENTS-STORE] API 응답 수신:', {
+          itemsCount: response.items?.length || 0,
+          items: response.items?.slice(0, 2) || [], // 처음 2개만 로깅
+          pagination: response.pagination,
+          metadata: response.metadata
+        })
         
         set(produce((draft) => {
-          draft.students = data.students
-          draft.pagination = data.pagination
+          // 표준 API 응답에서 데이터 추출
+          draft.students = response.items || []
           draft.filters = currentFilters
           draft.loading = false
+          
+          // pagination 정보 업데이트 (안전한 기본값 설정)
+          draft.pagination = {
+            total: response.pagination?.total_count || 0,
+            limit: response.pagination?.per_page || limit,
+            offset: 0,
+            hasMore: response.pagination?.has_more || false
+          }
+          
+          console.log('🏪 [STUDENTS-STORE] 스토어 업데이트 완료:', {
+            studentsCount: draft.students.length,
+            pagination: draft.pagination,
+            loading: draft.loading
+          })
         }))
       } catch (error) {
         const errorMessage = getErrorMessage(error)
-        logError(error, { component: 'studentsStore', action: 'fetchStudents' })
+        console.error('❌ [STUDENTS-STORE] fetchStudents 실패:', error)
         set({ 
           error: errorMessage,
           loading: false 
@@ -262,20 +313,20 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
           ...(filters.status && filters.status.length > 0 && 
              filters.status[0] && filters.status[0] !== 'active' && { status: filters.status[0] }),
           ...(filters.class_id && filters.class_id.length > 0 && 
-             { classId: filters.class_id[0] }),
+             { class_id: filters.class_id[0] }),
           ...(filters.search && { search: filters.search })
         })
-        
-        // tenantId는 별도로 처리 (undefined여도 추가)
-        if (tenantId) {
-          params.set('tenantId', tenantId)
-        }
 
-        const data = await apiCall<StudentListResponse>(`/api/students?${params}`)
+        const data = await apiCall<PaginatedData<Student>>(`/api/students?${params}`)
         
         set(produce((draft) => {
-          draft.students.push(...data.students)
-          draft.pagination = data.pagination
+          draft.students.push(...data.items)
+          draft.pagination = {
+            total: data.pagination?.total_count || draft.pagination.total,
+            limit: data.pagination?.per_page || draft.pagination.limit,
+            offset: draft.pagination.offset + draft.pagination.limit,
+            hasMore: data.pagination?.has_more || false
+          }
           draft.loading = false
         }))
       } catch (error) {

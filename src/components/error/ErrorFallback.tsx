@@ -46,7 +46,7 @@ export function ErrorFallback({
   const recommendedActions = getRecommendedActions(error, context)
 
   const handleGoHome = () => {
-    router.push('/admin')
+    router.push('/main')
   }
 
   const handleReload = () => {

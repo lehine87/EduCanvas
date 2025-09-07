@@ -86,7 +86,8 @@ const sentryWebpackPluginOptions = {
   automaticVercelMonitors: true // Vercel 모니터링 자동 설정
 };
 
-// 개발/프로덕션 환경 모두에서 Sentry 활성화 (환경변수가 있을 때만)
-export default process.env.NEXT_PUBLIC_SENTRY_DSN 
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+// Sentry 임시 비활성화 (무한 컴파일 문제 해결 위해)
+// export default process.env.NEXT_PUBLIC_SENTRY_DSN 
+//   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+//   : nextConfig;
+export default nextConfig;

@@ -32,8 +32,8 @@ export interface StaffInfo {
   max_classes?: number
   teaching_experience_years?: number
   
-  // Additional custom fields
-  [key: string]: any
+  // Additional custom fields (JSON-safe types only) 
+  [key: string]: string | number | boolean | string[] | null | undefined
 }
 
 export interface StaffMember {

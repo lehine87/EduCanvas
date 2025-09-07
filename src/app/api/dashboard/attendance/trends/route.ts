@@ -14,6 +14,8 @@ import type {
   HourlyAttendanceTrend,
   AttendanceComparison 
 } from '@/types/attendance-widget'
+import type { Database } from '@/types/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // 출석 트렌드 파라미터 스키마
 const attendanceTrendsSchema = z.object({
@@ -120,7 +122,7 @@ export async function GET(request: NextRequest) {
 
 // 일별 출석 트렌드 조회 함수
 async function fetchDailyAttendanceTrends(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   tenantId: string,
   startDate: Date,
   endDate: Date
@@ -154,7 +156,14 @@ async function fetchDailyAttendanceTrends(
     total: number
   }>()
 
-  dailyData.forEach((record: any) => {
+  // 출석 기록과 학생 정보가 포함된 타입 정의 (실제 Supabase 조인 결과)
+  type AttendanceWithStudent = {
+    attendance_date: string
+    status: Database['public']['Enums']['attendance_status']
+    students: { id: string; status: string | null }
+  }
+  
+  dailyData.forEach((record: AttendanceWithStudent) => {
     const date = record.attendance_date
     if (!dateGroups.has(date)) {
       dateGroups.set(date, { present: 0, absent: 0, late: 0, total: 0 })
@@ -199,19 +208,29 @@ async function fetchDailyAttendanceTrends(
 
 // 시간별 출석 트렌드 조회 함수
 async function fetchHourlyAttendanceTrends(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   tenantId: string,
   startDate: Date,
   endDate: Date
 ): Promise<HourlyAttendanceTrend[]> {
-  // 시간별 분석을 위해 클래스의 scheduled_at과 출석 기록을 결합
+  // 시간별 분석을 위해 클래스의 스케줄 정보와 출석 기록을 결합
   const { data: hourlyData, error } = await supabase
     .from('attendances')
     .select(`
       status,
+      attendance_date,
       classes!inner(
-        scheduled_at,
-        class_memberships(student_id)
+        id,
+        name,
+        start_date,
+        class_classroom_schedules!inner(
+          day_of_week,
+          time_slots(
+            start_time,
+            end_time
+          )
+        ),
+        student_enrollments(student_id)
       )
     `)
     .eq('tenant_id', tenantId)
@@ -235,9 +254,33 @@ async function fetchHourlyAttendanceTrends(
     studentCount: Set<string>
   }>()
 
-  hourlyData.forEach((record: any) => {
-    const scheduledAt = new Date(record.classes.scheduled_at)
-    const hour = scheduledAt.getHours()
+  // 클래스 스케줄과 시간 슬롯 정보가 포함된 복잡한 join 결과 타입
+  type AttendanceWithClassSchedule = {
+    status: Database['public']['Enums']['attendance_status']
+    attendance_date: string
+    classes?: {
+      id: string
+      name: string
+      start_date: string | null
+      class_classroom_schedules?: {
+        day_of_week: Database['public']['Enums']['day_of_week']
+        time_slots?: {
+          start_time: string
+          end_time: string
+        } | null
+      }[]
+      student_enrollments: { student_id: string | null }[]
+    }
+  }
+  
+  hourlyData.forEach((record: AttendanceWithClassSchedule) => {
+    // 실제 수업 시간 계산: attendance_date + time_slot.start_time 조합
+    let hour = 9 // 기본값 (9시)
+    
+    if (record.classes?.class_classroom_schedules?.[0]?.time_slots?.start_time) {
+      const startTime = record.classes.class_classroom_schedules[0].time_slots.start_time
+      hour = parseInt(startTime.split(':')[0], 10)
+    }
     
     if (!hourGroups.has(hour)) {
       hourGroups.set(hour, {
@@ -253,6 +296,11 @@ async function fetchHourlyAttendanceTrends(
     
     if (record.status === 'present' || record.status === 'late') {
       group.presentAndLate++
+    }
+    
+    // 클래스 ID 추가 (중복 제거용)
+    if (record.classes?.id) {
+      group.classCount.add(record.classes.id)
     }
   })
 
@@ -279,7 +327,7 @@ async function fetchHourlyAttendanceTrends(
 
 // 이전 기간과의 비교 분석 함수
 async function fetchAttendanceComparison(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   tenantId: string,
   currentStartDate: Date,
   currentEndDate: Date,
@@ -315,7 +363,13 @@ async function fetchAttendanceComparison(
   }
 
   // 출석률 계산 헬퍼 함수
-  const calculateRate = (data: any[]): number => {
+  // 출석률 계산용 타입
+  type AttendanceForCalculation = {
+    status: Database['public']['Enums']['attendance_status']
+    students: { id: string; status: string | null }
+  }
+  
+  const calculateRate = (data: AttendanceForCalculation[]): number => {
     if (!data || data.length === 0) return 0
     
     const presentAndLate = data.filter(d => d.status === 'present' || d.status === 'late').length

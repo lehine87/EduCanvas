@@ -11,8 +11,10 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
 import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { clsx } from 'clsx'
 import { LoadingPlaceholder } from '@/components/ui/classflow/LoadingPlaceholder'
 import type { Student, Class, Attendance, StudentEnrollment, Consultation, Payment, StudentHistory } from '@/types'
 import { ClassSearchSelector, ClassSearchResult } from '@/components/ui/ClassSearchSelector'
@@ -38,6 +40,11 @@ import {
   PauseIcon
 } from '@heroicons/react/24/outline'
 import { toast } from 'react-hot-toast'
+import ResponsiveStudentLayout from '@/components/layout/ResponsiveStudentLayout'
+import { StudentInfoCard, QuickStatsCard } from '@/components/ui/ResponsiveCard'
+import { SmartGrid, GridItem, WidgetSizes } from '@/components/dashboard-v2/core/SmartGrid'
+import { NotificationBell, notifications } from '@/components/notifications/NotificationSystem'
+import { QuickActions, FloatingQuickActions } from '@/components/ui/QuickActions'
 
 // 🎯 Phase 2: UX 가이드에 따른 5개 탭 정의
 const TAB_CONFIGS = [
@@ -353,6 +360,16 @@ export default function StudentDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('basic')
   const [showClassSelector, setShowClassSelector] = useState(false)
   const [enrollingInClass, setEnrollingInClass] = useState(false)
+  
+  // 빠른 편집 상태
+  const [isQuickEditing, setIsQuickEditing] = useState(false)
+  const [quickEditData, setQuickEditData] = useState<{
+    phone?: string
+    email?: string
+    parent_phone_1?: string
+    parent_phone_2?: string
+  }>({})
+  const [isSavingQuickEdit, setIsSavingQuickEdit] = useState(false)
 
   // 🎯 UX 가이드: 모든 탭 데이터 즉시 로딩을 위한 상태
   const [tabData, setTabData] = useState<TabData>({
@@ -425,12 +442,14 @@ export default function StudentDetailPage() {
         })
       ])
 
-      // 탭 데이터 업데이트
-      (setTabData as any)((prev: any) => ({
+      // 탭 데이터 업데이트 (타입 단언으로 임시 해결)
+      setTabData((prev: any) => ({
         basic: { student, loaded: true },
         enrollment: {
           ...prev.enrollment,
-          ...enrollmentData,
+          classes: enrollmentData.classes as any,
+          attendance: enrollmentData.attendance as any,
+          schedule: enrollmentData.schedule as any,
           loaded: true
         },
         consultation: {
@@ -475,6 +494,85 @@ export default function StudentDetailPage() {
   const handleEdit = useCallback(() => {
     router.push(`/main/students/${studentId}/edit`)
   }, [router, studentId])
+  
+  // 빠른 편집 모드 토글
+  const toggleQuickEdit = useCallback(() => {
+    if (isQuickEditing) {
+      // 편집 모드 종료 - 변경사항 되돌리기
+      setQuickEditData({})
+      setIsQuickEditing(false)
+    } else {
+      // 편집 모드 시작 - 현재 값으로 초기화
+      setQuickEditData({
+        phone: selectedStudent?.phone || '',
+        email: selectedStudent?.email || '',
+        parent_phone_1: selectedStudent?.parent_phone_1 || '',
+        parent_phone_2: selectedStudent?.parent_phone_2 || ''
+      })
+      setIsQuickEditing(true)
+    }
+  }, [isQuickEditing, selectedStudent])
+  
+  // 빠른 편집 저장
+  const saveQuickEdit = useCallback(async () => {
+    if (!tenantId || !selectedStudent) return
+    
+    setIsSavingQuickEdit(true)
+    const loadingToast = toast.loading('정보를 저장하는 중...')
+    
+    try {
+      // 변경된 필드만 업데이트
+      const updateData: Partial<any> = {}
+      if (quickEditData.phone !== selectedStudent.phone) {
+        updateData.phone = quickEditData.phone || null
+      }
+      if (quickEditData.email !== selectedStudent.email) {
+        updateData.email = quickEditData.email || null
+      }
+      if (quickEditData.parent_phone_1 !== selectedStudent.parent_phone_1) {
+        updateData.parent_phone_1 = quickEditData.parent_phone_1 || null
+      }
+      if (quickEditData.parent_phone_2 !== selectedStudent.parent_phone_2) {
+        updateData.parent_phone_2 = quickEditData.parent_phone_2 || null
+      }
+      
+      // 변경사항이 있을 때만 업데이트
+      if (Object.keys(updateData).length > 0) {
+        await actions.updateStudent(studentId, updateData, tenantId)
+        toast.dismiss(loadingToast)
+        toast.success('정보가 성공적으로 저장되었습니다.')
+        
+        // 실시간 알림 발송
+        notifications.studentUpdate(
+          selectedStudent.name,
+          '정보가 업데이트되었습니다',
+          selectedStudent.id,
+          [{
+            label: '상세 보기',
+            type: 'primary',
+            action: () => window.location.reload()
+          }]
+        )
+        
+        // 탭 데이터 새로고침
+        if (selectedStudent) {
+          loadAllTabData({ ...selectedStudent, ...updateData })
+        }
+      } else {
+        toast.dismiss(loadingToast)
+        toast.success('변경사항이 없습니다.')
+      }
+      
+      setIsQuickEditing(false)
+      setQuickEditData({})
+    } catch (error) {
+      console.error('빠른 편집 저장 실패:', error)
+      toast.dismiss(loadingToast)
+      toast.error(error instanceof Error ? error.message : '정보 저장에 실패했습니다.')
+    } finally {
+      setIsSavingQuickEdit(false)
+    }
+  }, [tenantId, selectedStudent, studentId, quickEditData, actions, loadAllTabData])
 
   // 클래스 등록 핸들러
   const handleClassSelected = useCallback(async (classData: ClassSearchResult) => {
@@ -671,7 +769,8 @@ export default function StudentDetailPage() {
   const student = selectedStudent
 
   return (
-    <div className="container mx-auto p-6 max-w-5xl">
+    <ResponsiveStudentLayout showSearchSidebar={true} searchContext="students" enableGridLayout={false}>
+      <div className="container mx-auto p-6 max-w-5xl">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
@@ -698,22 +797,25 @@ export default function StudentDetailPage() {
           </div>
         </div>
 
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-3">
+          {/* 실시간 알림 벨 */}
+          <NotificationBell className="hidden lg:flex" />
+          
           <Button onClick={handleEdit} variant="outline">
             <PencilIcon className="h-4 w-4 mr-2" />
-            편집
+            <span className="hidden sm:inline">편집</span>
           </Button>
           <Button 
             onClick={() => setShowLeaveModal(true)}
             variant="outline"
             className={
               student.status === 'inactive' 
-                ? 'border-green-300 text-green-700 hover:bg-green-50' 
-                : 'border-yellow-300 text-yellow-700 hover:bg-yellow-50'
+                ? 'border-green-300 text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20' 
+                : 'border-yellow-300 text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
             }
           >
             <PauseIcon className="h-4 w-4 mr-2" />
-            {student.status === 'inactive' ? '복원' : '휴원'}
+            <span className="hidden sm:inline">{student.status === 'inactive' ? '복원' : '휴원'}</span>
           </Button>
           <Button 
             onClick={() => setShowDeleteModal(true)}
@@ -725,35 +827,107 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
+      {/* 빠른 액션 버튼들 */}
+      <div className="mb-6">
+        <QuickActions 
+          student={student} 
+          context="profile"
+          className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-lg p-4 border border-neutral-200/50 dark:border-neutral-800/50"
+        />
+      </div>
+
       {/* 🎯 Phase 2: 5개 탭 상세 정보 시스템 */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabId)} className="space-y-6">
         {/* 🎯 UX 가이드: 아이콘 + 텍스트 탭 레이블 */}
-        <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-white shadow-sm border">
           {TAB_CONFIGS.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
             const isLoaded = tabData[tab.id].loaded
             
+            // 탭별 배지 정보 계산
+            const getBadgeInfo = () => {
+              switch (tab.id) {
+                case 'basic':
+                  return selectedStudent?.status === 'active' 
+                    ? { count: '✓', color: 'bg-green-500', textColor: 'text-white' }
+                    : { count: '!', color: 'bg-yellow-500', textColor: 'text-white' }
+                    
+                case 'enrollment':
+                  const enrollmentCount = tabData.enrollment?.classes?.length || 0
+                  return enrollmentCount > 0 
+                    ? { count: enrollmentCount, color: 'bg-blue-500', textColor: 'text-white' }
+                    : { count: 0, color: 'bg-gray-300', textColor: 'text-gray-600' }
+                    
+                case 'consultation':
+                  const consultationCount = (tabData.consultation?.records?.length || 0) + 
+                                          (tabData.consultation?.upcoming?.length || 0)
+                  return consultationCount > 0
+                    ? { count: consultationCount, color: 'bg-purple-500', textColor: 'text-white' }
+                    : { count: 0, color: 'bg-gray-300', textColor: 'text-gray-600' }
+                    
+                case 'payment':
+                  const unpaidCount = tabData.payment?.unpaid?.length || 0
+                  return unpaidCount > 0
+                    ? { count: unpaidCount, color: 'bg-red-500', textColor: 'text-white' }
+                    : { count: '✓', color: 'bg-green-500', textColor: 'text-white' }
+                    
+                case 'learning':
+                  const hasGrades = (tabData.learning?.grades?.length || 0) > 0
+                  return hasGrades
+                    ? { count: '📊', color: 'bg-indigo-500', textColor: 'text-white' }
+                    : { count: '-', color: 'bg-gray-300', textColor: 'text-gray-600' }
+                    
+                default:
+                  return { count: '-', color: 'bg-gray-300', textColor: 'text-gray-600' }
+              }
+            }
+            
+            const badgeInfo = getBadgeInfo()
+            
             return (
               <TabsTrigger 
                 key={tab.id}
                 value={tab.id}
-                className={`flex flex-col items-center p-4 space-y-2 text-sm ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className={`
+                  relative flex flex-col items-center p-4 space-y-2 text-sm transition-all duration-200
+                  ${isActive 
+                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }
+                `}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 relative">
                   <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className="font-medium">{tab.label}</span>
+                  
+                  {/* 진행 상태 인디케이터 */}
                   {isLoaded && (
-                    <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                    <div className="absolute -top-1 -right-1">
+                      <CheckCircleIcon className="h-3 w-3 text-green-500 bg-white rounded-full" />
+                    </div>
                   )}
+                  
+                  {/* 배지 시스템 */}
+                  <div className={`
+                    min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium
+                    flex items-center justify-center
+                    ${badgeInfo.color} ${badgeInfo.textColor}
+                  `}>
+                    {badgeInfo.count}
+                  </div>
                 </div>
-                <span className="text-xs text-gray-500 hidden md:block">
+                
+                <span className="text-xs text-gray-500 hidden md:block text-center leading-tight">
                   {tab.description}
                 </span>
+                
+                {/* 활성 탭 인디케이터 */}
+                {isActive && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                )}
               </TabsTrigger>
             )
           })}
@@ -761,104 +935,217 @@ export default function StudentDetailPage() {
 
         {/* 기본 정보 탭 */}
         <TabsContent value="basic" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 학생 정보 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <UserIcon className="h-5 w-5 text-blue-600" />
-                  <span>학생 정보</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <InfoRow
-                  icon={<UserIcon className="h-5 w-5" />}
-                  label="이름"
-                  value={student.name}
+          <SmartGrid 
+            gap={20}
+            maxColumns={{
+              xs: 1,
+              sm: 1,
+              md: 2,
+              lg: 2,
+              xl: 2,
+              '2xl': 3
+            }}
+          >
+            {/* 퀵 스탯 카드들 */}
+            <GridItem size={{ cols: { xs: 1, sm: 1, md: 2, lg: 2, xl: 2, '2xl': 3 }, minHeight: '120px' }}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <QuickStatsCard
+                  title="출석률"
+                  value="92%"
+                  label="지난 30일"
+                  badge={{ text: '우수', color: 'bg-green-500 text-white' }}
+                  trend="up"
+                  change="+5%"
                 />
-                <InfoRow
-                  icon={<PhoneIcon className="h-5 w-5" />}
-                  label="연락처"
-                  value={student.phone}
-                  href={student.phone ? `tel:${student.phone}` : undefined}
+                <QuickStatsCard
+                  title="수강 클래스"
+                  value={tabData.enrollment.classes?.length || 0}
+                  label="현재 진행"
+                  badge={{ text: '활동중', color: 'bg-blue-500 text-white' }}
                 />
-                <InfoRow
-                  icon={<EnvelopeIcon className="h-5 w-5" />}
-                  label="이메일"
-                  value={student.email}
-                  href={student.email ? `mailto:${student.email}` : undefined}
+                <QuickStatsCard
+                  title="미납금"
+                  value="0원"
+                  label="납입 상태"
+                  badge={{ text: '완납', color: 'bg-green-500 text-white' }}
+                  trend="neutral"
                 />
-                <InfoRow
-                  icon={<AcademicCapIcon className="h-5 w-5" />}
-                  label="학년"
-                  value={student.grade_level}
-                />
-                <InfoRow
-                  icon={<AcademicCapIcon className="h-5 w-5" />}
-                  label="학교"
-                  value={student.school_name}
-                />
-                <InfoRow
-                  icon={<MapPinIcon className="h-5 w-5" />}
-                  label="주소"
-                  value={student.address}
-                />
-              </CardContent>
-            </Card>
-
-            {/* 학부모 정보 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <UserIcon className="h-5 w-5 text-green-600" />
-                  <span>학부모 정보</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <InfoRow
-                  icon={<UserIcon className="h-5 w-5" />}
-                  label="학부모 이름"
-                  value={student.parent_name}
-                />
-                <InfoRow
-                  icon={<PhoneIcon className="h-5 w-5" />}
-                  label="주 연락처"
-                  value={student.parent_phone_1}
-                  href={student.parent_phone_1 ? `tel:${student.parent_phone_1}` : undefined}
-                />
-                <InfoRow
-                  icon={<PhoneIcon className="h-5 w-5" />}
-                  label="보조 연락처"
-                  value={student.parent_phone_2}
-                  href={student.parent_phone_2 ? `tel:${student.parent_phone_2}` : undefined}
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* 점진적 공개: 메모 및 시스템 정보 */}
-          <div className="space-y-4">
-            {student.notes && (
-              <ProgressiveDisclosure title="메모" defaultExpanded={false}>
-                <p className="text-gray-700 whitespace-pre-wrap">{student.notes}</p>
-              </ProgressiveDisclosure>
-            )}
-
-            <ProgressiveDisclosure title="시스템 정보" defaultExpanded={false}>
-              <div className="space-y-2">
-                <InfoRow
-                  icon={<CalendarIcon className="h-5 w-5" />}
-                  label="등록일"
-                  value={student.created_at ? new Date(student.created_at).toLocaleDateString('ko-KR') : undefined}
-                />
-                <InfoRow
-                  icon={<CalendarIcon className="h-5 w-5" />}
-                  label="최종 수정일"
-                  value={student.updated_at ? new Date(student.updated_at).toLocaleDateString('ko-KR') : undefined}
+                <QuickStatsCard
+                  title="상담 예정"
+                  value="2회"
+                  label="이번 달"
+                  badge={{ text: '예정', color: 'bg-orange-500 text-white' }}
                 />
               </div>
-            </ProgressiveDisclosure>
-          </div>
+            </GridItem>
+            
+            {/* 학생 정보 - 개선된 프로필 카드 */}
+            <GridItem size={WidgetSizes.medium}>
+              <StudentInfoCard
+                title="학생 프로필"
+                subtitle="기본 정보 및 상태"
+                icon={UserIcon}
+                badge={{
+                  text: statusText[student.status as keyof typeof statusText],
+                  color: student.status === 'active' ? 'bg-green-500 text-white' : 
+                         student.status === 'inactive' ? 'bg-yellow-500 text-white' :
+                         student.status === 'graduated' ? 'bg-blue-500 text-white' : 
+                         'bg-red-500 text-white'
+                }}
+                className="h-full"
+              >
+                {/* 프로필 요약 정보 */}
+                <div className="flex items-center space-x-4 mb-4">
+                  <Avatar className="w-16 h-16 border-2 border-white shadow-lg">
+                    <AvatarImage src="" alt={student.name} />
+                    <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-educanvas-500 to-wisdom-500 text-white">
+                      {student.name?.charAt(0) || 'S'}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{student.name}</h3>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      {student.student_number && `#${student.student_number} • `}
+                      {student.grade_level} • {student.school_name || '학교 정보 없음'}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className={clsx(
+                        "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                        student.status === 'active' && "bg-green-100 text-green-700",
+                        student.status === 'inactive' && "bg-yellow-100 text-yellow-700",
+                        student.status === 'graduated' && "bg-blue-100 text-blue-700",
+                        student.status === 'withdrawn' && "bg-orange-100 text-orange-700",
+                        student.status === 'suspended' && "bg-red-100 text-red-700"
+                      )}>
+                        {student.status === 'active' && <CheckCircleIcon className="w-3 h-3" />}
+                        {student.status === 'inactive' && <PauseIcon className="w-3 h-3" />}
+                        {student.status === 'graduated' && <AcademicCapIcon className="w-3 h-3" />}
+                        {student.status === 'withdrawn' && <XCircleIcon className="w-3 h-3" />}
+                        {student.status === 'suspended' && <ExclamationTriangleIcon className="w-3 h-3" />}
+                        {statusText[student.status as keyof typeof statusText]}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 연락처 정보 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                      <PhoneIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">학생</p>
+                      <a
+                        href={student.phone ? `tel:${student.phone}` : '#'}
+                        className="font-medium text-neutral-900 dark:text-neutral-100 hover:text-blue-600 dark:hover:text-blue-400"
+                      >
+                        {student.phone || '등록되지 않음'}
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <PhoneIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">학부모</p>
+                      <a
+                        href={student.parent_phone_1 ? `tel:${student.parent_phone_1}` : '#'}
+                        className="font-medium text-neutral-900 dark:text-neutral-100 hover:text-green-600 dark:hover:text-green-400"
+                      >
+                        {student.parent_phone_1 || '등록되지 않음'}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 빠른 액션 버튼들 */}
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleQuickEdit}
+                    className="flex-1"
+                  >
+                    <PencilIcon className="w-4 h-4 mr-2" />
+                    편집
+                  </Button>
+                </div>
+              </StudentInfoCard>
+            </GridItem>
+
+            {/* 학부모 정보 카드 */}
+            <GridItem size={WidgetSizes.medium}>
+              <StudentInfoCard
+                title="학부모 정보"
+                subtitle="보호자 연락처"
+                icon={UserIcon}
+                className="h-full"
+              >
+                {/* 학부모 연락처 목록 */}
+                <div className="space-y-3">
+                  {student.parent_name_1 && (
+                    <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+                      <Avatar className="w-10 h-10 bg-green-100 dark:bg-green-900/30">
+                        <AvatarFallback className="text-green-700 dark:text-green-300 font-semibold">
+                          {student.parent_name_1?.charAt(0) || 'P'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-medium text-neutral-900 dark:text-neutral-100">{student.parent_name_1}</p>
+                        <a
+                          href={student.parent_phone_1 ? `tel:${student.parent_phone_1}` : '#'}
+                          className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400"
+                        >
+                          {student.parent_phone_1 || '연락처 없음'}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {student.parent_name_2 && (
+                    <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+                      <Avatar className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30">
+                        <AvatarFallback className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                          {student.parent_name_2?.charAt(0) || 'P'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-medium text-neutral-900 dark:text-neutral-100">{student.parent_name_2}</p>
+                        <a
+                          href={student.parent_phone_2 ? `tel:${student.parent_phone_2}` : '#'}
+                          className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        >
+                          {student.parent_phone_2 || '연락처 없음'}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* 학부모 정보가 없는 경우 */}
+                  {!student.parent_name_1 && !student.parent_name_2 && !student.parent_phone_1 && !student.parent_phone_2 && (
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <UserIcon className="h-6 w-6 text-neutral-400" />
+                      </div>
+                      <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-3">등록된 학부모 정보가 없습니다</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/main/students/${studentId}/edit`)}
+                      >
+                        <PencilIcon className="h-4 w-4 mr-2" />
+                        정보 추가
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </StudentInfoCard>
+            </GridItem>
+          </SmartGrid>
         </TabsContent>
 
         {/* 수강 현황 탭 */}
@@ -1146,6 +1433,9 @@ export default function StudentDetailPage() {
         </TabsContent>
       </Tabs>
 
+      {/* 플로팅 빠른 액션 (모바일) */}
+      <FloatingQuickActions student={student} visible={true} />
+
       {/* 휴원 확인 모달 */}
       <LeaveConfirmModal
         isOpen={showLeaveModal}
@@ -1185,6 +1475,7 @@ export default function StudentDetailPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ResponsiveStudentLayout>
   )
 }

@@ -20,10 +20,11 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"  // 명시적 기본값: 라이트 모드
+      enableSystem={false}  // 시스템 다크모드 자동 감지 비활성화
       disableTransitionOnChange
       storageKey="educanvas-theme"
+      themes={['light', 'dark']}  // 허용되는 테마 명시
       {...props}
     >
       {children}

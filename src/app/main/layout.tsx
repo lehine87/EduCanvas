@@ -10,13 +10,12 @@ interface MainLayoutWrapperProps {
 
 /**
  * 메인 대시보드 레이아웃 래퍼
- * T-V2-005: MainSidebar 대신 TabNavigation + SearchSidebar 조합 사용
- * 권한 기반 동적 탭 메뉴 + 컨텍스트별 검색 사이드바
+ * 최적화된 MainLayout 사용
  */
 export default function MainLayoutWrapper({ children }: MainLayoutWrapperProps) {
   return (
     <>
-      {/* 메인 레이아웃 */}
+      {/* 최적화된 메인 레이아웃 */}
       <MainLayout>
         {children}
       </MainLayout>
@@ -42,6 +41,13 @@ export default function MainLayoutWrapper({ children }: MainLayoutWrapperProps) 
           },
         }}
       />
+      
+      {/* 개발 환경 디버깅 표시 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm">
+          🔧 최적화된 MainLayout 사용 중
+        </div>
+      )}
     </>
   )
 }

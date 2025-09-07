@@ -56,7 +56,7 @@ const updateCoursePackageSchema = z.object({
   price: z.number().min(0, '가격은 0 이상이어야 합니다'),
   original_price: z.number().optional(),
   billing_type: z.enum(['monthly', 'sessions', 'hours', 'package', 'drop_in']),
-  currency: z.string().default('KRW'),
+  currency: z.string(),
   class_id: z.string().optional(),
   
   // 기간/횟수 관련 - 조건부 필수
@@ -67,16 +67,16 @@ const updateCoursePackageSchema = z.object({
   
   // 접근 제어
   max_enrollments: z.number().optional(),
-  is_active: z.boolean().default(true),
-  is_featured: z.boolean().default(false),
+  is_active: z.boolean(),
+  is_featured: z.boolean(),
   available_from: z.string().optional(),
   available_until: z.string().optional(),
   
   // 추가 기능
-  download_allowed: z.boolean().default(false),
-  offline_access: z.boolean().default(false),
+  download_allowed: z.boolean(),
+  offline_access: z.boolean(),
   video_access_days: z.number().optional(),
-  display_order: z.number().default(0)
+  display_order: z.number()
 })
 
 type UpdateCoursePackageFormData = z.infer<typeof updateCoursePackageSchema>
@@ -109,12 +109,22 @@ export const CoursePackageDetailSheet: React.FC<CoursePackageDetailSheetProps> =
       name: '',
       description: '',
       price: 0,
-      billing_type: 'monthly',
+      original_price: 0,
+      billing_type: 'monthly' as const,
       currency: 'KRW',
+      class_id: '',
+      months: 0,
+      sessions: 0,
+      hours: 0,
+      validity_days: 0,
+      max_enrollments: 0,
       is_active: true,
       is_featured: false,
+      available_from: '',
+      available_until: '',
       download_allowed: false,
       offline_access: false,
+      video_access_days: 0,
       display_order: 0
     }
   })
@@ -550,8 +560,10 @@ export const CoursePackageDetailSheet: React.FC<CoursePackageDetailSheetProps> =
                   id="name"
                   placeholder="예: 고등부 수학 심화과정"
                   {...register('name')}
-                  error={errors.name?.message}
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                )}
               </div>
 
               {/* 과정 설명 */}
@@ -637,8 +649,10 @@ export const CoursePackageDetailSheet: React.FC<CoursePackageDetailSheetProps> =
                     min="0"
                     placeholder="0"
                     {...register('price', { valueAsNumber: true })}
-                    error={errors.price?.message}
                   />
+                  {errors.price && (
+                    <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                  )}
                 </div>
 
                 {/* 정가 */}

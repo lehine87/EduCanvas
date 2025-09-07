@@ -77,7 +77,7 @@ export default function OnboardingPage() {
           if (profile.status === 'pending_approval') {
             router.push('/pending-approval')
           } else if (profile.status === 'active') {
-            router.push('/admin')
+            router.push('/main')
           }
           return
         }

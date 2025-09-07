@@ -6,7 +6,7 @@ export interface WidgetConfig {
   id: string
   component: React.ComponentType<any>
   props?: Record<string, any>
-  size: 'small' | 'medium' | 'large' | 'wide' | 'tall'
+  size: 'small' | 'medium' | 'large' | 'wide' | 'tall' | 'extra-wide'
   priority: number
   roleCategories: string[]  // ['admin', 'instructor', 'staff'] 등 역할 카테고리
   permissions?: string[]    // ['students.read', 'payments.create'] 등 권한 기반
@@ -98,14 +98,14 @@ export const CategoryWidgetPriorities: Record<string, Record<string, number>> = 
     'revenue-analytics': 1,
     'student-overview': 2,
     'critical-alerts': 3,
-    'attendance-check': 4,
+    'attendance-realtime': 4, // T-V2-008 실시간 출석 위젯
     'quick-actions': 5,
     'ai-insights': 6
   },
   
   instructor: {
     // 강사: 교육 활동 중심
-    'attendance-check': 1,
+    'attendance-realtime': 1, // T-V2-008 실시간 출석 위젯 (강사 최우선)
     'student-overview': 2,
     'critical-alerts': 3,
     'quick-actions': 4,
@@ -117,7 +117,7 @@ export const CategoryWidgetPriorities: Record<string, Record<string, number>> = 
     // 직원: 운영 업무 중심
     'quick-actions': 1,
     'critical-alerts': 2,
-    'attendance-check': 3,
+    'attendance-realtime': 3, // T-V2-008 실시간 출석 위젯
     'student-overview': 4,
     'ai-insights': 5,
     'revenue-analytics': 6
@@ -126,7 +126,7 @@ export const CategoryWidgetPriorities: Record<string, Record<string, number>> = 
   viewer: {
     // 뷰어: 조회 중심
     'student-overview': 1,
-    'attendance-check': 2,
+    'attendance-realtime': 2, // T-V2-008 실시간 출석 위젯
     'ai-insights': 3
   }
 }
@@ -138,6 +138,12 @@ export function filterWidgetsByRole(
 ): WidgetConfig[] {
   const priorities = CategoryWidgetPriorities[userRoleInfo.roleCategory] || {}
   
+  console.log('🔍 [filterWidgetsByRole] 필터링 세부사항:', {
+    roleCategory: userRoleInfo.roleCategory,
+    availablePriorities: priorities,
+    userPermissions: userRoleInfo.permissions
+  })
+  
   return widgets
     .filter(widget => {
       // 1. 역할 카테고리 확인
@@ -146,6 +152,14 @@ export function filterWidgetsByRole(
       // 2. 권한 확인 (옵션)
       const hasPermissions = !widget.permissions || 
         widget.permissions.some(permission => userRoleInfo.permissions.includes(permission))
+      
+      console.log(`🔍 [filterWidgetsByRole] 위젯 "${widget.id}" 검사:`, {
+        roleCategories: widget.roleCategories,
+        hasRoleCategory,
+        requiredPermissions: widget.permissions,
+        hasPermissions,
+        willInclude: hasRoleCategory && hasPermissions
+      })
       
       return hasRoleCategory && hasPermissions
     })
@@ -200,7 +214,8 @@ export function adaptWidgetSize(
       'large': 'medium', 
       'medium': 'small',
       'small': 'small',
-      'tall': 'medium'
+      'tall': 'medium',
+      'extra-wide': 'large'
     } as const
     
     return sizeMapping[baseSize] || baseSize
@@ -237,7 +252,8 @@ export function optimizeWidgetLayout(
       medium: Math.min(2, maxCols),
       large: Math.min(3, maxCols), 
       wide: maxCols,
-      tall: Math.min(2, maxCols)
+      tall: Math.min(2, maxCols),
+      'extra-wide': maxCols
     }
     
     const colSpan = colSpans[adaptedSize]
@@ -285,7 +301,7 @@ export function getRoleColors(roleCategory: string) {
     }
   }
   
-  return colorMappings[roleCategory] || colorMappings.staff
+  return colorMappings[roleCategory as keyof typeof colorMappings] || colorMappings.staff
 }
 
 // 역할명으로부터 카테고리 추론
@@ -343,8 +359,30 @@ export function useRoleAdapter(userRoleInfo: UserRoleInfo | null, widgets: Widge
   
   // 역할별 위젯 필터링 및 최적화
   const adaptedWidgets = React.useMemo(() => {
+    console.log('🔍 [RoleAdapter] 위젯 필터링 시작:', {
+      totalWidgets: widgets.length,
+      widgetIds: widgets.map(w => w.id),
+      userRole: roleInfo.roleName,
+      roleCategory: roleInfo.roleCategory,
+      userPermissions: roleInfo.permissions
+    })
+    
     const filteredWidgets = filterWidgetsByRole(widgets, roleInfo)
-    return optimizeWidgetLayout(filteredWidgets, roleInfo.roleCategory, screenSize)
+    
+    console.log('🔍 [RoleAdapter] 필터링 결과:', {
+      filteredCount: filteredWidgets.length,
+      filteredIds: filteredWidgets.map(w => w.id),
+      screenSize
+    })
+    
+    const optimizedWidgets = optimizeWidgetLayout(filteredWidgets, roleInfo.roleCategory, screenSize)
+    
+    console.log('🔍 [RoleAdapter] 최종 위젯 배치:', {
+      finalCount: optimizedWidgets.length,
+      finalWidgets: optimizedWidgets.map(w => ({ id: w.id, priority: w.priority, size: w.size }))
+    })
+    
+    return optimizedWidgets
   }, [widgets, roleInfo, screenSize])
   
   // 역할별 설정

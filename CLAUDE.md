@@ -45,6 +45,7 @@ project_phase: "v5-staff-integration"
 docs/quick-reference/component-cheatsheet.md      # 🎨 Top 10 컴포넌트 + 스타일링
 docs/quick-reference/api-patterns-cheatsheet.md   # 🚀 CRUD API + 인증 패턴
 docs/quick-reference/troubleshooting-cheatsheet.md # 🔧 TypeScript/DB/환경 문제
+docs/guides/api-development/industry-standard-api-implementation-guide.md # 🚀 업계 표준 API 구현 완전 메뉴얼
 ```
 
 **⚡ Tier 2: 스마트 검색 방식**  
@@ -60,6 +61,9 @@ grep -A 20 "Form.*validation" docs/guides/components/component-usage-guide.md
 
 ### 🚀 API 개발 시
 ```bash
+# 업계 표준 API 구현 메뉴얼 (우선 확인) ✨
+docs/guides/api-development/industry-standard-api-implementation-guide.md
+
 # 특정 API 패턴만 검색
 grep -A 15 "POST.*route" docs/guides/ui-development/Quick-API-Reference.md
 grep -A 10 "RLS.*정책" docs/guides/database/supabase-connection-guide.md
@@ -235,3 +239,4 @@ npm run dev
 ---
 
 **💡 더 자세한 내용이 필요할 때만 위의 문서들을 참조하세요.**
+- 파일이 복잡하여 파일 재작성이 필요한 경우 반드시 백업본을 만들어놓을 것.

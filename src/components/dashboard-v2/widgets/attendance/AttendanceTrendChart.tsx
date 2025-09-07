@@ -55,14 +55,21 @@ export function AttendanceTrendChart({
     }
   }, [data])
 
-  // 다크모드 색상 설정
+  // 다크모드 색상 설정 (EduCanvas 디자인 토큰 기반)
   const colors = {
-    primary: '#10b981', // success-500
-    secondary: '#3b82f6', // blue-500
+    // 출석률 라인 색상 (브랜드 색상 사용)
+    primary: isDark ? '#34d399' : '#10b981', // success-400 : success-500
+    secondary: isDark ? '#60a5fa' : '#3b82f6', // blue-400 : blue-500
+    // 그리드 및 UI 색상
     grid: isDark ? '#374151' : '#f3f4f6', // neutral-700 : neutral-100
     text: isDark ? '#d1d5db' : '#6b7280', // neutral-300 : neutral-500
+    textMuted: isDark ? '#9ca3af' : '#9ca3af', // neutral-400
     background: isDark ? '#1f2937' : '#ffffff', // neutral-800 : white
-    average: '#f59e0b' // amber-500
+    // 평균선 색상
+    average: isDark ? '#fbbf24' : '#f59e0b', // warning-400 : warning-500
+    // 그라데이션 영역
+    gradientStart: isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)',
+    gradientEnd: isDark ? 'rgba(52, 211, 153, 0.05)' : 'rgba(16, 185, 129, 0.05)'
   }
 
   // 시간 라벨 포맷 함수
@@ -117,7 +124,7 @@ export function AttendanceTrendChart({
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
+        ease: "easeOut" as const
       }
     }
   }

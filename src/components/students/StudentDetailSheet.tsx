@@ -167,12 +167,12 @@ export function StudentDetailSheet({
   }, [student, onDelete, onOpenChange])
 
   // 입력값 변경 처리
-  const handleInputChange = useCallback((field: keyof Student, value: any) => {
+  const handleInputChange = useCallback((field: keyof Student, value: Student[keyof Student]) => {
     setEditedData(prev => ({ ...prev, [field]: value }))
   }, [])
 
   // 상태별 스타일 및 라벨 가져오기
-  const getStatusBadge = (status: StudentStatus) => {
+  const getStatusBadge = (status: StudentStatus | null) => {
     const statusConfig = {
       active: { className: 'bg-green-100 text-green-800', label: '활동중' },
       inactive: { className: 'bg-gray-100 text-gray-800', label: '비활성' },
@@ -180,7 +180,7 @@ export function StudentDetailSheet({
       suspended: { className: 'bg-red-100 text-red-800', label: '정지' },
       graduated: { className: 'bg-blue-100 text-blue-800', label: '졸업' }
     }
-    const config = statusConfig[status] || { className: 'bg-gray-100 text-gray-800', label: status }
+    const config = statusConfig[status as keyof typeof statusConfig] || { className: 'bg-gray-100 text-gray-800', label: status || '미정' }
     return <Badge className={config.className}>{config.label}</Badge>
   }
 

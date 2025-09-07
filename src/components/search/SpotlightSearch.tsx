@@ -32,6 +32,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
       }, 100)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [isOpen])
 
   // Reset state when modal closes
@@ -125,16 +126,16 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
     setTimeout(() => {
       switch (result.type) {
         case 'student':
-          window.location.href = `/students/${result.id}`
+          window.location.href = `/main/students/${result.id}`
           break
         case 'class':
-          window.location.href = `/classes/${result.id}`
+          window.location.href = `/main/classes/${result.id}`
           break
         case 'staff':
-          window.location.href = `/staff/${result.id}`
+          window.location.href = `/main/staff/${result.id}`
           break
         case 'schedule':
-          window.location.href = `/schedule/${result.id}`
+          window.location.href = `/main/schedule/${result.id}`
           break
       }
     }, 100)

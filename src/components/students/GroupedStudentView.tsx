@@ -88,8 +88,8 @@ export function GroupedStudentView({
         }
       case 'school':
         return {
-          key: student.school || 'none',
-          label: student.school || '학교 없음',
+          key: student.school_name || 'none',
+          label: student.school_name || '학교 없음',
           metadata: {
             avatar: '🏫',
             color: 'blue'

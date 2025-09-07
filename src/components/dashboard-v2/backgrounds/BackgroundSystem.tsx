@@ -33,29 +33,29 @@ export interface BackgroundSystemProps extends React.HTMLAttributes<HTMLDivEleme
   children?: React.ReactNode
 }
 
-// Static class mappings for Tailwind v4 compatibility
+// Static class mappings for Tailwind v4 compatibility (라이트모드 배경 밝게 수정)
 const staticClasses = {
   glassmorphism: {
-    base: 'w-full h-full bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950',
+    base: 'w-full h-full bg-gradient-to-br from-white via-slate-50/30 to-blue-50/50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950',
     overlay1: 'absolute inset-0',
     overlay2: 'absolute inset-0'
   },
   dots: {
-    base: 'w-full h-full bg-gradient-to-br from-neutral-50 to-blue-50 dark:from-neutral-900 dark:to-blue-900',
+    base: 'w-full h-full bg-gradient-to-br from-white to-slate-50/40 dark:from-neutral-900 dark:to-blue-900',
     overlay1: 'absolute inset-0'
   },
   grid: {
-    base: 'w-full h-full bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900',
+    base: 'w-full h-full bg-gradient-to-br from-white to-neutral-50/60 dark:from-slate-900 dark:to-gray-900',
     overlay1: 'absolute inset-0'
   },
   waves: {
-    base: 'w-full h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950',
+    base: 'w-full h-full bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950',
     overlay1: 'absolute inset-0 animate-pulse',
     overlay2: 'absolute inset-0',
     overlay3: 'absolute inset-0'
   },
   morphing: {
-    base: 'w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-purple-950 dark:via-pink-950 dark:to-indigo-950',
+    base: 'w-full h-full bg-gradient-to-br from-white via-purple-50/20 to-pink-50/30 dark:from-purple-950 dark:via-pink-950 dark:to-indigo-950',
     overlay1: 'absolute inset-0',
     overlay2: 'absolute inset-0',
     overlay3: 'absolute inset-0'
@@ -365,7 +365,7 @@ export const BackgroundSystem = forwardRef<HTMLDivElement, BackgroundSystemProps
                     position: 'absolute',
                     inset: 0,
                     ...layer.style,
-                    opacity: layer.style?.opacity || 1
+                    opacity: (layer.style && 'opacity' in layer.style) ? layer.style.opacity : 1
                   }}
                 />
               )

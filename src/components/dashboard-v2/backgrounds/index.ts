@@ -1,28 +1,30 @@
-// 배경 시스템 통합 Export
-export { BackgroundSystem, backgroundPresets } from './BackgroundSystem'
+// 배경 시스템 단순화 Export (순환 참조 방지)
+
+// 핵심 시스템만 export (업계 표준)
+export { UnifiedBackgroundSystem } from './UnifiedBackgroundSystem'
+export { useBackgroundConfig } from './useBackgroundConfig'
+export { BackgroundSystem } from './BackgroundSystem'
+
+// 타입 정의
 export type { 
-  BackgroundSystemProps, 
   BackgroundConfig, 
-  BackgroundType, 
-  BackgroundPattern 
+  BackgroundType 
 } from './BackgroundSystem'
 
-export { BackgroundSettings } from './BackgroundSettings'
-export type { BackgroundSettingsProps } from './BackgroundSettings'
+export type { 
+  UnifiedBackgroundSystemProps
+} from './UnifiedBackgroundSystem'
 
-export { useBackgroundConfig } from './useBackgroundConfig'
+export type {
+  UnifiedBackgroundConfig
+} from './unifiedBackgroundConfig'
 
+// 유틸리티 함수들 export
 export { 
-  getPatternStyle, 
-  getDarkPatternStyle, 
-  getThemedPatternStyle, 
-  getCardShadowStyle,
   getGlowShadowStyle,
   getCompleteCardShadow,
-  BACKGROUND_CONFIG,
-  CARD_SHADOW_CONFIG 
+  BACKGROUND_CONFIG as BackgroundSettings
 } from './backgroundStyles'
-export type { BackgroundPatternType, PatternStyle } from './backgroundStyles'
 
-// 편의성을 위한 기본 export
-export { BackgroundSystem as default } from './BackgroundSystem'
+// 기본 export
+export { UnifiedBackgroundSystem as default } from './UnifiedBackgroundSystem'

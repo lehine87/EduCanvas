@@ -24,7 +24,11 @@ export function AttendanceRealtimeWidget({
     isLoading, 
     error,
     lastUpdated 
-  } = useAttendanceData()
+  } = useAttendanceData({
+    enabled: true,
+    refetchInterval: 120000, // 2분 간격 (성능 최적화)
+    enableRealtime: false // 개발 중 실시간 기능 비활성화
+  })
 
   if (isLoading) {
     return <AttendanceWidgetSkeleton />

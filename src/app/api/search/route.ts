@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         // Department filter (staff only) - 실제 부서명으로 직접 비교
         if (type === 'staff' && filters.department && filters.department.length > 0) {
           // 선택된 부서명이 실제 부서명에 포함되는지 확인 (부분 일치 허용)
-          const hasMatchingDept = filters.department.some(dept => 
+          const hasMatchingDept = filters.department.some((dept: string) => 
             item.department && item.department.includes(dept)
           )
           if (!hasMatchingDept) return false
@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
             'sat': '토',
             'sun': '일'
           }
-          const selectedDays = filters.dayOfWeek.map(d => dayMap[d] || d)
-          const hasMatchingDay = selectedDays.some(day => item.time && item.time.includes(day))
+          const selectedDays = filters.dayOfWeek.map((d: string) => dayMap[d] || d)
+          const hasMatchingDay = selectedDays.some((day: string) => item.time && item.time.includes(day))
           if (!hasMatchingDay) return false
         }
         

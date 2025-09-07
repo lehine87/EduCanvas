@@ -1,7 +1,9 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { 
   AttendanceRealtimeResponse, 
   UseAttendanceDataResult,
@@ -37,40 +39,120 @@ async function fetchRealtimeAttendance(tenantId: string): Promise<AttendanceReal
   return result.data
 }
 
-// 메인 useAttendanceData 훅
+// Supabase Realtime 구독 훅 (업계 표준 구현)
+function useAttendanceRealtimeSubscription(tenantId: string, enabled: boolean = true) {
+  const queryClient = useQueryClient()
+  const subscriptionRef = useRef<any>(null)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // 안정된 참조를 위한 useCallback 사용 (업계 표준)
+  const handleInvalidation = useCallback((queryKey: readonly unknown[]) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey })
+    }, 2000) // 2초 디바운스로 증가
+  }, [queryClient])
+
+  useEffect(() => {
+    // 업계 표준: 개발 환경에서 실시간 구독 비활성화
+    if (!enabled || !tenantId || process.env.NODE_ENV === 'development') {
+      return
+    }
+
+    const supabase = createClient()
+
+    const channel = supabase
+      .channel(`attendance-updates-${tenantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendances',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        (payload) => {
+          console.log('🔴 출석 데이터 변경:', payload.eventType)
+          handleInvalidation(attendanceQueryKeys.realtime(tenantId))
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('📡 출석 실시간 구독 활성화')
+        }
+      })
+
+    subscriptionRef.current = channel
+
+    // 정리 함수 (업계 표준)
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+        debounceRef.current = null
+      }
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe()
+        subscriptionRef.current = null
+      }
+    }
+  }, [tenantId, enabled, handleInvalidation]) // 안정된 참조만 의존성으로 사용
+
+  return subscriptionRef.current
+}
+
+// 메인 useAttendanceData 훅 (Realtime 구독 + React Query 조합)
 export function useAttendanceData(options?: {
   enabled?: boolean
   refetchInterval?: number
+  enableRealtime?: boolean
 }): UseAttendanceDataResult {
   const { profile } = useAuthStore()
-  const { enabled = true, refetchInterval = 30000 } = options || {}
+  const { 
+    enabled = true, 
+    refetchInterval = 30000, // 30초 폴백 폴링
+    enableRealtime = true 
+  } = options || {}
 
+  // 업계 표준: useMemo로 안정된 참조 보장
+  const tenantId = useMemo(() => profile?.tenant_id || '', [profile?.tenant_id])
+  const shouldEnableRealtime = useMemo(() => 
+    enableRealtime && enabled && !!profile?.tenant_id, 
+    [enableRealtime, enabled, profile?.tenant_id]
+  )
+
+  // Supabase Realtime 구독 (안정된 참조로 호출)
+  useAttendanceRealtimeSubscription(tenantId, shouldEnableRealtime)
+
+  // 업계 표준: 안정된 쿼리 키와 함수 참조
+  const stableQueryKey = useMemo(() => attendanceQueryKeys.realtime(tenantId), [tenantId])
+  
+  const queryFn = useCallback(async () => {
+    if (!tenantId) {
+      throw new Error('테넌트 ID가 없습니다. 로그인 상태를 확인해주세요.')
+    }
+    return fetchRealtimeAttendance(tenantId)
+  }, [tenantId])
+
+  // React Query (기본 데이터 페칭 + 업계 표준 최적화)
   const query = useQuery({
-    queryKey: attendanceQueryKeys.realtime(profile?.tenant_id || ''),
-    queryFn: () => {
-      if (!profile?.tenant_id) {
-        throw new Error('테넌트 ID가 없습니다. 로그인 상태를 확인해주세요.')
-      }
-      return fetchRealtimeAttendance(profile.tenant_id)
-    },
-    enabled: enabled && !!profile?.tenant_id,
-    refetchInterval: refetchInterval, // 30초마다 자동 업데이트
-    refetchIntervalInBackground: true, // 백그라운드에서도 업데이트
-    staleTime: 25000, // 25초간 캐시 유효
-    gcTime: 60000, // 1분간 캐시 보관 (구 cacheTime)
+    queryKey: stableQueryKey,
+    queryFn,
+    enabled: enabled && !!tenantId,
+    refetchInterval: process.env.NODE_ENV === 'development' ? false : 120000, // 개발 모드에서 폴링 비활성화
+    refetchIntervalInBackground: false,
+    staleTime: 60000, // 1분간 캐시 유효
+    gcTime: 300000, // 5분간 캐시 보관
     retry: (failureCount, error) => {
-      // API 에러인 경우 재시도 로직
-      if (error instanceof Error) {
-        if (error.message.includes('권한') || error.message.includes('인증')) {
-          return false // 권한 에러는 재시도하지 않음
-        }
-        if (failureCount < 3) {
-          return true // 3회까지 재시도
-        }
+      if (error instanceof Error && 
+          (error.message.includes('권한') || error.message.includes('인증'))) {
+        return false
       }
-      return false
+      return failureCount < 2
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 지수 백오프
+    retryDelay: (attemptIndex) => Math.min(2000 * 2 ** attemptIndex, 10000),
   })
 
   return {

@@ -5,6 +5,8 @@ import { Database } from '@/types/database'
 import { UserProfile } from '@/types/auth.types'
 
 type Class = Database['public']['Tables']['classes']['Row']
+type ClassInsert = Database['public']['Tables']['classes']['Insert'] 
+type ClassUpdate = Database['public']['Tables']['classes']['Update']
 
 // 클래스 필터 및 정렬 옵션
 export interface ClassFilters {
@@ -91,8 +93,8 @@ export interface ClassesActions {
   // 데이터 관리
   fetchClasses: (tenantId: string, options?: Partial<ClassFilters & ClassSortOptions>) => Promise<void>
   fetchClassById: (classId: string, tenantId: string, includeStudents?: boolean) => Promise<void>
-  createClass: (classData: any, tenantId: string, accessToken?: string) => Promise<ClassWithRelations | null>
-  updateClass: (classId: string, classData: any, tenantId: string) => Promise<ClassWithRelations | null>
+  createClass: (classData: ClassInsert, tenantId: string, accessToken?: string) => Promise<ClassWithRelations | null>
+  updateClass: (classId: string, classData: ClassUpdate, tenantId: string) => Promise<ClassWithRelations | null>
   deleteClass: (classId: string, tenantId: string, forceDelete?: boolean) => Promise<boolean>
   
   // 학생 이동
@@ -242,7 +244,7 @@ const fetchClassByIdAPI = async (
   return result.data.class
 }
 
-const createClassAPI = async (classData: any, tenantId: string, accessToken: string): Promise<ClassWithRelations> => {
+const createClassAPI = async (classData: ClassInsert, tenantId: string, accessToken: string): Promise<ClassWithRelations> => {
   console.log('🚀 클래스 생성 API 호출:', { classData, tenantId, hasToken: !!accessToken })
   
   const response = await fetch('/api/classes', {
@@ -284,7 +286,7 @@ const createClassAPI = async (classData: any, tenantId: string, accessToken: str
 
 const updateClassAPI = async (
   classId: string, 
-  classData: any, 
+  classData: ClassUpdate, 
   tenantId: string
 ): Promise<ClassWithRelations> => {
   const response = await fetch(`/api/classes/${classId}`, {
@@ -411,7 +413,7 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
       }
     },
 
-    createClass: async (classData: any, tenantId: string, accessToken?: string) => {
+    createClass: async (classData: ClassInsert, tenantId: string, accessToken?: string) => {
       set({ loading: true, error: null })
       
       try {
@@ -450,7 +452,7 @@ export const useClassesStore = create<ClassesState & ClassesActions>()(
       }
     },
 
-    updateClass: async (classId: string, classData: any, tenantId: string) => {
+    updateClass: async (classId: string, classData: ClassUpdate, tenantId: string) => {
       set({ loading: true, error: null })
       
       try {

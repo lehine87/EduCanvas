@@ -7,6 +7,7 @@ import {
   SortingState,
   VisibilityState,
   ColumnResizeMode,
+  Column,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -499,8 +500,8 @@ export function DataTable<TData, TValue>({
 }
 
 // 편의를 위한 정렬 가능한 컬럼 헤더 헬퍼 컴포넌트
-export function SortableHeader({ column, children }: {
-  column: any
+export function SortableHeader<TData>({ column, children }: {
+  column: Column<TData, unknown>
   children: React.ReactNode
 }) {
   return (

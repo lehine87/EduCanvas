@@ -123,6 +123,12 @@ reorganized_date: "2025-08-25"
 | **class_management_implementation.md** | ClassFlow 구현 상세 가이드 | `guides/ui-development/` |
 | **page-structure-overview.md** | v2 페이지 구조 및 라우팅 설계 | `guides/ui-development/` |
 
+### API 개발 가이드 (`guides/api-development/`) - ✨ NEW
+
+| 문서명 | 핵심 내용 | 경로 |
+|--------|-----------|------|
+| **industry-standard-api-implementation-guide.md** | ✅ 업계 표준 REST API 구현 완전 가이드 (T-V2-009 검증 완료) | `guides/api-development/` |
+
 ### Database 개발 가이드 (`guides/database/`)
 
 | 문서명 | 핵심 내용 | 경로 |

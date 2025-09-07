@@ -8,6 +8,8 @@ import {
   logApiStart,
   logApiSuccess 
 } from '@/lib/api/utils'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
 import type { 
   AttendanceRealtimeResponse,
   AttendanceStats,
@@ -74,8 +76,8 @@ export async function GET(request: NextRequest) {
           classes!inner(
             id,
             name,
-            scheduled_at,
-            status
+            start_date,
+            is_active
           ),
           students!inner(
             id,
@@ -104,23 +106,22 @@ export async function GET(request: NextRequest) {
         throw new Error(`학생 데이터 조회 실패: ${studentsError.message}`)
       }
 
-      // 3. 오늘의 수업 목록 조회
+      // 3. 오늘 출석 데이터가 있는 수업들 조회 (올바른 관계 테이블 사용)
       const { data: todayClasses, error: classesError } = await supabase
         .from('classes')
         .select(`
           id,
           name,
-          scheduled_at,
-          status,
-          class_memberships(
+          start_date,
+          is_active,
+          student_enrollments(
             student_id,
             students(id, name, status)
           )
         `)
         .eq('tenant_id', tenantId)
-        .gte('scheduled_at', todayStart.toISOString())
-        .lt('scheduled_at', todayEnd.toISOString())
-        .order('scheduled_at', { ascending: true })
+        .eq('is_active', true)
+        .in('id', attendanceData?.map((a: any) => a.class_id) || [])
 
       if (classesError) {
         console.error('❌ 클래스 데이터 조회 실패:', classesError)
@@ -160,9 +161,23 @@ export async function GET(request: NextRequest) {
 }
 
 // 출석 통계 계산 함수
+// 안전한 출석 데이터 타입 정의
+interface SafeAttendanceRecord {
+  student_id: string
+  status: string
+  attendance_date: string
+  class_id: string
+}
+
+// 안전한 학생 데이터 타입 정의  
+interface SafeStudentRecord {
+  id: string
+  status: string
+}
+
 function calculateAttendanceStats(
-  attendanceData: any[], 
-  activeStudents: any[]
+  attendanceData: unknown[], 
+  activeStudents: unknown[]
 ): AttendanceStats {
   const totalStudents = activeStudents?.length || 0
   
@@ -178,17 +193,36 @@ function calculateAttendanceStats(
   }
 
   // 중복 제거 (같은 학생이 여러 수업에 참여할 수 있음)
-  const uniqueStudentAttendances = new Map()
-  attendanceData.forEach((record: any) => {
-    const studentId = record.student_id
+  const uniqueStudentAttendances = new Map<string, SafeAttendanceRecord>()
+  
+  attendanceData.forEach((record: unknown) => {
+    // 타입 가드 적용
+    if (!record || typeof record !== 'object') return
+    const safeRecord = record as Record<string, unknown>
+    
+    if (typeof safeRecord.student_id !== 'string' || 
+        typeof safeRecord.status !== 'string' ||
+        typeof safeRecord.attendance_date !== 'string' ||
+        typeof safeRecord.class_id !== 'string') {
+      return
+    }
+    
+    const validRecord: SafeAttendanceRecord = {
+      student_id: safeRecord.student_id,
+      status: safeRecord.status,
+      attendance_date: safeRecord.attendance_date,
+      class_id: safeRecord.class_id
+    }
+    
+    const studentId = validRecord.student_id
     if (!uniqueStudentAttendances.has(studentId)) {
-      uniqueStudentAttendances.set(studentId, record)
+      uniqueStudentAttendances.set(studentId, validRecord)
     } else {
       // 이미 있는 경우, 더 나은 상태로 업데이트 (present > late > absent)
-      const existing = uniqueStudentAttendances.get(studentId)
-      if (record.status === 'present' || 
-          (record.status === 'late' && existing.status === 'absent')) {
-        uniqueStudentAttendances.set(studentId, record)
+      const existing = uniqueStudentAttendances.get(studentId)!
+      if (validRecord.status === 'present' || 
+          (validRecord.status === 'late' && existing.status === 'absent')) {
+        uniqueStudentAttendances.set(studentId, validRecord)
       }
     }
   })
@@ -213,56 +247,96 @@ function calculateAttendanceStats(
   }
 }
 
+// 안전한 클래스 데이터 타입 정의
+interface SafeClassRecord {
+  id: string
+  name: string
+  start_date: string
+  student_enrollments?: Array<{
+    student_id: string
+    students?: {
+      id: string
+      name: string
+      status: string
+    }
+  }>
+}
+
 // 클래스별 출석 현황 처리 함수
 function processClassAttendance(
-  classes: any[], 
-  attendanceData: any[]
+  classes: unknown[], 
+  attendanceData: unknown[]
 ): ClassAttendance[] {
   if (!classes || classes.length === 0) return []
 
-  return classes.map(cls => {
-    const classAttendances = attendanceData?.filter(a => a.class_id === cls.id) || []
-    const totalStudents = cls.class_memberships?.length || 0
-    
-    const presentCount = classAttendances.filter(a => a.status === 'present').length
-    const absentCount = classAttendances.filter(a => a.status === 'absent').length  
-    const lateCount = classAttendances.filter(a => a.status === 'late').length
+  return classes
+    .filter((cls: unknown): cls is SafeClassRecord => {
+      // 타입 가드: 클래스 데이터 검증
+      if (!cls || typeof cls !== 'object') return false
+      const safeClass = cls as Record<string, unknown>
+      
+      return typeof safeClass.id === 'string' &&
+             typeof safeClass.name === 'string' &&
+             typeof safeClass.start_date === 'string'
+    })
+    .map((cls: SafeClassRecord) => {
+      // 출석 데이터 필터링 (타입 가드 적용)
+      const classAttendances = attendanceData
+        ?.filter((a: unknown) => {
+          if (!a || typeof a !== 'object') return false
+          const safeA = a as Record<string, unknown>
+          return safeA.class_id === cls.id && typeof safeA.status === 'string'
+        })
+        .map((a: unknown) => {
+          const safeA = a as Record<string, unknown>
+          return {
+            status: safeA.status as string,
+            class_id: safeA.class_id as string
+          }
+        }) || []
+      
+      const totalStudents = cls.student_enrollments?.length || 0
+      
+      const presentCount = classAttendances.filter(a => a.status === 'present').length
+      const absentCount = classAttendances.filter(a => a.status === 'absent').length  
+      const lateCount = classAttendances.filter(a => a.status === 'late').length
 
-    const attendanceRate = totalStudents > 0 
-      ? Math.round(((presentCount + lateCount) / totalStudents) * 100 * 10) / 10
-      : 0
+      const attendanceRate = totalStudents > 0 
+        ? Math.round(((presentCount + lateCount) / totalStudents) * 100 * 10) / 10
+        : 0
 
-    // 클래스 상태 결정
-    const now = new Date()
-    const scheduledTime = new Date(cls.scheduled_at)
-    const endTime = new Date(scheduledTime.getTime() + 60 * 60 * 1000) // 1시간 후
-    
-    let status: 'ongoing' | 'completed' | 'upcoming'
-    if (now < scheduledTime) {
-      status = 'upcoming'
-    } else if (now > endTime) {
-      status = 'completed'
-    } else {
-      status = 'ongoing'
-    }
+      // 간단한 수업 시간 추정 (오늘 출석 데이터가 있는 수업)
+      const now = new Date()
+      const todayStr = now.toISOString().split('T')[0]
+      const scheduledTime = new Date(`${todayStr}T09:00:00`) // 기본 9시로 설정
+      const endTime = new Date(`${todayStr}T17:00:00`) // 기본 5시 종료
+      
+      let status: 'ongoing' | 'completed' | 'upcoming'
+      if (now < scheduledTime) {
+        status = 'upcoming'
+      } else if (now > endTime) {
+        status = 'completed'
+      } else {
+        status = 'ongoing'
+      }
 
-    return {
-      classId: cls.id,
-      className: cls.name,
-      scheduledTime: new Date(cls.scheduled_at),
-      totalStudents,
-      presentCount,
-      absentCount,
-      lateCount,
-      attendanceRate,
-      status
-    }
-  })
+      return {
+        classId: cls.id,
+        className: cls.name,
+        scheduledTime,
+        totalStudents,
+        presentCount,
+        absentCount,
+        lateCount,
+        attendanceRate,
+        status
+      }
+    })
 }
 
 // 출석 트렌드 계산 함수 (간단한 버전)
 async function calculateAttendanceTrends(
-  supabase: any, 
+  supabase: SupabaseClient<Database>,
   tenantId: string
 ): Promise<AttendanceTrend[]> {
   try {
@@ -285,14 +359,23 @@ async function calculateAttendanceTrends(
 
     // 날짜별 그룹화 및 출석률 계산
     const dateGroups = new Map()
-    trendData.forEach(record => {
-      const date = record.attendance_date
+    trendData.forEach((record: unknown) => {
+      // 타입 가드를 통한 안전한 타입 검증
+      if (!record || typeof record !== 'object') return
+      
+      const safeRecord = record as Record<string, unknown>
+      if (typeof safeRecord.attendance_date !== 'string') return
+      if (typeof safeRecord.status !== 'string') return
+      
+      const date = safeRecord.attendance_date
+      const status = safeRecord.status
+      
       if (!dateGroups.has(date)) {
         dateGroups.set(date, { present: 0, total: 0 })
       }
-      const group = dateGroups.get(date)
+      const group = dateGroups.get(date)!
       group.total++
-      if (record.status === 'present' || record.status === 'late') {
+      if (status === 'present' || status === 'late') {
         group.present++
       }
     })

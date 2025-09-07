@@ -33,19 +33,16 @@ export interface ForwardRefComponentProps<T = HTMLElement>
 /** 데이터베이스 테이블 타입 단축형 */
 export type Student = Database['public']['Tables']['students']['Row'];
 export type Class = Database['public']['Tables']['classes']['Row'];
-export type Course = Database['public']['Tables']['courses']['Row'];
 export type TenantMembership = Database['public']['Tables']['tenant_memberships']['Row'];
-export type Enrollment = Database['public']['Tables']['enrollments']['Row'];
+// Note: courses, enrollments 테이블은 현재 데이터베이스에 존재하지 않음
 
 /** Insert 타입 (생성 시 사용) */
 export type StudentInsert = Database['public']['Tables']['students']['Insert'];
 export type ClassInsert = Database['public']['Tables']['classes']['Insert'];
-export type CourseInsert = Database['public']['Tables']['courses']['Insert'];
 
 /** Update 타입 (수정 시 사용) */
 export type StudentUpdate = Database['public']['Tables']['students']['Update'];
 export type ClassUpdate = Database['public']['Tables']['classes']['Update'];
-export type CourseUpdate = Database['public']['Tables']['courses']['Update'];
 
 // =============================================================================
 // Component Variant Types
@@ -95,9 +92,9 @@ export interface FormFieldProps {
 
 /** 입력 컴포넌트 Props */
 export interface InputProps 
-  extends React.InputHTMLAttributes<HTMLInputElement>, 
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, 
     FormFieldProps {
-  /** 입력 크기 */
+  /** 입력 크기 (HTML의 size 속성과 구분하기 위해 재정의) */
   size?: ComponentSize;
   /** 입력 변형 */
   variant?: 'default' | 'filled' | 'outline';
@@ -242,10 +239,10 @@ export interface SearchOption {
 }
 
 /** 검색 컴포넌트 Props */
-export interface SearchProps extends BaseComponentProps {
+export interface SearchProps extends Omit<BaseComponentProps, 'onChange'> {
   /** 검색어 */
   value?: string;
-  /** 검색어 변경 핸들러 */
+  /** 검색어 변경 핸들러 (커스텀 시그니처) */
   onChange?: (value: string) => void;
   /** 검색 실행 핸들러 */
   onSearch?: (query: string) => void;

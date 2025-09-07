@@ -13,6 +13,10 @@ import { motion } from 'framer-motion'
 
 interface MainHeaderProps {
   className?: string
+  title?: string
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
+  showSidebarToggle?: boolean
 }
 
 /**
@@ -20,7 +24,13 @@ interface MainHeaderProps {
  * 학원 브랜딩 + 탭 네비게이션 + 사용자 메뉴
  * 브랜드 컬러 배경 + 흰색 텍스트
  */
-export function Header({ className }: MainHeaderProps) {
+export function Header({ 
+  className, 
+  title, 
+  sidebarCollapsed, 
+  onToggleSidebar, 
+  showSidebarToggle 
+}: MainHeaderProps) {
   const { profile } = useAuth()
   const visibleTabs = useVisibleTabs()
   const { theme, setTheme } = useTheme()

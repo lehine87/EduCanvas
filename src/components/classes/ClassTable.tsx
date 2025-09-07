@@ -187,13 +187,20 @@ export const ClassTable = memo<ClassTableProps>(({
 
   // 테이블 컬럼 정의
   const columns = useMemo(() => {
-    const baseColumns = [
+    const baseColumns: Array<{
+      key: string
+      header: string
+      sortable: boolean
+      width: number
+      align?: 'left' | 'center' | 'right'
+      render?: (value: unknown, row: ClassWithRelations) => React.ReactNode
+    }> = [
       {
         key: 'name' as const,
         header: '클래스명',
         sortable: true,
         width: 200,
-        render: (value: string, row: ClassWithRelations) => (
+        render: (value: unknown, row: ClassWithRelations) => (
           <div className="flex items-center space-x-3">
             {row.color && (
               <div 
@@ -203,7 +210,7 @@ export const ClassTable = memo<ClassTableProps>(({
             )}
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 truncate">
-                {value}
+                {String(value)}
               </div>
               {row.description && (
                 <div className="text-sm text-gray-500 truncate">
@@ -219,9 +226,9 @@ export const ClassTable = memo<ClassTableProps>(({
         header: '학년',
         sortable: true,
         width: 80,
-        render: (value: string) => (
+        render: (value: unknown) => (
           <span className="text-sm text-gray-700">
-            {value || '-'}
+            {String(value) || '-'}
           </span>
         )
       },
@@ -230,9 +237,9 @@ export const ClassTable = memo<ClassTableProps>(({
         header: '과정',
         sortable: true,
         width: 120,
-        render: (value: string) => (
+        render: (value: unknown) => (
           <span className="text-sm text-gray-700">
-            {value || '-'}
+            {String(value) || '-'}
           </span>
         )
       },
@@ -264,9 +271,9 @@ export const ClassTable = memo<ClassTableProps>(({
         sortable: true,
         width: 120,
         align: 'center' as const,
-        render: (value: number, row: ClassWithRelations) => (
+        render: (value: unknown, row: ClassWithRelations) => (
           <ClassCapacity 
-            current={value || 0} 
+            current={typeof value === 'number' ? value : 0} 
             max={row.max_students ?? undefined} 
           />
         )
@@ -277,8 +284,8 @@ export const ClassTable = memo<ClassTableProps>(({
         sortable: true,
         width: 100,
         align: 'center' as const,
-        render: (value: boolean) => (
-          <ClassStatusBadge isActive={value} />
+        render: (value: unknown) => (
+          <ClassStatusBadge isActive={Boolean(value)} />
         )
       },
       {
@@ -286,35 +293,41 @@ export const ClassTable = memo<ClassTableProps>(({
         header: '교재',
         sortable: false,
         width: 150,
-        render: (value: unknown, row: ClassWithRelations) => (
-          <div className="text-sm">
-            {(row as any).main_textbook || (row as any).supplementary_textbook ? (
-              <div className="space-y-1">
-                {(row as any).main_textbook && (
-                  <div className="text-gray-900 font-medium">
-                    📚 {(row as any).main_textbook}
-                  </div>
-                )}
-                {(row as any).supplementary_textbook && (
-                  <div className="text-gray-600">
-                    📖 {(row as any).supplementary_textbook}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <span className="text-gray-400">교재 미지정</span>
-            )}
-          </div>
-        )
+        render: (value: unknown, row: ClassWithRelations) => {
+          const rowWithTextbooks = row as ClassWithRelations & {
+            main_textbook?: string
+            supplementary_textbook?: string
+          }
+          return (
+            <div className="text-sm">
+              {rowWithTextbooks.main_textbook || rowWithTextbooks.supplementary_textbook ? (
+                <div className="space-y-1">
+                  {rowWithTextbooks.main_textbook && (
+                    <div className="text-gray-900 font-medium">
+                      📚 {rowWithTextbooks.main_textbook}
+                    </div>
+                  )}
+                  {rowWithTextbooks.supplementary_textbook && (
+                    <div className="text-gray-600">
+                      📖 {rowWithTextbooks.supplementary_textbook}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-gray-400">교재 미지정</span>
+              )}
+            </div>
+          )
+        }
       },
       {
         key: 'created_at' as const,
         header: '생성일',
         sortable: true,
         width: 120,
-        render: (value: string) => (
+        render: (value: unknown) => (
           <span className="text-sm text-gray-500">
-            {new Date(value).toLocaleDateString('ko-KR')}
+            {new Date(String(value)).toLocaleDateString('ko-KR')}
           </span>
         )
       }
@@ -322,7 +335,7 @@ export const ClassTable = memo<ClassTableProps>(({
 
     if (showActions) {
       baseColumns.push({
-        key: 'actions' as any,
+        key: 'actions',
         header: '작업',
         sortable: false,
         width: 120,
@@ -484,7 +497,7 @@ export const ClassTable = memo<ClassTableProps>(({
                   )}
                 >
                   {column.render ? 
-                    column.render(row[column.key as keyof ClassWithRelations] as any, row) : 
+                    column.render(row[column.key as keyof ClassWithRelations], row) : 
                     String(row[column.key as keyof ClassWithRelations] || '-')
                   }
                 </TableCell>

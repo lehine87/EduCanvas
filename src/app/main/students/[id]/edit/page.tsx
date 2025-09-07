@@ -21,6 +21,7 @@ import { LoadingPlaceholder } from '@/components/ui/classflow/LoadingPlaceholder
 import type { StudentFormData } from '@/types/student.types'
 import { ArrowLeftIcon, PencilIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { toast } from 'react-hot-toast'
+import StudentDetailLayout from '@/components/layout/StudentDetailLayout'
 
 // 폼 검증 스키마
 const studentEditSchema = z.object({
@@ -28,7 +29,8 @@ const studentEditSchema = z.object({
   student_number: z.string().min(1, '학번은 필수입니다'),
   phone: z.string().optional(),
   email: z.string().email('올바른 이메일 형식이 아닙니다').optional().or(z.literal('')),
-  parent_name: z.string().optional(),
+  parent_name_1: z.string().optional(),
+  parent_name_2: z.string().optional(),
   parent_phone_1: z.string().optional(),
   parent_phone_2: z.string().optional(),
   grade_level: z.string().optional(),
@@ -83,14 +85,15 @@ export default function EditStudentPage() {
         student_number: selectedStudent.student_number,
         phone: selectedStudent.phone || '',
         email: selectedStudent.email || '',
-        parent_name: selectedStudent.parent_name || '',
+        parent_name_1: selectedStudent.parent_name_1 || '',
+        parent_name_2: selectedStudent.parent_name_2 || '',
         parent_phone_1: selectedStudent.parent_phone_1 || '',
         parent_phone_2: selectedStudent.parent_phone_2 || '',
         grade_level: selectedStudent.grade_level || '',
         school_name: selectedStudent.school_name || '',
         address: selectedStudent.address || '',
         notes: selectedStudent.notes || '',
-        status: selectedStudent.status as any
+        status: selectedStudent.status || 'active'
       })
     }
   }, [selectedStudent, reset])
@@ -110,7 +113,8 @@ export default function EditStudentPage() {
         ...data,
         email: data.email || undefined, // 빈 문자열을 undefined로 변환
         phone: data.phone || undefined,
-        parent_name: data.parent_name || undefined,
+        parent_name_1: data.parent_name_1 || undefined,
+        parent_name_2: data.parent_name_2 || undefined,
         parent_phone_1: data.parent_phone_1 || undefined,
         parent_phone_2: data.parent_phone_2 || undefined,
         grade_level: data.grade_level || undefined,
@@ -189,7 +193,8 @@ export default function EditStudentPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <StudentDetailLayout showSearchSidebar={true} searchContext="students">
+      <div className="container mx-auto p-6 max-w-4xl">
       {/* 헤더 */}
       <div className="flex items-center space-x-4 mb-6">
         <Button
@@ -276,7 +281,10 @@ export default function EditStudentPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="grade_level">학년</Label>
-                <Select onValueChange={(value) => setValue('grade_level', value)}>
+                <Select 
+                  value={watch('grade_level') || ''}
+                  onValueChange={(value) => setValue('grade_level', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="학년 선택" />
                   </SelectTrigger>
@@ -310,8 +318,8 @@ export default function EditStudentPage() {
               <div>
                 <Label htmlFor="status">상태</Label>
                 <Select 
+                  value={watch('status') || 'active'}
                   onValueChange={(value) => setValue('status', value as any)}
-                  defaultValue={selectedStudent.status || 'active'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="상태 선택" />
@@ -320,7 +328,7 @@ export default function EditStudentPage() {
                     <SelectItem value="active">활동중</SelectItem>
                     <SelectItem value="inactive">비활성</SelectItem>
                     <SelectItem value="graduated">졸업</SelectItem>
-                    <SelectItem value="withdrawn">탈퇴</SelectItem>
+                    <SelectItem value="withdrawn">퇴학</SelectItem>
                     <SelectItem value="suspended">정지</SelectItem>
                   </SelectContent>
                 </Select>
@@ -336,11 +344,20 @@ export default function EditStudentPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="parent_name">학부모 이름</Label>
+              <Label htmlFor="parent_name_1">학부모 이름 1</Label>
               <Input
-                id="parent_name"
-                {...register('parent_name')}
+                id="parent_name_1"
+                {...register('parent_name_1')}
                 placeholder="홍아버지"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="parent_name_2">학부모 이름 2</Label>
+              <Input
+                id="parent_name_2"
+                {...register('parent_name_2')}
+                placeholder="홍어머니"
               />
             </div>
 
@@ -426,5 +443,6 @@ export default function EditStudentPage() {
         </div>
       </form>
     </div>
+    </StudentDetailLayout>
   )
 }

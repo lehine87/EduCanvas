@@ -372,9 +372,21 @@ export function shouldRetryError(error: unknown): boolean {
  * 에러 로깅 헬퍼
  */
 export function logError(error: unknown, context?: AppError['context']) {
+  // error가 null/undefined인 경우 안전하게 처리
+  const safeErrorMessage = (() => {
+    try {
+      if (error === null) return 'null error'
+      if (error === undefined) return 'undefined error'  
+      if (error instanceof Error) return error.message
+      return String(error)
+    } catch (e) {
+      return 'Unknown error (failed to convert to string)'
+    }
+  })()
+  
   const errorObj = isAppError(error) ? error : new AppErrorBase(
     'UNKNOWN_ERROR',
-    error instanceof Error ? error.message : String(error),
+    safeErrorMessage,
     '예상치 못한 오류가 발생했습니다.',
     'medium',
     'system',
@@ -382,7 +394,16 @@ export function logError(error: unknown, context?: AppError['context']) {
     context
   )
 
-  console.error(`[${errorObj.severity.toUpperCase()}] ${errorObj.code}:`, JSON.stringify(errorObj))
+  try {
+    console.error(`[${errorObj.severity.toUpperCase()}] ${errorObj.code}:`, JSON.stringify(errorObj))
+  } catch (e) {
+    // JSON.stringify 실패 시 간단한 객체로 로깅
+    console.error(`[${errorObj.severity.toUpperCase()}] ${errorObj.code}:`, {
+      message: errorObj.message,
+      code: errorObj.code,
+      context: errorObj.context
+    })
+  }
   
   // Sentry나 다른 에러 추적 서비스에 전송
   if (typeof window !== 'undefined' && (window as unknown as { Sentry?: unknown }).Sentry) {

@@ -4,9 +4,11 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/useAuthStore'
 import { SmartGrid, GridItem, WidgetSizes } from './core/SmartGrid'
+import { DraggableGrid } from './core/DraggableGrid'
 import { GlassWidget } from './widgets/GlassWidget'
 import { useRoleAdapter, WidgetConfig, UserRoleInfo, inferRoleCategory } from './core/RoleAdapter'
-import { BackgroundSystem, BackgroundSettings, useBackgroundConfig, getCompleteCardShadow } from './backgrounds'
+import { useBackgroundConfig, getCompleteCardShadow } from './backgrounds'
+import { UnifiedBackgroundSystem } from './backgrounds/UnifiedBackgroundSystem'
 import { Button } from '@/components/ui/button'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { AttendanceRealtimeWidget } from './widgets/attendance'
@@ -198,10 +200,17 @@ function AIInsightsWidget() {
 
 // 메인 DashboardV2 컴포넌트
 export default function DashboardV2() {
-  const { profile } = useAuthStore()
+  const { profile, loading, initialized, initialize } = useAuthStore()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoadingStats, setIsLoadingStats] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  // 인증 초기화
+  useEffect(() => {
+    if (!initialized) {
+      initialize()
+    }
+  }, [initialized, initialize])
   
   // 배경 설정 시스템
   const { config: backgroundConfig } = useBackgroundConfig()
@@ -213,14 +222,7 @@ export default function DashboardV2() {
     [isDark]
   )
   
-  // 디버깅: backgroundConfig 및 다크모드 상태 추적
-  React.useEffect(() => {
-    console.log('🖼️ DashboardV2 backgroundConfig 변경됨:', backgroundConfig)
-    console.log('🎯 DashboardV2 backgroundConfig.pattern:', backgroundConfig.pattern)
-    console.log('🎯 DashboardV2 backgroundConfig.type:', backgroundConfig.type)
-    console.log('🌙 DashboardV2 isDark:', isDark)
-    console.log('🎨 DashboardV2 cardShadowClass:', cardShadowClass)
-  }, [backgroundConfig, isDark])
+  // 성능 최적화: 불필요한 로깅 useEffect 제거됨
 
   // 현재 사용자 역할 정보 생성 (임시로 tenant_admin 기반)
   const userRoleInfo: UserRoleInfo | null = React.useMemo(() => {
@@ -229,26 +231,59 @@ export default function DashboardV2() {
     const roleName = profile.role as string
     const roleCategory = inferRoleCategory(roleName)
     
+    // tenant_admin은 모든 권한을 가짐 (임시)
+    const permissions = roleName === 'tenant_admin' ? [
+      'students.read',
+      'students.write', 
+      'attendance.read',
+      'attendance.write',
+      'payments.read',
+      'payments.create',
+      'analytics.view',
+      'classes.read',
+      'classes.write'
+    ] : []
+    
     return {
       roleName,
       roleDisplayName: roleName === 'tenant_admin' ? '학원 관리자' : '직원',
       roleCategory,
-      permissions: [], // 실제로는 DB에서 가져와야 함
+      permissions,
       hierarchyLevel: roleName === 'tenant_admin' ? 10 : 1
     }
   }, [profile?.role])
 
   // 대시보드 통계 데이터 로드
   const fetchDashboardStats = useCallback(async () => {
-    if (!profile?.tenant_id) return
-
     setIsLoadingStats(true)
     try {
-      const response = await fetch(`/api/students/dashboard-stats?tenantId=${profile.tenant_id}`)
-      if (!response.ok) throw new Error('Failed to fetch dashboard stats')
-      
-      const data = await response.json()
-      setStats(data.data)
+      // 인증된 경우만 실제 API 호출
+      if (profile?.tenant_id) {
+        const response = await fetch(`/api/students/dashboard-stats?tenantId=${profile.tenant_id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data.data)
+        } else {
+          throw new Error('Failed to fetch dashboard stats')
+        }
+      } else {
+        // 비로그인 또는 프로필 없는 경우 데모 데이터 설정
+        console.log('🔒 비로그인 상태 - 데모 데이터 사용')
+        setStats({
+          total_students: 156,
+          active_students: 142,
+          inactive_students: 14,
+          graduated_students: 89,
+          withdrawn_students: 12,
+          suspended_students: 3,
+          urgent_actions: 5,
+          today_attendance: 128,
+          unpaid_students: 8,
+          consultation_scheduled: 12,
+          new_registrations_this_month: 23,
+          recent_activities: []
+        })
+      }
     } catch (error) {
       console.error('대시보드 통계 로드 실패:', error)
       // 에러 시 기본값 설정
@@ -326,7 +361,7 @@ export default function DashboardV2() {
       id: 'attendance-realtime',
       component: AttendanceWidget, // 내부적으로 AttendanceRealtimeWidget 사용
       props: { stats },
-      size: 'wide', // 실시간 위젯은 더 많은 공간 필요
+      size: 'extra-wide', // 초대형 사이즈로 변경
       priority: 4,
       roleCategories: ['instructor', 'staff', 'admin'], // admin도 포함
       permissions: ['attendance.read'],
@@ -371,7 +406,7 @@ export default function DashboardV2() {
   // 로딩 상태 (Layout Shift 방지용)
   if (isLoadingStats) {
     return (
-      <BackgroundSystem 
+      <UnifiedBackgroundSystem 
         config={backgroundConfig}
         className="h-full p-6"
       >
@@ -453,17 +488,16 @@ export default function DashboardV2() {
             </GridItem>
           </SmartGrid>
         </div>
-      </BackgroundSystem>
+      </UnifiedBackgroundSystem>
     )
   }
 
   return (
-    <BackgroundSystem 
+    <UnifiedBackgroundSystem 
       config={backgroundConfig}
       className="min-h-full p-6"
     >
-      {/* Hidden failsafe for Tailwind class detection */}
-      <div className="hidden w-full h-full absolute inset-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-950 dark:to-purple-950 from-neutral-50 to-blue-50 dark:from-neutral-900 dark:to-blue-900 from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 from-purple-50 via-pink-50 to-indigo-50 dark:from-purple-950 dark:via-pink-950 dark:to-indigo-950 animate-pulse relative min-h-full bg-cover bg-center bg-no-repeat pointer-events-none" />
+      {/* Hidden failsafe 제거됨 - 배경 간섭 방지 */}
       
       <div className="max-w-7xl mx-auto space-y-6">
         
@@ -486,8 +520,8 @@ export default function DashboardV2() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* 배경 설정 버튼 */}
-            <BackgroundSettings
+            {/* 배경 설정 버튼 - TODO: BackgroundSettings 컴포넌트 구현 필요 */}
+            {/* <BackgroundSettings
               trigger={
                 <Button 
                   variant="outline" 
@@ -497,7 +531,7 @@ export default function DashboardV2() {
                   <SwatchIcon className="w-4 h-4" />
                 </Button>
               }
-            />
+            /> */}
 
             {/* 새로고침 버튼 */}
             <motion.button
@@ -513,43 +547,40 @@ export default function DashboardV2() {
           </div>
         </motion.div>
 
-        {/* Widgets Grid */}
-        <SmartGrid 
-          maxColumns={layoutConfig.gridConfig.maxColumns}
-          gap={layoutConfig.gridConfig.gap}
-          autoFlow={layoutConfig.gridConfig.autoFlow}
-          animate={theme.animations}
-        >
-          <AnimatePresence>
-            {adaptedWidgets.map((widget) => {
-              const WidgetComponent = widget.component
-              
-              return (
-                <GridItem 
-                  key={widget.id}
-                  size={WidgetSizes[widget.size]}
-                  animate={theme.animations}
-                >
-                  <GlassWidget
-                    opacity={widget.id === 'critical-alerts' ? 'critical' : theme.styles.primary}
-                    size="md"
-                    title={widget.title}
-                    subtitle={widget.subtitle}
-                    icon={widget.icon}
-                    animate={theme.animations}
-                    glow={true}
-                    float={false}
-                    className={cardShadowClass}
-                  >
-                    <WidgetComponent {...widget.props} />
-                  </GlassWidget>
-                </GridItem>
-              )
-            })}
-          </AnimatePresence>
-        </SmartGrid>
+        {/* Draggable Widgets Grid */}
+        <DraggableGrid
+          widgets={adaptedWidgets.map(widget => ({
+            id: widget.id,
+            title: widget.title,
+            subtitle: widget.subtitle,
+            icon: widget.icon,
+            component: ({ children, ...props }: any) => (
+              <GlassWidget
+                opacity={widget.id === 'critical-alerts' ? 'critical' : (theme.styles.primary as any)}
+                size="md"
+                animate={theme.animations}
+                glow={true}
+                float={false}
+                className={cardShadowClass}
+              >
+                <widget.component {...widget.props} />
+              </GlassWidget>
+            ),
+            props: widget.props,
+            size: widget.size,
+            priority: widget.priority
+          }))}
+          onReorder={(newOrder) => {
+            console.log('새로운 위젯 순서:', newOrder)
+            // TODO: 사용자 설정 저장
+          }}
+          onSizeChange={(widgetId, newSize) => {
+            console.log('위젯 크기 변경:', widgetId, newSize)
+            // TODO: 사용자 설정 저장
+          }}
+        />
 
       </div>
-    </BackgroundSystem>
+    </UnifiedBackgroundSystem>
   )
 }

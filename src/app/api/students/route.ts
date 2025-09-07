@@ -1,212 +1,159 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { withRouteValidation, handleCorsPreflightRequest } from '@/lib/route-validation'
+import { StudentSearchSchema } from '@/schemas/student-search'
 import { 
-  withApiHandler, 
-  createSuccessResponse, 
-  validateRequestBody,
-  validateTenantAccess,
-  logApiStart,
-  logApiSuccess 
-} from '@/lib/api/utils'
+  createPaginatedResponse, 
+  createValidationErrorResponse,
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/api-response'
+import type { Database } from '@/types/database.types'
+import { searchStudentsService, createStudentService } from '@/services/student-service'
 
-// 학생 조회 파라미터 스키마
-const getStudentsSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다').optional().nullable(), // 🔧 시스템 관리자는 tenantId 없이 전체 조회 가능
-  classId: z.string().uuid().optional().nullable(),
-  status: z.enum(['active', 'inactive', 'graduated', 'all']).default('all'),
-  limit: z.number().min(1).max(1000).default(100),
-  offset: z.number().min(0).default(0),
-  search: z.string().optional().nullable() // 🔧 null 값도 허용
-})
+/**
+ * 학생 API - 업계 표준 구현
+ * 
+ * 기능:
+ * - Full-text search (PostgreSQL GIN 인덱스)
+ * - 고도화된 필터링 (학년, 상태, 날짜 등) 
+ * - Cursor-based pagination
+ * - Zod validation
+ * - 표준 에러 처리
+ * - Rate limiting
+ * - CORS 지원
+ */
 
-// 학생 생성 스키마
-const createStudentSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  name: z.string().min(1, '학생 이름은 필수입니다'),
-  student_number: z.string().min(1, '학번은 필수입니다'),
+// Student Create Schema (업계 표준 스키마)
+const StudentCreateSchema = z.object({
+  name: z.string().min(1, '학생 이름은 필수입니다').max(100),
+  student_number: z.string().min(1, '학번은 필수입니다').max(50),
   phone: z.string().optional(),
   email: z.string().email().optional(),
-  parent_name: z.string().optional(),
+  parent_name_1: z.string().optional(),
   parent_phone_1: z.string().optional(),
+  parent_name_2: z.string().optional(),
   parent_phone_2: z.string().optional(),
   grade_level: z.string().optional(),
   school_name: z.string().optional(),
   address: z.string().optional(),
   notes: z.string().optional(),
-  status: z.enum(['active', 'inactive']).default('active')
+  status: z.enum(['active', 'inactive', 'graduated', 'withdrawn', 'suspended']).default('active'),
+  emergency_contact: z.record(z.string(), z.unknown()).optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional(),
+  tags: z.array(z.string()).optional(),
 })
 
-type GetStudentsParams = z.infer<typeof getStudentsSchema>
-type CreateStudentData = z.infer<typeof createStudentSchema>
+/**
+ * GET /api/students - 학생 목록 조회 (업계 표준 구현)
+ * 
+ * 기능:
+ * - Full-text search (PostgreSQL GIN 인덱스 활용)
+ * - 고도화된 필터링 (학년, 상태, 날짜 등)
+ * - Cursor-based pagination (성능 최적화)
+ * - 실시간 통계
+ * - Zod validation (Runtime 타입 안전성)
+ * - 표준 에러 처리
+ */
+export const GET = withRouteValidation({
+  querySchema: StudentSearchSchema,
+  requireAuth: true,
+  rateLimitKey: 'students_search',
+  handler: async (req: NextRequest, context) => {
+    const { query, user, timer } = context;
+    try {
+      // 서비스 레이어 호출 (비즈니스 로직 분리)
+      const result = await searchStudentsService({
+        ...query,
+        tenant_id: user.tenant_id
+      })
+
+      // 메타데이터 생성 (API 사용량 분석용)
+      const filtersApplied = []
+      if (query.search) filtersApplied.push('search')
+      if (query.grade) filtersApplied.push('grade')
+      if (query.class_id) filtersApplied.push('class_id')
+      if (query.status) filtersApplied.push('status')
+      if (query.enrollment_date_from) filtersApplied.push('enrollment_date_from')
+      if (query.enrollment_date_to) filtersApplied.push('enrollment_date_to')
+      if (query.has_overdue_payment) filtersApplied.push('has_overdue_payment')
+      if (query.attendance_rate_min) filtersApplied.push('attendance_rate_min')
+      if (query.attendance_rate_max) filtersApplied.push('attendance_rate_max')
+
+      const sortApplied = `${query.sort_field}:${query.sort_order}`
+
+      // 표준 페이지네이션 응답 반환
+      return createPaginatedResponse(
+        result.items,
+        {
+          cursor: result.next_cursor,
+          has_more: result.has_more,
+          total_count: result.total_count,
+          per_page: query.limit
+        },
+        {
+          filters_applied: filtersApplied,
+          sort_applied: sortApplied,
+          search_query: query.search,
+          execution_time_ms: timer?.getExecutionTime() || 0
+        }
+      )
+
+    } catch (error) {
+      console.error('Students search error:', error)
+      return createServerErrorResponse(
+        'Failed to search students',
+        error instanceof Error ? error : new Error(String(error))
+      )
+    }
+  }
+})
 
 /**
- * 학생 목록 조회
- * GET /api/students?tenantId=xxx&classId=xxx&status=active&limit=100&offset=0&search=홍길동
+ * POST /api/students - 학생 생성 (업계 표준 구현)
  */
-export async function GET(request: NextRequest) {
-  return withApiHandler(
-    request,
-    async ({ request, userProfile, supabase }) => {
-      logApiStart('get-students', { userId: userProfile!.id })
-
-      // URL 파라미터 파싱
-      const { searchParams } = new URL(request.url)
-      const rawParams = {
-        tenantId: searchParams.get('tenantId'),
-        classId: searchParams.get('classId'),
-        status: searchParams.get('status') || 'all',
-        limit: parseInt(searchParams.get('limit') || '100'),
-        offset: parseInt(searchParams.get('offset') || '0'),
-        search: searchParams.get('search')
+export const POST = withRouteValidation({
+  bodySchema: StudentCreateSchema,
+  requireAuth: true,
+  rateLimitKey: 'students_create',
+  handler: async (req: NextRequest, context) => {
+    const { body, user, timer } = context;
+    try {
+      if (!body) {
+        return createValidationErrorResponse(
+          [{ field: 'body', message: 'Request body is required' }],
+          'Invalid request'
+        )
       }
       
-      // 🔧 디버깅: 파라미터 로그
-      console.log('📋 API 파라미터:', rawParams)
+      if (!user.tenant_id) {
+        return createValidationErrorResponse(
+          [{ field: 'auth', message: 'Tenant access required' }],
+          'Unauthorized'
+        )
+      }
+      
+      const createData = {
+        ...body,
+        tenant_id: user.tenant_id,
+        created_by: user.id
+      } as Database['public']['Tables']['students']['Insert'] & { tenant_id: string; created_by: string }
+      
+      const result = await createStudentService(createData)
 
-      // 파라미터 검증
-      const validationResult = validateRequestBody(rawParams, (data) => 
-        getStudentsSchema.parse(data)
+      return createSuccessResponse(result, 'Student created successfully', 201)
+
+    } catch (error) {
+      console.error('Student creation error:', error)
+      return createServerErrorResponse(
+        'Failed to create student',
+        error instanceof Error ? error : new Error(String(error))
       )
-
-      if (validationResult instanceof Response) {
-        return validationResult
-      }
-
-      const params: GetStudentsParams = validationResult
-
-      // 테넌트 권한 검증 (시스템 관리자는 전체 접근 가능)
-      const isSystemAdmin = userProfile!.role === 'system_admin'
-      if (!isSystemAdmin && !validateTenantAccess(userProfile!, params.tenantId)) {
-        throw new Error('해당 테넌트의 학생 정보에 접근할 권한이 없습니다.')
-      }
-
-      // 🔧 임시 수정: 단순한 쿼리로 시작 (복잡한 조인 제거)
-      let query = supabase
-        .from('students')
-        .select('*')
-
-      // 시스템 관리자가 아닌 경우에만 테넌트 필터링
-      if (!isSystemAdmin && params.tenantId) {
-        query = query.eq('tenant_id', params.tenantId)
-      }
-
-      // 클래스 필터링
-      if (params.classId) {
-        query = query.eq('class_id', params.classId)
-      }
-
-      // 상태 필터링
-      if (params.status !== 'all') {
-        query = query.eq('status', params.status)
-      }
-
-      // 검색 기능
-      if (params.search) {
-        query = query.or(`name.ilike.%${params.search}%,student_number.ilike.%${params.search}%,phone.ilike.%${params.search}%`)
-      }
-
-      // 페이지네이션
-      const { data: students, error, count } = await query
-        .range(params.offset, params.offset + params.limit - 1)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('❌ 학생 목록 조회 실패:', error)
-        throw new Error(`학생 목록 조회 실패: ${error.message}`)
-      }
-
-      const result = {
-        students: students || [],
-        pagination: {
-          total: count || 0,
-          limit: params.limit,
-          offset: params.offset,
-          hasMore: (count || 0) > params.offset + params.limit
-        }
-      }
-
-      logApiSuccess('get-students', { 
-        count: students?.length || 0, 
-        total: count || 0 
-      })
-
-      return createSuccessResponse(result)
-    },
-    {
-      requireAuth: true
     }
-  )
-}
+  }
+})
 
 /**
- * 새 학생 생성
- * POST /api/students
+ * OPTIONS - CORS 프리플라이트 처리 (업계 표준)
  */
-export async function POST(request: NextRequest) {
-  return withApiHandler(
-    request,
-    async ({ request, userProfile, supabase }) => {
-      logApiStart('create-student', { userId: userProfile!.id })
-
-      // 입력 검증
-      const body: unknown = await request.json()
-      const validationResult = validateRequestBody(body, (data) => 
-        createStudentSchema.parse(data)
-      )
-
-      if (validationResult instanceof Response) {
-        return validationResult
-      }
-
-      const studentData: CreateStudentData = validationResult
-
-      // 테넌트 권한 검증
-      if (!validateTenantAccess(userProfile!, studentData.tenantId)) {
-        throw new Error('해당 테넌트에 학생을 생성할 권한이 없습니다.')
-      }
-
-      // 학번 중복 확인
-      const { data: existingStudent } = await supabase
-        .from('students')
-        .select('id')
-        .eq('tenant_id', studentData.tenantId)
-        .eq('student_number', studentData.student_number)
-        .single()
-
-      if (existingStudent) {
-        throw new Error('이미 존재하는 학번입니다.')
-      }
-
-      // 학생 생성 - tenantId를 tenant_id로 매핑
-      const { tenantId, ...restStudentData } = studentData
-      const { data: newStudent, error } = await supabase
-        .from('students')
-        .insert({
-          ...restStudentData,
-          tenant_id: tenantId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select('*')
-        .single()
-
-      if (error) {
-        console.error('❌ 학생 생성 실패:', error)
-        throw new Error(`학생 생성 실패: ${error.message}`)
-      }
-
-      logApiSuccess('create-student', { 
-        studentId: newStudent.id,
-        studentNumber: newStudent.student_number 
-      })
-
-      return createSuccessResponse(
-        { student: newStudent },
-        '학생이 성공적으로 생성되었습니다.'
-      )
-    },
-    {
-      requireAuth: true
-    }
-  )
-}
+export const OPTIONS = () => handleCorsPreflightRequest()

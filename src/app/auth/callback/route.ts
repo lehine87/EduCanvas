@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin, hash } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/admin'
+  const next = searchParams.get('next') ?? '/main'
   const error = searchParams.get('error')
   const error_code = searchParams.get('error_code')
   const error_description = searchParams.get('error_description')

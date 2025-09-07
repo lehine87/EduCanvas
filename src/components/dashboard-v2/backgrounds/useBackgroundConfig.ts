@@ -13,63 +13,54 @@ export function useBackgroundConfig() {
     return { type: 'none' }
   })
 
-  // 로컬 스토리지에서 설정 불러오기
+  // 로컬 스토리지에서 설정 불러오기 (초기 렌더링 시에만)
   useEffect(() => {
+    let mounted = true
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
+      if (saved && mounted) {
         const parsed = JSON.parse(saved) as BackgroundConfig
         setConfig(parsed)
       }
     } catch (error) {
       console.warn('배경 설정 로드 실패:', error)
     }
+    return () => { mounted = false }
   }, [])
 
-  // localStorage 변경 감지 (다른 컴포넌트에서 변경된 경우)
+  // 업계 표준: 개발 환경에서 storage 이벤트 리스너 비활성화
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
-        try {
-          const newConfig = JSON.parse(e.newValue) as BackgroundConfig
-          setConfig(newConfig)
-        } catch (error) {
-          console.warn('localStorage 변경 처리 실패:', error)
-        }
-      }
+    // 개발 모드에서는 storage 이벤트 리스너 완전 비활성화 (성능 최적화)
+    if (process.env.NODE_ENV === 'development') {
+      return
     }
 
-    // 같은 탭 내에서는 storage 이벤트가 발생하지 않으므로 
-    // 커스텀 이벤트로 대체
-    const handleCustomStorageChange = (e: CustomEvent) => {
+    let mounted = true
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!mounted || e.key !== STORAGE_KEY || !e.newValue) return
       try {
-        const newConfig = e.detail as BackgroundConfig
+        const newConfig = JSON.parse(e.newValue) as BackgroundConfig
         setConfig(newConfig)
       } catch (error) {
-        console.warn('커스텀 이벤트 처리 실패:', error)
+        console.warn('localStorage 변경 처리 실패:', error)
       }
     }
 
-    window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('background-config-changed' as any, handleCustomStorageChange)
+    // 프로덕션에서만 이벤트 리스너 등록
+    window.addEventListener('storage', handleStorageChange, { passive: true })
     
     return () => {
+      mounted = false
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('background-config-changed' as any, handleCustomStorageChange)
     }
   }, [])
 
-  // 설정 변경 및 저장
+  // 설정 변경 및 저장 (성능 최적화)
   const updateConfig = useCallback((newConfig: BackgroundConfig) => {
     setConfig(newConfig)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig))
-      
-      // 다른 컴포넌트에 변경 사항 알리기 (커스텀 이벤트)
-      const event = new CustomEvent('background-config-changed', {
-        detail: newConfig
-      })
-      window.dispatchEvent(event)
     } catch (error) {
       console.warn('배경 설정 저장 실패:', error)
     }
