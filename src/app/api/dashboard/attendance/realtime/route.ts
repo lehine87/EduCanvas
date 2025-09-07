@@ -121,7 +121,11 @@ export async function GET(request: NextRequest) {
         `)
         .eq('tenant_id', tenantId)
         .eq('is_active', true)
-        .in('id', attendanceData?.map((a: any) => a.class_id) || [])
+        .in('id', attendanceData?.map((a) => {
+          if (!a || typeof a !== 'object') return ''
+          const safeA = a as Record<string, unknown>
+          return typeof safeA.class_id === 'string' ? safeA.class_id : ''
+        }).filter(id => id !== '') || [])
 
       if (classesError) {
         console.error('❌ 클래스 데이터 조회 실패:', classesError)

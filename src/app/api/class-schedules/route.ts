@@ -224,14 +224,19 @@ export async function GET(request: NextRequest) {
       }
 
       // 3. 날짜별 스케줄 계산 (요청된 날짜가 있는 경우)
-      let dateSpecificSchedules: any[] = []
+      type ScheduleWithRelations = ClassSchedule & {
+        classes?: { id: string; name: string; grade: string; course: string } | null
+        classrooms?: { id: string; name: string; building: string; room_number: string; capacity?: number } | null
+        time_slots?: { id: string; name: string; start_time: string; end_time: string } | null
+      }
+      let dateSpecificSchedules: ScheduleWithRelations[] = []
       
       if (params.date) {
         const requestDate = new Date(params.date)
         const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestDate.getDay()]
         
         // 해당 날짜에 적용되는 정규 스케줄 필터링
-        dateSpecificSchedules = regularSchedules?.filter(schedule => {
+        const schedules = regularSchedules?.filter(schedule => {
           const effectiveFrom = new Date(schedule.effective_from)
           const effectiveUntil = schedule.effective_until ? new Date(schedule.effective_until) : null
           
@@ -239,6 +244,8 @@ export async function GET(request: NextRequest) {
                  requestDate >= effectiveFrom &&
                  (!effectiveUntil || requestDate <= effectiveUntil)
         }) || []
+        
+        dateSpecificSchedules = schedules as ScheduleWithRelations[]
 
         // 임시 변경으로 인해 교체된 스케줄 제거
         const tempChangesForDate = temporarySchedules.filter(tc => tc.change_date === params.date)
@@ -252,7 +259,11 @@ export async function GET(request: NextRequest) {
       }
 
       // 4. 교실 사용률 통계
-      const classroomUsageStats: Record<string, any> = {}
+      const classroomUsageStats: Record<string, {
+        classroom_name: string
+        regular_sessions: number
+        total_hours_per_week: number
+      }> = {}
       
       if (regularSchedules) {
         for (const schedule of regularSchedules) {

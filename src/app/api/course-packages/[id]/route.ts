@@ -140,7 +140,7 @@ export async function GET(
         active_enrollment_count: activeEnrollmentCount
       })
 
-      logApiSuccess('get-course-package', { packageId: (coursePackage as any).id })
+      logApiSuccess('get-course-package', { packageId: coursePackage && typeof coursePackage === 'object' && 'id' in coursePackage && typeof (coursePackage as Record<string, unknown>).id === 'string' ? (coursePackage as Record<string, unknown>).id as string : params.id })
 
       return createSuccessResponse({ course_package: result })
     },

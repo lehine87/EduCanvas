@@ -120,7 +120,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply filters to data
-    const applyFilters = (data: any[], type: string) => {
+    interface FilterableItem {
+      status?: string
+      grade?: string
+      role?: string
+      department?: string
+      time?: string
+      room?: string
+      [key: string]: unknown
+    }
+    
+    const applyFilters = (data: FilterableItem[], type: string) => {
       const filtered = data.filter(item => {
         // Status filter
         if (filters.status && filters.status.length > 0) {
@@ -186,15 +196,15 @@ export async function POST(request: NextRequest) {
         const matchScore = 1 - score
         if (matchScore >= 0.5) {
           results.push({
-            id: item.id,
+            id: String(item.id),
             type: 'student',
-            title: item.name,
-            subtitle: `${item.student_number} • ${item.grade}`,
-            description: `전화: ${item.phone}`,
+            title: String(item.name),
+            subtitle: `${String(item.student_number || '')} • ${String(item.grade || '')}`,
+            description: `전화: ${String(item.phone || '')}`,
             metadata: {
-              status: item.status,
-              phone: item.phone,
-              email: item.email
+              status: String(item.status || ''),
+              phone: String(item.phone || ''),
+              email: String(item.email || '')
             },
             matchScore: matchScore,
             actions: [
@@ -216,14 +226,14 @@ export async function POST(request: NextRequest) {
         const matchScore = 1 - score
         if (matchScore >= 0.5) {
           results.push({
-            id: item.id,
+            id: String(item.id),
             type: 'class',
-            title: item.name,
-            subtitle: `${item.instructor} • ${item.room}`,
-            description: `${item.time} • 학생 ${item.students}명`,
+            title: String(item.name),
+            subtitle: `${String(item.instructor || '')} • ${String(item.room || '')}`,
+            description: `${String(item.time || '')} • 학생 ${item.students || 0}명`,
             metadata: {
-              location: item.room,
-              time: item.time
+              location: String(item.room || ''),
+              time: String(item.time || '')
             },
             matchScore: matchScore,
             actions: [
@@ -245,14 +255,14 @@ export async function POST(request: NextRequest) {
         const matchScore = 1 - score
         if (matchScore >= 0.5) {
           results.push({
-            id: item.id,
+            id: String(item.id),
             type: 'staff',
-            title: item.name,
-            subtitle: `${item.department} • ${item.role === 'instructor' ? '강사' : '직원'}`,
-            description: `전화: ${item.phone}`,
+            title: String(item.name),
+            subtitle: `${String(item.department || '')} • ${item.role === 'instructor' ? '강사' : '직원'}`,
+            description: `전화: ${String(item.phone || '')}`,
             metadata: {
-              phone: item.phone,
-              email: item.email,
+              phone: String(item.phone || ''),
+              email: String(item.email || ''),
               status: 'active'
             },
             matchScore: matchScore,

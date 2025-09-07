@@ -89,7 +89,15 @@
       "Bash(timeout 10 curl -I http://localhost:3000/main)",
       "Bash(timeout 10 curl -I http://localhost:3000)",
       "Bash(timeout:*)",
-      "Bash(start http://localhost:3001)"
+      "Bash(start http://localhost:3001)",
+      "mcp__vercel__list_teams",
+      "mcp__vercel__list_projects",
+      "mcp__vercel__list_deployments",
+      "mcp__vercel__get_deployment_build_logs",
+      "Bash(git check-ignore:*)",
+      "Bash(git hash-object:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

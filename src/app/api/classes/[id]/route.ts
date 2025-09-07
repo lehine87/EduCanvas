@@ -114,7 +114,7 @@ export async function GET(
         student_count: studentCount
       })
 
-      logApiSuccess('get-class', { classId: (classData as any).id })
+      logApiSuccess('get-class', { classId: classData && typeof classData === 'object' && 'id' in classData && typeof (classData as Record<string, unknown>).id === 'string' ? (classData as Record<string, unknown>).id as string : params.id })
 
       return createSuccessResponse({ class: result })
     },
