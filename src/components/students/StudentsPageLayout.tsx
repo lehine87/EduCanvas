@@ -1,19 +1,29 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StudentSearchSidebar from './StudentSearchSidebar'
 import StudentDetailMain from './StudentDetailMain'
+import StudentOverviewDashboard from './StudentOverviewDashboard'
 import type { Student } from '@/types/student.types'
 
 interface StudentsPageLayoutProps {
   className?: string
+  initialSelectedStudent?: Student | null
 }
 
-export default function StudentsPageLayout({ className }: StudentsPageLayoutProps) {
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+export default function StudentsPageLayout({ className, initialSelectedStudent }: StudentsPageLayoutProps) {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(initialSelectedStudent || null)
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [showDetailSheet, setShowDetailSheet] = useState(false)
+
+  // initialSelectedStudent가 변경될 때 내부 상태 업데이트
+  useEffect(() => {
+    if (initialSelectedStudent) {
+      console.log('🔄 StudentsPageLayout: initialSelectedStudent 업데이트', initialSelectedStudent.name)
+      setSelectedStudent(initialSelectedStudent)
+    }
+  }, [initialSelectedStudent])
 
   const handleStudentSelect = useCallback((student: Student) => {
     setSelectedStudent(student)
@@ -47,9 +57,9 @@ export default function StudentsPageLayout({ className }: StudentsPageLayoutProp
   }, [])
 
   return (
-    <div className={`flex h-full bg-gray-50 dark:bg-gray-900 ${className || ''}`}>
+    <div className={`flex h-full ${className || ''}`}>
       {/* 사이드바 - 고정 너비 384px */}
-      <div className="w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700">
+      <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <StudentSearchSidebar
           selectedStudent={selectedStudent}
           onStudentSelect={handleStudentSelect}
@@ -62,16 +72,25 @@ export default function StudentsPageLayout({ className }: StudentsPageLayoutProp
           onDeleteSuccess={handleDeleteSuccess}
           onCloseCreateSheet={() => setShowCreateSheet(false)}
           onCloseDetailSheet={() => setShowDetailSheet(false)}
+          pendingStudentId={null}
+          onPendingStudentLoaded={() => {}}
         />
       </div>
 
       {/* 메인 영역 */}
-      <div className="flex-1 flex flex-col">
-        <StudentDetailMain
-          selectedStudent={selectedStudent}
-          onStudentUpdate={setSelectedStudent}
-          onEditStudent={handleEditStudent}
-        />
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
+        {selectedStudent ? (
+          <StudentDetailMain
+            selectedStudent={selectedStudent}
+            onStudentUpdate={setSelectedStudent}
+            onEditStudent={handleEditStudent}
+          />
+        ) : (
+          <StudentOverviewDashboard
+            onStudentSelect={handleStudentSelect}
+            onCreateStudent={handleCreateStudent}
+          />
+        )}
       </div>
 
       {/* 사이드시트용 오버레이 - 사이드시트가 열릴 때 메인 영역 dim 처리 */}

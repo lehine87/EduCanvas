@@ -1,282 +1,228 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Fuse from 'fuse.js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { SearchResult, SearchContext } from '@/lib/stores/searchStore'
+import type { SearchResult } from '@/lib/stores/searchStore'
+import type { Database } from '@/types/database'
 
-// Mock data for testing (replace with actual database queries)
-const mockData = {
-  students: [
-    {
-      id: '1',
-      name: '김민수',
-      student_number: 'ST2024001',
-      phone: '010-1234-5678',
-      grade: '1학년',
-      status: 'active',
-      email: 'minsu.kim@example.com'
-    },
-    {
-      id: '2',
-      name: '이지은',
-      student_number: 'ST2024002',
-      phone: '010-2345-6789',
-      grade: '2학년',
-      status: 'active',
-      email: 'jieun.lee@example.com'
-    },
-    {
-      id: '3',
-      name: '박서준',
-      student_number: 'ST2024003',
-      phone: '010-3456-7890',
-      grade: '3학년',
-      status: 'inactive',
-      email: 'seojun.park@example.com'
-    }
-  ],
-  classes: [
-    {
-      id: '1',
-      name: '고등 수학 A반',
-      instructor: '김선생',
-      room: '101호',
-      time: '월,수,금 14:00-16:00',
-      students: 15
-    },
-    {
-      id: '2',
-      name: '중등 영어 B반',
-      instructor: '이선생',
-      room: '102호',
-      time: '화,목 15:00-17:00',
-      students: 12
-    }
-  ],
-  staff: [
-    {
-      id: '1',
-      name: '김선생',
-      role: 'instructor',
-      department: '수학과',
-      phone: '010-9876-5432',
-      email: 'teacher.kim@example.com'
-    },
-    {
-      id: '2',
-      name: '이선생',
-      role: 'instructor',
-      department: '영어과',
-      phone: '010-8765-4321',
-      email: 'teacher.lee@example.com'
-    }
-  ]
-}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { query, context = 'dashboard', filters = {}, limit = 20 } = body
 
+    console.log('Search API called with:', { query, context, filters, limit })
 
     if (!query || query.length < 2) {
+      console.log('Query too short:', query)
       return NextResponse.json({ results: [] })
     }
 
-    // TODO: Replace with actual Supabase queries
-    // const cookieStore = cookies()
-    // const supabase = createServerClient(
-    //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    //   {
-    //     cookies: {
-    //       get(name: string) {
-    //         return cookieStore.get(name)?.value
-    //       },
-    //     },
-    //   }
-    // )
+    // Supabase 클라이언트 생성
+    const cookieStore = await cookies()
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
 
-    // Perform search based on context
+    // 인증 확인
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다' },
+        { status: 401 }
+      )
+    }
+
+    // 사용자 프로필 조회
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (!userProfile?.tenant_id) {
+      return NextResponse.json(
+        { error: '테넌트 정보를 찾을 수 없습니다' },
+        { status: 403 }
+      )
+    }
+
+    const tenantId = userProfile.tenant_id
     const results: SearchResult[] = []
 
-    // Configure Fuse.js options
-    const fuseOptions = {
-      includeScore: true,
-      threshold: 0.2, // 더 엄격한 임계값으로 정확도 향상 (0.0 = 완전일치, 1.0 = 모든것매치)
-      ignoreLocation: false, // 문자열 위치 고려하여 정확도 향상
-      findAllMatches: false, // 첫 번째 매치만 찾아서 성능 향상
-      minMatchCharLength: 2, // 최소 2글자 이상 매치
-      distance: 50, // 매치 거리 제한
-      keys: [
-        { name: 'name', weight: 0.7 }, // 이름에 가장 높은 가중치
-        { name: 'student_number', weight: 0.6 },
-        { name: 'phone', weight: 0.5 },
-        { name: 'email', weight: 0.3 },
-        { name: 'instructor', weight: 0.7 },
-        { name: 'department', weight: 0.4 },
-        { name: 'role', weight: 0.2 }
-      ]
-    }
-
-    // Apply filters to data
-    interface FilterableItem {
-      status?: string
-      grade?: string
-      role?: string
-      department?: string
-      time?: string
-      room?: string
-      [key: string]: unknown
-    }
-    
-    const applyFilters = (data: FilterableItem[], type: string) => {
-      const filtered = data.filter(item => {
-        // Status filter
-        if (filters.status && filters.status.length > 0) {
-          if (!filters.status.includes(item.status)) return false
-        }
-        
-        // Grade filter (students only)
-        if (type === 'students' && filters.grade && filters.grade.length > 0) {
-          // "1학년", "2학년" 등에서 숫자 추출하여 비교
-          const gradeNumber = item.grade?.match(/\d+/)?.[0]
-          if (!gradeNumber || !filters.grade.includes(gradeNumber)) return false
-        }
-        
-        // Role filter (staff only)
-        if (type === 'staff' && filters.role && filters.role.length > 0) {
-          if (!filters.role.includes(item.role)) return false
-        }
-        
-        // Department filter (staff only) - 실제 부서명으로 직접 비교
-        if (type === 'staff' && filters.department && filters.department.length > 0) {
-          // 선택된 부서명이 실제 부서명에 포함되는지 확인 (부분 일치 허용)
-          const hasMatchingDept = filters.department.some((dept: string) => 
-            item.department && item.department.includes(dept)
-          )
-          if (!hasMatchingDept) return false
-        }
-        
-        // Day of week filter (classes only)
-        if (type === 'classes' && filters.dayOfWeek && filters.dayOfWeek.length > 0) {
-          const dayMap: Record<string, string> = {
-            'mon': '월',
-            'tue': '화', 
-            'wed': '수',
-            'thu': '목',
-            'fri': '금',
-            'sat': '토',
-            'sun': '일'
-          }
-          const selectedDays = filters.dayOfWeek.map((d: string) => dayMap[d] || d)
-          const hasMatchingDay = selectedDays.some((day: string) => item.time && item.time.includes(day))
-          if (!hasMatchingDay) return false
-        }
-        
-        // Room filter (classes only) - 실제 강의실 이름으로 직접 비교
-        if (type === 'classes' && filters.room && filters.room.length > 0) {
-          // 선택된 강의실 중 하나라도 일치하면 통과
-          if (!filters.room.includes(item.room)) return false
-        }
-        
-        return true
-      })
-      return filtered
-    }
+    // 병렬 쿼리 실행으로 성능 최적화
+    const searchPromises: Promise<any>[] = []
 
     // Search students
     if (context === 'dashboard' || context === 'students') {
-      const filteredStudents = applyFilters(mockData.students, 'students')
-      const fuse = new Fuse(filteredStudents, fuseOptions)
-      const studentResults = fuse.search(query).slice(0, limit)
-      
-      studentResults.forEach(({ item, score = 1 }) => {
-        // 매치 스코어가 너무 낮으면 제외 (0.8 = 80% 이상 일치)
-        const matchScore = 1 - score
-        if (matchScore >= 0.5) {
-          results.push({
-            id: String(item.id),
-            type: 'student',
-            title: String(item.name),
-            subtitle: `${String(item.student_number || '')} • ${String(item.grade || '')}`,
-            description: `전화: ${String(item.phone || '')}`,
+      const studentsPromise = (async () => {
+        let studentsQuery = supabase
+          .from('students')
+          .select(`
+            id, name, student_number, grade_level, phone, email, status,
+            birth_date, gender, address, school_name, notes,
+            parent_name_1, parent_phone_1, parent_name_2, parent_phone_2,
+            emergency_contact, custom_fields, tags,
+            created_at, updated_at
+          `)
+          .eq('tenant_id', tenantId)
+          .or(`name.ilike.%${query}%,student_number.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
+        
+        if (filters.status && filters.status.length > 0) {
+          studentsQuery = studentsQuery.in('status', filters.status)
+        }
+        
+        studentsQuery = studentsQuery.limit(Math.min(limit, 50))
+        
+        const { data: students, error: studentsError } = await studentsQuery
+        
+        if (!studentsError && students) {
+          console.log('Found students:', students.length)
+          return students.map((student) => ({
+            id: student.id,
+            type: 'student' as const,
+            title: student.name,
+            subtitle: `${student.student_number || ''} • ${student.grade_level || ''}학년`,
+            description: `전화: ${student.phone || ''}`,
             metadata: {
-              status: String(item.status || ''),
-              phone: String(item.phone || ''),
-              email: String(item.email || '')
+              status: student.status || 'active',
+              phone: student.phone || '',
+              email: student.email || '',
+              avatar: undefined,
+              // 전체 학생 데이터 포함 (프리캐시용)
+              fullStudent: student
             },
-            matchScore: matchScore,
             actions: [
               { label: '보기', onClick: () => {} },
               { label: '편집', onClick: () => {} }
             ]
-          })
+          }))
         }
-      })
+        return []
+      })()
+      searchPromises.push(studentsPromise)
     }
 
     // Search classes
     if (context === 'dashboard' || context === 'classes') {
-      const filteredClasses = applyFilters(mockData.classes, 'classes')
-      const fuse = new Fuse(filteredClasses, fuseOptions)
-      const classResults = fuse.search(query).slice(0, limit)
-      
-      classResults.forEach(({ item, score = 1 }) => {
-        const matchScore = 1 - score
-        if (matchScore >= 0.5) {
-          results.push({
-            id: String(item.id),
-            type: 'class',
-            title: String(item.name),
-            subtitle: `${String(item.instructor || '')} • ${String(item.room || '')}`,
-            description: `${String(item.time || '')} • 학생 ${item.students || 0}명`,
-            metadata: {
-              location: String(item.room || ''),
-              time: String(item.time || '')
-            },
-            matchScore: matchScore,
-            actions: [
-              { label: '보기', onClick: () => {} },
-              { label: '편집', onClick: () => {} }
-            ]
+      const classesPromise = (async () => {
+        const { data: classes, error: classesError } = await supabase
+          .from('classes')
+          .select(`
+            id, 
+            name, 
+            description, 
+            classroom_id, 
+            start_date, 
+            end_date,
+            instructor_id,
+            tenant_memberships!classes_instructor_id_fkey(
+              user_profiles!tenant_memberships_user_id_fkey(name)
+            )
+          `)
+          .eq('tenant_id', tenantId)
+          .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+          .limit(Math.min(limit, 50))
+        
+        if (!classesError && classes) {
+          console.log('Found classes:', classes.length)
+          return classes.map((classItem) => {
+            const instructor = (classItem.tenant_memberships as any)?.user_profiles?.name || '강사 미정'
+            
+            return {
+              id: classItem.id,
+              type: 'class' as const,
+              title: classItem.name,
+              subtitle: `${instructor} • ${classItem.classroom_id || '강의실 미정'}`,
+              description: `${classItem.start_date || ''} ~ ${classItem.end_date || ''}`,
+              metadata: {
+                location: classItem.classroom_id || '',
+                time: `${classItem.start_date || ''} ~ ${classItem.end_date || ''}`,
+                status: 'active'
+              },
+              actions: [
+                { label: '보기', onClick: () => {} },
+                { label: '편집', onClick: () => {} }
+              ]
+            }
           })
         }
-      })
+        return []
+      })()
+      searchPromises.push(classesPromise)
     }
 
     // Search staff
     if (context === 'dashboard' || context === 'staff') {
-      const filteredStaff = applyFilters(mockData.staff, 'staff')
-      const fuse = new Fuse(filteredStaff, fuseOptions)
-      const staffResults = fuse.search(query).slice(0, limit)
-      
-      staffResults.forEach(({ item, score = 1 }) => {
-        const matchScore = 1 - score
-        if (matchScore >= 0.5) {
-          results.push({
-            id: String(item.id),
-            type: 'staff',
-            title: String(item.name),
-            subtitle: `${String(item.department || '')} • ${item.role === 'instructor' ? '강사' : '직원'}`,
-            description: `전화: ${String(item.phone || '')}`,
-            metadata: {
-              phone: String(item.phone || ''),
-              email: String(item.email || ''),
-              status: 'active'
-            },
-            matchScore: matchScore,
-            actions: [
-              { label: '보기', onClick: () => {} },
-              { label: '편집', onClick: () => {} }
-            ]
+      const staffPromise = (async () => {
+        const { data: staffMembers, error: staffError } = await supabase
+          .from('tenant_memberships')
+          .select(`
+            id,
+            status,
+            staff_info,
+            user_profiles!tenant_memberships_user_id_fkey(name, email)
+          `)
+          .eq('tenant_id', tenantId)
+          .limit(Math.min(limit, 50))
+        
+        if (!staffError && staffMembers) {
+          console.log('Found staff members:', staffMembers.length)
+          
+          // 검색어가 포함된 직원만 필터링 (DB에서 직접 필터링이 어려우므로 최소한의 클라이언트 필터링)
+          const filteredStaff = staffMembers.filter((member) => {
+            const profile = member.user_profiles as any
+            if (!profile?.name) return false
+            
+            const searchTerm = query.toLowerCase()
+            return profile.name.toLowerCase().includes(searchTerm) || 
+                   profile.email?.toLowerCase().includes(searchTerm)
+          })
+          
+          return filteredStaff.map((member) => {
+            const profile = member.user_profiles as any
+            const staffInfo = member.staff_info as any || {}
+            
+            return {
+              id: member.id,
+              type: 'staff' as const,
+              title: profile.name || '이름 없음',
+              subtitle: `${staffInfo.department || '부서 미정'} • ${staffInfo.role || '직원'}`,
+              description: `전화: ${staffInfo.phone || ''}`,
+              metadata: {
+                phone: staffInfo.phone || '',
+                email: profile.email || '',
+                status: member.status || 'active',
+                avatar: undefined
+              },
+              actions: [
+                { label: '보기', onClick: () => {} },
+                { label: '편집', onClick: () => {} }
+              ]
+            }
           })
         }
-      })
+        return []
+      })()
+      searchPromises.push(staffPromise)
     }
 
-    // Sort by match score
-    results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+    // 모든 검색 쿼리를 병렬로 실행
+    const searchResults = await Promise.all(searchPromises)
+    
+    // 결과 병합
+    searchResults.forEach(resultArray => {
+      results.push(...resultArray)
+    })
+
+    console.log('Final results:', results)
 
     return NextResponse.json({
       results: results.slice(0, limit),

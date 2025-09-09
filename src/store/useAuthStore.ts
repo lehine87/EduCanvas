@@ -12,6 +12,13 @@ interface AuthState {
   loading: boolean
   initialized: boolean
   lastProfileRefresh: number | null
+  authSubscription: any | null // 인증 리스너 구독 객체 저장
+  
+  // ✅ 업계 표준: SSR/CSR 하이드레이션을 위한 지속 데이터 (학원명 포함)
+  persistedProfile: Pick<UserProfile, 'name' | 'role' | 'tenant_id' | 'status'> & {
+    tenantName?: string
+  } | null
+  hasValidSession: boolean
   
   // Actions
   setUser: (user: User | null) => void
@@ -26,6 +33,7 @@ interface AuthState {
   // Security helpers
   clearSensitiveData: () => void
   isSessionValid: () => boolean
+  cleanup: () => void // 리스너 정리 함수
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,15 +46,46 @@ export const useAuthStore = create<AuthState>()(
         loading: false,
         initialized: false,
         lastProfileRefresh: null,
+        authSubscription: null,
+        
+        // ✅ 업계 표준: 지속된 데이터 초기값
+        persistedProfile: null,
+        hasValidSession: false,
 
         setUser: (user) => set({ user }),
-        setProfile: (profile) => set({ profile, lastProfileRefresh: Date.now() }),
-        setSession: (session) => set({ session }),
+        setProfile: (profile) => set({ 
+          profile, 
+          lastProfileRefresh: Date.now(),
+          // ✅ 업계 표준: 프로필 설정시 지속 데이터도 업데이트 (학원명 포함)
+          persistedProfile: profile ? {
+            name: profile.name,
+            role: profile.role,
+            tenant_id: profile.tenant_id,
+            status: profile.status,
+            tenantName: (profile as any)?.tenants?.name
+          } : null
+        }),
+        setSession: (session) => set({ 
+          session,
+          // ✅ 업계 표준: 세션 상태 지속 정보 업데이트
+          hasValidSession: session ? true : false
+        }),
         setLoading: (loading) => set({ loading }),
 
         initialize: async () => {
           try {
-            set({ loading: true })
+            // ✅ 업계 표준: 지속된 데이터로 즉시 UI 업데이트 (깜빡거림 방지)
+            const { persistedProfile, hasValidSession } = get()
+            if (persistedProfile && hasValidSession) {
+              console.log('🔄 [AUTH-STORE] 지속된 프로필 데이터로 즉시 UI 렌더링:', persistedProfile.name)
+              // 지속된 데이터를 임시로 profile에 설정하여 즉시 렌더링
+              set({ 
+                profile: persistedProfile as UserProfile, // 기본 정보만 있지만 UI 렌더링에는 충분
+                loading: true 
+              })
+            } else {
+              set({ loading: true })
+            }
 
             const session = await authClient.getCurrentSession()
             
@@ -57,12 +96,27 @@ export const useAuthStore = create<AuthState>()(
                 user: session.user,
                 session,
                 profile,
-                initialized: true 
+                initialized: true,
+                // ✅ 업계 표준: 완전한 프로필 데이터 로드시 지속 데이터도 업데이트
+                persistedProfile: profile ? {
+                  name: profile.name,
+                  role: profile.role,
+                  tenant_id: profile.tenant_id,
+                  status: profile.status,
+                  tenantName: (profile as any)?.tenants?.name
+                } : null,
+                hasValidSession: true
               })
               
+              // 기존 구독이 있으면 정리
+              const currentSubscription = get().authSubscription
+              if (currentSubscription) {
+                currentSubscription.subscription.unsubscribe()
+              }
+
               const { data: { subscription } } = authClient.onAuthStateChange(
                 async (event, sessionData) => {
-                  console.log('Auth state changed:', event, sessionData && typeof sessionData === 'object' && 'user' in sessionData ? 'user present' : 'no user')
+                  console.log('🔐 [AUTH-STORE] Auth state changed:', event, sessionData && typeof sessionData === 'object' && 'user' in sessionData ? 'user present' : 'no user')
                   
                   if (event === 'SIGNED_IN' && sessionData && typeof sessionData === 'object' && 'user' in sessionData && sessionData.user) {
                     const profile = await authClient.getUserProfile()
@@ -70,22 +124,37 @@ export const useAuthStore = create<AuthState>()(
                     set({ 
                       user: typedSession.user,
                       session: typedSession,
-                      profile 
+                      profile,
+                      // ✅ 업계 표준: 사인인시 지속 데이터 업데이트
+                      persistedProfile: profile ? {
+                        name: profile.name,
+                        role: profile.role,
+                        tenant_id: profile.tenant_id,
+                        status: profile.status,
+                        tenantName: (profile as any)?.tenants?.name
+                      } : null,
+                      hasValidSession: true
                     })
                   } else if (event === 'SIGNED_OUT') {
                     set({ 
                       user: null,
                       session: null,
-                      profile: null 
+                      profile: null,
+                      // ✅ 업계 표준: 사인아웃시 지속 데이터도 클리어
+                      persistedProfile: null,
+                      hasValidSession: false
                     })
                   } else if (event === 'TOKEN_REFRESHED' && sessionData && typeof sessionData === 'object' && 'user' in sessionData) {
-                    set({ session: sessionData as Session })
+                    set({ 
+                      session: sessionData as Session,
+                      hasValidSession: true
+                    })
                   }
                 }
               )
               
-              // 정리 함수를 따로 저장하지 않고 바로 처리
-              subscription.unsubscribe()
+              // ✅ 업계 표준: 구독 객체를 상태에 저장하여 나중에 정리할 수 있게 함
+              set({ authSubscription: { subscription } })
             } else {
               set({ initialized: true })
             }
@@ -100,13 +169,23 @@ export const useAuthStore = create<AuthState>()(
         signOut: async () => {
           try {
             set({ loading: true })
+            
+            // 인증 리스너 정리
+            const { authSubscription } = get()
+            if (authSubscription?.subscription) {
+              authSubscription.subscription.unsubscribe()
+            }
+            
             await authClient.signOut()
             
             set({
               user: null,
               profile: null,
               session: null,
-              loading: false
+              loading: false,
+              authSubscription: null,
+              persistedProfile: null,
+              hasValidSession: false
             })
           } catch (error) {
             console.error('Sign out error:', error)
@@ -136,19 +215,42 @@ export const useAuthStore = create<AuthState>()(
         },
 
         reset: () => {
+          // 인증 리스너 정리
+          const { authSubscription } = get()
+          if (authSubscription?.subscription) {
+            authSubscription.subscription.unsubscribe()
+          }
+          
           set({
             user: null,
             profile: null,
             session: null,
             loading: false,
             initialized: false,
-            lastProfileRefresh: null
+            lastProfileRefresh: null,
+            authSubscription: null,
+            persistedProfile: null,
+            hasValidSession: false
           })
+        },
+
+        cleanup: () => {
+          const { authSubscription } = get()
+          if (authSubscription?.subscription) {
+            console.log('🧹 [AUTH-STORE] 인증 리스너 정리 중...')
+            authSubscription.subscription.unsubscribe()
+          }
+          set({ authSubscription: null })
         },
 
         // 보안: 민감한 데이터 클리어 (메모리에서 완전 제거)
         clearSensitiveData: () => {
           const state = get()
+          
+          // 인증 리스너 정리
+          if (state.authSubscription?.subscription) {
+            state.authSubscription.subscription.unsubscribe()
+          }
           
           // 사용자 데이터를 null로 덮어쓰기
           if (state.user) {
@@ -176,7 +278,10 @@ export const useAuthStore = create<AuthState>()(
             session: null,
             loading: false,
             initialized: false,
-            lastProfileRefresh: null
+            lastProfileRefresh: null,
+            authSubscription: null,
+            persistedProfile: null,
+            hasValidSession: false
           })
           
           // 가비지 컬렉션 강제 실행 (개발환경)
@@ -205,9 +310,14 @@ export const useAuthStore = create<AuthState>()(
         partialize: (state) => ({
           initialized: state.initialized,
           lastProfileRefresh: state.lastProfileRefresh,
+          // ✅ 업계 표준: UI 깜빡거림 방지를 위한 기본 정보 지속
+          // 민감하지 않은 기본 정보만 저장하여 SSR/CSR 하이드레이션 개선
+          // persistedProfile을 state에서 직접 저장 (이미 setProfile에서 정리된 데이터)
+          persistedProfile: state.persistedProfile,
+          hasValidSession: state.hasValidSession,
         }),
-        // 민감한 데이터는 localStorage에 저장하지 않음
-        // user, profile, session은 메모리에만 보관
+        // 보안: 실제 세션 토큰, 전체 유저 데이터는 메모리에만 보관
+        // UI 개선: 기본 프로필 정보로 깜빡거림 없는 초기 렌더링
       }
     )
   )
@@ -222,26 +332,44 @@ export const useAuth = () => {
     signOut, 
     refreshProfile, 
     clearSensitiveData, 
-    isSessionValid 
+    isSessionValid,
+    cleanup,
+    // ✅ 업계 표준: 지속된 데이터에 접근하여 즉시 UI 렌더링 가능
+    persistedProfile,
+    hasValidSession
   } = useAuthStore()
   
-  // Vercel 프로덕션 환경에서는 로깅 비활성화 (429 에러 방지)
+  // ✅ 업계 표준: 앱 언마운트시 리소스 정리
   React.useEffect(() => {
-    // 개발 환경에서만 로깅
+    return () => {
+      // 컴포넌트 언마운트시 인증 리스너 정리 (메모리 누수 방지)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🧹 [AUTH] useAuth 컴포넌트 언마운트 - 리소스 정리 예약')
+      }
+    }
+  }, [])
+
+  // 개발환경 디버깅: 인증 상태 변화 로깅
+  React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🔐 [AUTH] useAuth STATE:`, {
+      console.log(`🔐 [AUTH] useAuth STATE CHANGE:`, {
         hasUser: !!user,
         hasProfile: !!profile,
+        hasPersisted: !!persistedProfile,
         loading,
         initialized,
         userEmail: user?.email,
-        profileRole: profile?.role,
-        profileStatus: profile?.status,
+        profileRole: profile?.role || persistedProfile?.role,
+        profileName: profile?.name || persistedProfile?.name,
+        hasValidSession,
         isSessionValid: isSessionValid(),
         timestamp: new Date().toISOString()
       })
     }
-  }, [user, profile, loading, initialized])
+  }, [user, profile, persistedProfile, loading, initialized, hasValidSession])
+  
+  // ✅ 업계 표준: 즉시 UI 렌더링을 위한 스마트 프로필 접근
+  const effectiveProfile = profile || persistedProfile
   
   return {
     user,
@@ -252,32 +380,43 @@ export const useAuth = () => {
     refreshProfile,
     clearSensitiveData,
     isSessionValid,
+    cleanup,
+    
+    // ✅ 업계 표준: 지속된 데이터 접근 (즉시 렌더링용)
+    persistedProfile,
+    hasValidSession,
+    effectiveProfile, // 실제 프로필 또는 지속된 프로필
+    
+    // ✅ 개선된 인증 상태 (지속 데이터 고려)
     isAuthenticated: !!user && isSessionValid(),
-    isAdmin: profile?.role === 'tenant_admin' || profile?.role === 'system_admin',
-    isSystemAdmin: profile?.role === 'system_admin',
-    isTenantAdmin: profile?.role === 'tenant_admin',
-    isInstructor: profile?.role === 'instructor',
-    isStaff: profile?.role === 'staff',
-    isViewer: profile?.role === 'viewer',
+    hasAuthData: !!(effectiveProfile && (user || hasValidSession)), // 인증 데이터 존재 여부
     
-    // 역할 기반 권한 검사 헬퍼
+    // ✅ 개선된 역할 기반 권한 (지속 데이터 사용으로 즉시 응답)
+    isAdmin: effectiveProfile?.role === 'tenant_admin' || effectiveProfile?.role === 'system_admin',
+    isSystemAdmin: effectiveProfile?.role === 'system_admin',
+    isTenantAdmin: effectiveProfile?.role === 'tenant_admin',
+    isInstructor: effectiveProfile?.role === 'instructor',
+    isStaff: effectiveProfile?.role === 'staff',
+    isViewer: effectiveProfile?.role === 'viewer',
+    
+    // 역할 기반 권한 검사 헬퍼 (지속 데이터 사용)
     hasRole: (role: string | string[]) => {
-      if (!profile?.role) return false
+      if (!effectiveProfile?.role) return false
       const roles = Array.isArray(role) ? role : [role]
-      return roles.includes(profile.role)
+      return roles.includes(effectiveProfile.role)
     },
     
-    // 테넌트 접근 권한 검사
+    // 테넌트 접근 권한 검사 (지속 데이터 사용)
     canAccessTenant: (tenantId: string) => {
-      if (profile?.role === 'system_admin') return true
-      return profile?.tenant_id === tenantId
+      if (effectiveProfile?.role === 'system_admin') return true
+      return effectiveProfile?.tenant_id === tenantId
     },
     
-    // 관리 권한 검사
-    isManager: profile?.role === 'tenant_admin' || profile?.role === 'system_admin',
+    // 관리 권한 검사 (지속 데이터 사용)
+    isManager: effectiveProfile?.role === 'tenant_admin' || effectiveProfile?.role === 'system_admin',
     
-    // 활성 상태 검사
-    isActive: profile?.status === 'active'
+    // 활성 상태 검사 (지속 데이터 사용)
+    isActive: effectiveProfile?.status === 'active'
   }
 }
 

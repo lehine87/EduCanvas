@@ -104,7 +104,15 @@
       "Bash(git config:*)",
       "Bash(git rm:*)",
       "Bash(git restore:*)",
-      "mcp__vercel__web_fetch_vercel_url"
+      "mcp__vercel__web_fetch_vercel_url",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_evaluate",
+      "Bash(start http://localhost:3001/main/students)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

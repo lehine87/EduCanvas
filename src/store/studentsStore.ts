@@ -96,6 +96,9 @@ interface StudentsState {
     getStudentById: (studentId: string) => Student | undefined
     updateStudentInList: (studentId: string, updates: Partial<Student>) => void
     removeStudentFromList: (studentId: string) => void
+    
+    // 프리캐시
+    precacheStudents: (students: Student[]) => void
   }
 }
 
@@ -588,6 +591,23 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
         draft.students = draft.students.filter((s: Student) => s.id !== studentId)
         draft.pagination.total -= 1
       }))
+    },
+
+    // 프리캐시: 검색 결과에서 학생 데이터 미리 저장
+    precacheStudents: (students: Student[]) => {
+      set(produce((draft) => {
+        students.forEach(student => {
+          const existingIndex = draft.students.findIndex((s: Student) => s.id === student.id)
+          if (existingIndex !== -1) {
+            // 기존 데이터 업데이트 (더 상세한 정보로)
+            draft.students[existingIndex] = { ...draft.students[existingIndex], ...student }
+          } else {
+            // 새로운 학생 데이터 추가
+            draft.students.unshift(student)
+          }
+        })
+      }))
+      console.log('✅ [STUDENTS-STORE] 프리캐시 완료:', students.length + '명')
     }
   }
 }))
@@ -605,5 +625,6 @@ export const {
   setFilters,
   setSearchTerm,
   clearFilters,
-  fetchStudentStats
+  fetchStudentStats,
+  precacheStudents
 } = useStudentsStore.getState().actions

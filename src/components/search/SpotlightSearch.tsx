@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { Search, Command, ArrowRight, Clock, User, School, Users, Calendar } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useSearchStore } from '@/lib/stores/searchStore'
 import { useDebounce } from '@/components/search/hooks/useDebounce'
+import { useAuthStore } from '@/store/useAuthStore'
 import type { SearchResult } from '@/lib/stores/searchStore'
 
 interface SpotlightSearchProps {
@@ -17,12 +19,24 @@ interface SpotlightSearchProps {
 }
 
 export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
+  const router = useRouter()
+  const { user, profile } = useAuthStore()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [loading, setLoading] = useState(false)
-  const debouncedQuery = useDebounce(query, 200) // 더 빠른 응답을 위해 200ms
+  const debouncedQuery = useDebounce(query, 150) // 더 빠른 응답을 위해 150ms
+
+  // 비로그인 상태 체크 및 리다이렉트
+  useEffect(() => {
+    if (isOpen && !user) {
+      console.log('🔒 비로그인 상태 감지 - 로그인 페이지로 리다이렉트')
+      onClose()
+      router.push('/auth/login')
+      return
+    }
+  }, [isOpen, user, onClose, router])
 
   // Focus input when modal opens
   useEffect(() => {
@@ -46,12 +60,19 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
 
   // Search handler
   const handleSearch = useCallback(async (searchQuery: string) => {
+    // 비로그인 상태 체크
+    if (!user) {
+      console.log('🔒 비로그인 상태 - 검색 중단')
+      return
+    }
+
     if (searchQuery.length < 2) {
       setResults([])
       return
     }
 
     setLoading(true)
+    console.log('Spotlight: Searching for:', searchQuery)
     
     try {
       const response = await fetch('/api/search', {
@@ -66,10 +87,62 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
         })
       })
 
+      console.log('Spotlight: Response status:', response.status)
+      const data = await response.json()
+      console.log('Spotlight: Response data:', data)
+
       if (response.ok) {
-        const data = await response.json()
         setResults(data.results || [])
         setSelectedIndex(0)
+        
+        // 학생 데이터 프리페치: 검색 결과에서 학생 정보를 미리 캐시
+        const studentResults = (data.results || []).filter((r: SearchResult) => r.type === 'student')
+        console.log('🔍 검색 결과 확인:', {
+          totalResults: data.results?.length || 0,
+          studentResults: studentResults.length,
+          hasFullStudent: studentResults.map((r: SearchResult) => !!r.metadata?.fullStudent)
+        })
+        
+        if (studentResults.length > 0) {
+          console.log('🚀 프리페치: 학생 데이터 캐싱 시작', studentResults.length + '명')
+          
+          // 검색 결과에서 전체 학생 데이터를 추출하여 스토어에 프리캐시
+          const studentsToCache = studentResults
+            .filter((result: SearchResult) => {
+              console.log('🔍 학생 데이터 체크:', {
+                id: result.id,
+                title: result.title,
+                hasMetadata: !!result.metadata,
+                hasFullStudent: !!result.metadata?.fullStudent
+              })
+              return result.metadata?.fullStudent
+            })
+            .map((result: SearchResult) => {
+              const fullStudent = result.metadata?.fullStudent as any
+              console.log('📦 프리캐시할 학생 데이터:', {
+                id: fullStudent.id,
+                name: fullStudent.name,
+                tenant_id: fullStudent.tenant_id || profile?.tenant_id
+              })
+              return {
+                ...fullStudent,
+                tenant_id: fullStudent.tenant_id || profile?.tenant_id || '',
+              }
+            })
+          
+          console.log('📊 프리캐시 대상:', studentsToCache.length + '명')
+          
+          if (studentsToCache.length > 0) {
+            // 동적 import로 스토어 불러오기 (순환 의존성 방지)
+            import('@/store/studentsStore').then(({ precacheStudents }) => {
+              console.log('✅ 프리캐시 실행:', studentsToCache.length + '명')
+              precacheStudents(studentsToCache)
+            })
+          }
+        }
+      } else {
+        console.error('Spotlight: API error:', data)
+        setResults([])
       }
     } catch (error) {
       console.error('Spotlight search error:', error)
@@ -77,7 +150,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user])
 
   // Debounced search
   useEffect(() => {
@@ -122,24 +195,24 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
   const handleSelectResult = useCallback((result: SearchResult) => {
     onClose()
     
-    // Navigate to result
+    // ✅ 업계 표준: Next.js 클라이언트 사이드 라우팅 사용 (깜빡거림 없음)
     setTimeout(() => {
       switch (result.type) {
         case 'student':
-          window.location.href = `/main/students/${result.id}`
+          router.push(`/main/students/${result.id}`)
           break
         case 'class':
-          window.location.href = `/main/classes/${result.id}`
+          router.push(`/main/classes?selected=${result.id}`)
           break
         case 'staff':
-          window.location.href = `/main/staff/${result.id}`
+          router.push(`/main/staff?selected=${result.id}`)
           break
         case 'schedule':
-          window.location.href = `/main/schedule/${result.id}`
+          router.push(`/main/schedule?selected=${result.id}`)
           break
       }
     }, 100)
-  }, [onClose])
+  }, [onClose, router])
 
   // Get type icon
   const getTypeIcon = (type: SearchResult['type']) => {

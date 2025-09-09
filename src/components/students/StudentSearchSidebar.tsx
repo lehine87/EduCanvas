@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { StudentDetailSideSheet } from './StudentDetailSideSheet'
 import { CreateStudentSideSheet } from './CreateStudentSideSheet'
+import QuickAccessPanel from './QuickAccessPanel'
 import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -20,8 +21,7 @@ import {
   PencilIcon,
   UserIcon,
   PhoneIcon,
-  EnvelopeIcon,
-  AdjustmentsHorizontalIcon
+  EnvelopeIcon
 } from '@heroicons/react/24/outline'
 import type { Student } from '@/types/student.types'
 
@@ -37,6 +37,8 @@ interface StudentSearchSidebarProps {
   onDeleteSuccess: () => void
   onCloseCreateSheet: () => void
   onCloseDetailSheet: () => void
+  pendingStudentId?: string | null
+  onPendingStudentLoaded?: () => void
 }
 
 export default function StudentSearchSidebar({
@@ -50,46 +52,138 @@ export default function StudentSearchSidebar({
   onUpdateSuccess,
   onDeleteSuccess,
   onCloseCreateSheet,
-  onCloseDetailSheet
+  onCloseDetailSheet,
+  pendingStudentId,
+  onPendingStudentLoaded
 }: StudentSearchSidebarProps) {
   const { profile } = useAuthStore()
   const { students, loading, actions } = useStudentsStore()
   
   const [basicSearchTerm, setBasicSearchTerm] = useState('')
-  const [detailedSearchTerm, setDetailedSearchTerm] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
   const [searchResults, setSearchResults] = useState<Student[]>([])
-  const [filteredResults, setFilteredResults] = useState<Student[]>([])
   const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1)
   
   const debouncedBasicSearch = useDebounce(basicSearchTerm, 300)
-  const debouncedDetailedSearch = useDebounce(detailedSearchTerm, 300)
 
   const tenantId = profile?.tenant_id
 
   // 초기 학생 목록 로드
   useEffect(() => {
+    console.log('📚 Student fetch useEffect:', { tenantId, hasActions: !!actions })
     if (tenantId) {
+      console.log('📞 Fetching students for tenant:', tenantId)
       actions.fetchStudents(tenantId)
     }
   }, [tenantId, actions])
-
-  // 기본 검색 처리
+  
+  // pendingStudentId가 있을 때 해당 학생 자동 선택
   useEffect(() => {
-    if (debouncedBasicSearch.length >= 2) {
-      const results = students.filter(student =>
-        student.name.toLowerCase().includes(debouncedBasicSearch.toLowerCase()) ||
-        student.student_number?.toLowerCase().includes(debouncedBasicSearch.toLowerCase()) ||
-        student.phone?.toLowerCase().includes(debouncedBasicSearch.toLowerCase()) ||
-        student.parent_phone_1?.toLowerCase().includes(debouncedBasicSearch.toLowerCase())
-      )
-      setSearchResults(results)
-      setSelectedSearchIndex(-1) // 검색 결과 변경시 선택 초기화
-    } else {
-      setSearchResults([])
-      setSelectedSearchIndex(-1)
+    console.log('🔄 useEffect triggered:', { 
+      pendingStudentId, 
+      studentsLength: students.length, 
+      tenantId,
+      hasOnStudentSelect: !!onStudentSelect,
+      hasOnPendingStudentLoaded: !!onPendingStudentLoaded
+    })
+    
+    const selectPendingStudent = () => {
+      if (pendingStudentId && students.length > 0) {
+        console.log('🔍 Looking for pending student:', { pendingStudentId, studentsCount: students.length })
+        
+        // 이미 로드된 학생 목록에서 해당 ID 찾기
+        const targetStudent = students.find(student => student.id === pendingStudentId)
+        
+        if (targetStudent) {
+          console.log('✅ Found and selecting student:', targetStudent.name)
+          onStudentSelect(targetStudent)
+          onPendingStudentLoaded?.()
+        } else {
+          console.warn('⚠️ Student not found in loaded list:', pendingStudentId)
+          // 학생을 찾을 수 없으면 API로 다시 시도
+          loadStudentFromApi()
+        }
+      }
     }
-  }, [debouncedBasicSearch, students])
+    
+    const loadStudentFromApi = async () => {
+      if (pendingStudentId && tenantId) {
+        console.log('📞 Fetching student from API:', pendingStudentId)
+        try {
+          const response = await fetch(`/api/students/${pendingStudentId}`)
+          console.log('📞 API response status:', response.status)
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log('📄 API response data:', data)
+            
+            if (data.success && data.data) {
+              console.log('✅ Selecting student from API:', data.data.name)
+              onStudentSelect(data.data)
+              onPendingStudentLoaded?.()
+            } else {
+              console.warn('⚠️ API returned no student data')
+              onPendingStudentLoaded?.()
+            }
+          } else {
+            console.error('❌ API call failed:', response.status)
+            onPendingStudentLoaded?.()
+          }
+        } catch (error) {
+          console.error('💥 Failed to load pending student:', error)
+          onPendingStudentLoaded?.()
+        }
+      }
+    }
+    
+    selectPendingStudent()
+  }, [pendingStudentId, students, tenantId, onStudentSelect, onPendingStudentLoaded])
+
+  // 기본 검색 처리 - API 호출 방식
+  useEffect(() => {
+    const searchStudents = async () => {
+      if (debouncedBasicSearch.length >= 2) {
+        try {
+          const response = await fetch('/api/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: debouncedBasicSearch,
+              context: 'students',
+              limit: 10
+            })
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            const studentResults = data.results
+              ?.filter((r: any) => r.type === 'student')
+              ?.map((r: any) => ({
+                id: r.id,
+                name: r.title,
+                student_number: r.subtitle?.split(' • ')[0] || '',
+                phone: r.metadata?.phone || '',
+                email: r.metadata?.email || '',
+                status: r.metadata?.status || 'active',
+                avatar_url: r.metadata?.avatar,
+                tenant_id: tenantId
+              })) || []
+            setSearchResults(studentResults)
+            setSelectedSearchIndex(-1)
+          }
+        } catch (error) {
+          console.error('Search error:', error)
+          setSearchResults([])
+        }
+      } else {
+        setSearchResults([])
+        setSelectedSearchIndex(-1)
+      }
+    }
+    
+    searchStudents()
+  }, [debouncedBasicSearch, tenantId])
 
   // 기본검색 키보드 네비게이션
   useEffect(() => {
@@ -126,21 +220,6 @@ export default function StudentSearchSidebar({
     return undefined
   }, [searchResults, selectedSearchIndex])
 
-  // 상세 검색 처리
-  useEffect(() => {
-    if (debouncedDetailedSearch.length >= 1) {
-      const results = students.filter(student =>
-        student.name.toLowerCase().includes(debouncedDetailedSearch.toLowerCase()) ||
-        student.student_number?.toLowerCase().includes(debouncedDetailedSearch.toLowerCase()) ||
-        student.phone?.toLowerCase().includes(debouncedDetailedSearch.toLowerCase()) ||
-        student.parent_phone_1?.toLowerCase().includes(debouncedDetailedSearch.toLowerCase()) ||
-        student.email?.toLowerCase().includes(debouncedDetailedSearch.toLowerCase())
-      )
-      setFilteredResults(results)
-    } else {
-      setFilteredResults([]) // 초기 상태에서는 빈 목록 표시
-    }
-  }, [debouncedDetailedSearch, students])
 
   const handleBasicSearchSelect = useCallback((student: Student) => {
     onStudentSelect(student)
@@ -148,9 +227,6 @@ export default function StudentSearchSidebar({
     setSearchResults([])
   }, [onStudentSelect])
 
-  const handleDetailedSearchSelect = useCallback((student: Student) => {
-    onStudentSelect(student)
-  }, [onStudentSelect])
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -305,99 +381,13 @@ export default function StudentSearchSidebar({
           </div>
         </div>
 
-        {/* 상세 검색 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">상세 검색</h4>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <AdjustmentsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <Input
-            placeholder="전체 학생 검색..."
-            value={detailedSearchTerm}
-            onChange={(e) => setDetailedSearchTerm(e.target.value)}
-            className="mb-3"
+        {/* 빠른 액세스 패널 */}
+        <div className="flex-1 p-4 overflow-hidden">
+          <QuickAccessPanel 
+            selectedStudent={selectedStudent}
+            onStudentSelect={onStudentSelect}
+            className="h-full"
           />
-
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2 mb-3"
-              >
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  추가 필터 옵션 (향후 확장 예정)
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* 필터링된 학생 목록 */}
-        <div className="flex-1 p-4">
-          <ScrollArea className="h-full">
-            {filteredResults.length === 0 && !detailedSearchTerm ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <UserIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    검색어를 입력하여<br />학생을 찾아보세요
-                  </p>
-                </div>
-              </div>
-            ) : filteredResults.length === 0 && detailedSearchTerm ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <UserIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    검색 결과가 없습니다
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredResults.map((student) => (
-                <Card
-                  key={student.id}
-                  className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                    selectedStudent?.id === student.id ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                  onClick={() => handleDetailedSearchSelect(student)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={student.profile_image || undefined} />
-                        <AvatarFallback className="text-xs">
-                          {student.name.substring(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {student.name}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {student.student_number || '학번 없음'}
-                        </p>
-                      </div>
-                      <Badge variant={getStatusBadgeVariant(student.status || 'active')} className="text-xs">
-                        {getStatusText(student.status || 'active')}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              </div>
-            )}
-          </ScrollArea>
         </div>
       </div>
 

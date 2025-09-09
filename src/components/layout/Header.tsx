@@ -31,7 +31,8 @@ export function Header({
   onToggleSidebar, 
   showSidebarToggle 
 }: MainHeaderProps) {
-  const { profile } = useAuth()
+  // ✅ 개선: 지속된 데이터 사용하여 깜빡거림 방지
+  const { profile, effectiveProfile } = useAuth()
   const visibleTabs = useVisibleTabs()
   const { theme, setTheme } = useTheme()
 
@@ -50,11 +51,15 @@ export function Header({
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
             <AvatarFallback className="bg-white/20 text-white text-sm font-bold">
-              {profile?.tenants?.name?.charAt(0) || profile?.tenant_id?.slice(0, 1)?.toUpperCase() || 'A'}
+              {/* ✅ 개선: 지속된 데이터 우선 사용 */}
+              {profile?.tenants?.name?.charAt(0) || 
+               effectiveProfile?.tenantName?.charAt(0) || 
+               effectiveProfile?.tenant_id?.slice(0, 1)?.toUpperCase() || 'A'}
             </AvatarFallback>
           </Avatar>
           <h1 className="text-lg font-bold text-white">
-            {profile?.tenants?.name || '학원명'}
+            {/* ✅ 개선: 실제 데이터 우선, 로딩 중에는 기본값 표시 */}
+            {profile?.tenants?.name || (effectiveProfile ? (effectiveProfile.tenantName || '학원명') : '학원명')}
           </h1>
         </div>
         
