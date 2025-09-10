@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useCreateInstructor } from '@/hooks/mutations/useInstructorMutations'
+import { useCreateInstructor } from '@/hooks/mutations/useStaffMutations'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
   UserPlusIcon, 
@@ -35,9 +35,9 @@ import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 /**
- * CreateInstructorSideSheet Props
+ * CreateStaffSideSheet Props
  */
-export interface CreateInstructorSideSheetProps {
+export interface CreateStaffSideSheetProps {
   /** Sheet 열림 상태 */
   open: boolean
   /** Sheet 상태 변경 핸들러 */
@@ -105,7 +105,7 @@ const initialFormData: InstructorFormData = {
 }
 
 /**
- * CreateInstructorSideSheet - 강사 등록 Sheet 컴포넌트
+ * CreateStaffSideSheet - 강사 등록 Sheet 컴포넌트
  * 
  * 특징:
  * - 학생 등록 Sheet와 동일한 UI 패턴
@@ -114,7 +114,7 @@ const initialFormData: InstructorFormData = {
  * - 접근성 완벽 지원
  * - 오른쪽에서 슬라이드되는 Sheet UI
  */
-const CreateInstructorSideSheet = memo<CreateInstructorSideSheetProps>(({
+const CreateStaffSideSheet = memo<CreateStaffSideSheetProps>(({
   open,
   onOpenChange,
   onSuccess,
@@ -704,6 +704,6 @@ const CreateInstructorSideSheet = memo<CreateInstructorSideSheetProps>(({
   )
 })
 
-CreateInstructorSideSheet.displayName = 'CreateInstructorSideSheet'
+CreateStaffSideSheet.displayName = 'CreateStaffSideSheet'
 
-export default CreateInstructorSideSheet
+export default CreateStaffSideSheet

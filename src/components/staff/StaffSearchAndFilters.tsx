@@ -19,17 +19,17 @@ import { cn } from '@/lib/utils'
 import type { InstructorFilters } from '@/types/staff.types'
 // import type { DateRange } from 'react-day-picker'
 
-interface InstructorSearchAndFiltersProps {
+interface StaffSearchAndFiltersProps {
   onFilterChange: (filters: InstructorFilters) => void
   initialFilters?: InstructorFilters
   className?: string
 }
 
-export default function InstructorSearchAndFilters({
+export default function StaffSearchAndFilters({
   onFilterChange,
   initialFilters = {},
   className
-}: InstructorSearchAndFiltersProps) {
+}: StaffSearchAndFiltersProps) {
   const [localFilters, setLocalFilters] = useState<InstructorFilters>(initialFilters)
   // const [dateRange, setDateRange] = useState<DateRange | undefined>()
 

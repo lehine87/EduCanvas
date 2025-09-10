@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import InstructorSearchSidebar from './InstructorSearchSidebar'
-import InstructorDetailMain from './InstructorDetailMain'
-import InstructorOverviewDashboard from './InstructorOverviewDashboard'
+import StaffSearchSidebar from './StaffSearchSidebar'
+import StaffDetailMain from './StaffDetailMain'
+import StaffOverviewDashboard from './StaffOverviewDashboard'
 import type { Instructor } from '@/types/staff.types'
 
 interface InstructorsPageLayoutProps {
@@ -62,7 +62,7 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
     <div className={`flex h-full ${className || ''}`}>
       {/* 사이드바 - 고정 너비 384px */}
       <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <InstructorSearchSidebar
+        <StaffSearchSidebar
           selectedInstructor={selectedInstructor}
           onInstructorSelect={handleInstructorSelect}
           onCreateInstructor={handleCreateInstructor}
@@ -82,13 +82,13 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
       {/* 메인 영역 */}
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
         {selectedInstructor ? (
-          <InstructorDetailMain
+          <StaffDetailMain
             selectedInstructor={selectedInstructor}
             onInstructorUpdate={setSelectedInstructor}
             onEditInstructor={handleEditInstructor}
           />
         ) : (
-          <InstructorOverviewDashboard
+          <StaffOverviewDashboard
             onInstructorSelect={handleInstructorSelect}
             onCreateInstructor={handleCreateInstructor}
           />

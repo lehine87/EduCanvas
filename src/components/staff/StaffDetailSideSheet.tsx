@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { useUpdateInstructor, useDeleteInstructor } from '@/hooks/mutations/useInstructorMutations'
+import { useUpdateInstructor, useDeleteInstructor } from '@/hooks/mutations/useStaffMutations'
 import { useInstructor } from '@/hooks/queries'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
@@ -38,9 +38,9 @@ import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 /**
- * InstructorDetailSideSheet Props
+ * StaffDetailSideSheet Props
  */
-export interface InstructorDetailSideSheetProps {
+export interface StaffDetailSideSheetProps {
   /** Sheet 열림 상태 */
   open: boolean
   /** Sheet 상태 변경 핸들러 */
@@ -91,7 +91,7 @@ interface InstructorFormData {
 }
 
 /**
- * InstructorDetailSideSheet - 강사 상세/수정 Sheet 컴포넌트
+ * StaffDetailSideSheet - 강사 상세/수정 Sheet 컴포넌트
  * 
  * 특징:
  * - 학생 상세 Sheet와 동일한 UI 패턴
@@ -100,7 +100,7 @@ interface InstructorFormData {
  * - 접근성 완벽 지원
  * - 오른쪽에서 슬라이드되는 Sheet UI
  */
-export const InstructorDetailSideSheet = memo<InstructorDetailSideSheetProps>(({
+export const StaffDetailSideSheet = memo<StaffDetailSideSheetProps>(({
   open,
   onOpenChange,
   instructorId,
@@ -936,4 +936,4 @@ export const InstructorDetailSideSheet = memo<InstructorDetailSideSheetProps>(({
   )
 })
 
-InstructorDetailSideSheet.displayName = 'InstructorDetailSideSheet'
+StaffDetailSideSheet.displayName = 'StaffDetailSideSheet'

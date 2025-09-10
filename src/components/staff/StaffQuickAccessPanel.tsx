@@ -27,7 +27,7 @@ import {
 } from '@heroicons/react/24/solid'
 import type { Instructor, StaffInfo } from '@/types/staff.types'
 
-interface InstructorQuickAccessPanelProps {
+interface StaffQuickAccessPanelProps {
   selectedInstructor: Instructor | null
   onInstructorSelect: (instructor: Instructor) => void
   className?: string
@@ -70,11 +70,11 @@ interface AlertItem {
   priority: 'high' | 'medium' | 'low'
 }
 
-export default function InstructorQuickAccessPanel({ 
+export default function StaffQuickAccessPanel({ 
   selectedInstructor, 
   onInstructorSelect,
   className = ''
-}: InstructorQuickAccessPanelProps) {
+}: StaffQuickAccessPanelProps) {
   const { profile } = useAuthStore()
   const queryClient = useQueryClient()
   const [favoriteInstructors, setFavoriteInstructors] = useState<FavoriteInstructor[]>([])

@@ -21,17 +21,17 @@ import type { Instructor, StaffInfo, SalaryCalculation, AttendanceRecord } from 
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
-interface InstructorDetailMainProps {
+interface StaffDetailMainProps {
   selectedInstructor: Instructor
   onInstructorUpdate: (instructor: Instructor) => void
   onEditInstructor: () => void
 }
 
-export default function InstructorDetailMain({
+export default function StaffDetailMain({
   selectedInstructor,
   onInstructorUpdate,
   onEditInstructor
-}: InstructorDetailMainProps) {
+}: StaffDetailMainProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [salaryHistory, setSalaryHistory] = useState<SalaryCalculation[]>([])
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])

@@ -6,7 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { updateInstructor } from '@/lib/api/staff.api'
-import { instructorKeys } from './useInstructors'
+import { instructorKeys } from './useStaffs'
 import { useToast } from '@/components/ui/use-toast'
 import type { UpdateInstructorRequest, Instructor } from '@/types/staff.types'
 

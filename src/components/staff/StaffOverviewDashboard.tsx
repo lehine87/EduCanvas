@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { DataTable, SortableHeader } from '@/components/data-table'
-import InstructorStatsGrid from './InstructorStatsGrid'
-import InstructorSearchAndFilters from './InstructorSearchAndFilters'
+import StaffStatsGrid from './StaffStatsGrid'
+import StaffSearchAndFilters from './StaffSearchAndFilters'
 import { useInstructorsWithFilters, useInstructorStats } from '@/hooks/queries'
 import {
   MagnifyingGlassIcon,
@@ -26,7 +26,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useInstructorsStore } from '@/store/staffStore'
 
-interface InstructorOverviewDashboardProps {
+interface StaffOverviewDashboardProps {
   onInstructorSelect?: (instructor: Instructor) => void
   onCreateInstructor?: () => void
   className?: string
@@ -134,11 +134,11 @@ const getStatusBadgeVariant = (status: string) => {
   }
 }
 
-export default function InstructorOverviewDashboard({ 
+export default function StaffOverviewDashboard({ 
   onInstructorSelect, 
   onCreateInstructor,
   className = '' 
-}: InstructorOverviewDashboardProps) {
+}: StaffOverviewDashboardProps) {
   const { profile } = useAuthStore()
   
   // T-V2-012: 고도화된 필터링 시스템 사용
@@ -172,7 +172,7 @@ export default function InstructorOverviewDashboard({
   // TODO: Create useAllInstructorsStats hook for overview statistics
 
   // 통계 데이터 디버깅
-  console.log('📊 [InstructorOverviewDashboard] 통계 상태:', {
+  console.log('📊 [StaffOverviewDashboard] 통계 상태:', {
     allInstructorsStats,
     statsLoading,
     statsError,
@@ -198,13 +198,13 @@ export default function InstructorOverviewDashboard({
   // 레거시 모드에서는 기존 방식으로 데이터 로드
   useEffect(() => {
     if (!useAdvancedFilters && profile?.tenant_id) {
-      console.log('👨‍🏫 [InstructorOverviewDashboard] 레거시 강사 데이터 로드:', profile.tenant_id)
+      console.log('👨‍🏫 [StaffOverviewDashboard] 레거시 강사 데이터 로드:', profile.tenant_id)
       fetchInstructors(profile.tenant_id)
     }
   }, [profile?.tenant_id, fetchInstructors, useAdvancedFilters])
 
   // 디버깅용 로그
-  console.log('👨‍🏫 [InstructorOverviewDashboard] 렌더링:', {
+  console.log('👨‍🏫 [StaffOverviewDashboard] 렌더링:', {
     instructorsCount: finalInstructors.length,
     loading: finalLoading,
     totalCount: finalTotalCount,
@@ -355,7 +355,7 @@ export default function InstructorOverviewDashboard({
           </div>
 
           {/* 통계 카드 그리드 - 전체 통계 데이터 사용 */}
-          <InstructorStatsGrid 
+          <StaffStatsGrid 
             stats={allInstructorsStats} // API 통계 데이터 사용
             isLoading={statsLoading}
           />
@@ -404,7 +404,7 @@ export default function InstructorOverviewDashboard({
                       React Query + API 연동
                     </Badge>
                   </div>
-                  <InstructorSearchAndFilters
+                  <StaffSearchAndFilters
                     onFilterChange={handleFiltersChange}
                     initialFilters={filters}
                     className="border-0 p-0 shadow-none"

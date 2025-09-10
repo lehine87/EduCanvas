@@ -9,13 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { InstructorDetailSideSheet } from './InstructorDetailSideSheet'
-import CreateInstructorSideSheet from './CreateInstructorSideSheet'
-import InstructorQuickAccessPanel from './InstructorQuickAccessPanel'
+import { StaffDetailSideSheet } from './StaffDetailSideSheet'
+import CreateStaffSideSheet from './CreateStaffSideSheet'
+import StaffQuickAccessPanel from './StaffQuickAccessPanel'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useInstructorsWithFilters, useInstructorSearch } from '@/hooks/queries'
-import { useCreateInstructor, useUpdateInstructor, useDeleteInstructor } from '@/hooks/mutations/useInstructorMutations'
+import { useCreateInstructor, useUpdateInstructor, useDeleteInstructor } from '@/hooks/mutations/useStaffMutations'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -26,7 +26,7 @@ import {
 } from '@heroicons/react/24/outline'
 import type { Instructor, StaffInfo } from '@/types/staff.types'
 
-interface InstructorSearchSidebarProps {
+interface StaffSearchSidebarProps {
   selectedInstructor: Instructor | null
   onInstructorSelect: (instructor: Instructor) => void
   onCreateInstructor: () => void
@@ -42,7 +42,7 @@ interface InstructorSearchSidebarProps {
   onPendingInstructorLoaded?: () => void
 }
 
-export default function InstructorSearchSidebar({
+export default function StaffSearchSidebar({
   selectedInstructor,
   onInstructorSelect,
   onCreateInstructor,
@@ -56,7 +56,7 @@ export default function InstructorSearchSidebar({
   onCloseDetailSheet,
   pendingInstructorId,
   onPendingInstructorLoaded
-}: InstructorSearchSidebarProps) {
+}: StaffSearchSidebarProps) {
   const { profile } = useAuthStore()
   
   const [basicSearchTerm, setBasicSearchTerm] = useState('')
@@ -307,7 +307,7 @@ export default function InstructorSearchSidebar({
 
         {/* 빠른 액세스 패널 */}
         <div className="flex-1 p-4 overflow-hidden">
-          <InstructorQuickAccessPanel 
+          <StaffQuickAccessPanel 
             selectedInstructor={selectedInstructor}
             onInstructorSelect={onInstructorSelect}
             className="h-full"
@@ -316,7 +316,7 @@ export default function InstructorSearchSidebar({
       </div>
 
       {/* 사이드시트들 - 사이드바 우측에서 슬라이딩 */}
-      <CreateInstructorSideSheet
+      <CreateStaffSideSheet
         open={showCreateSheet}
         onOpenChange={onCloseCreateSheet}
         onSuccess={(newInstructor) => {
@@ -331,7 +331,7 @@ export default function InstructorSearchSidebar({
       />
 
       {selectedInstructor && (
-        <InstructorDetailSideSheet
+        <StaffDetailSideSheet
           open={showDetailSheet}
           onOpenChange={onCloseDetailSheet}
           instructorId={selectedInstructor.id}

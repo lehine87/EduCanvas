@@ -13,17 +13,17 @@ import {
 import { cn } from '@/lib/utils'
 import type { InstructorDashboardStats } from '@/types/staff.types'
 
-interface InstructorStatsGridProps {
+interface StaffStatsGridProps {
   stats?: InstructorDashboardStats | null
   isLoading?: boolean
   className?: string
 }
 
-export default function InstructorStatsGrid({ 
+export default function StaffStatsGrid({ 
   stats, 
   isLoading = false,
   className 
-}: InstructorStatsGridProps) {
+}: StaffStatsGridProps) {
   
   const statsCards = [
     {

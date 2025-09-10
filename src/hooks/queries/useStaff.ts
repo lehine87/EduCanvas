@@ -6,7 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { fetchInstructorById } from '@/lib/api/staff.api'
-import { instructorKeys } from './useInstructors'
+import { instructorKeys } from './useStaffs'
 import type { Instructor } from '@/types/staff.types'
 
 /**

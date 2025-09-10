@@ -67,14 +67,7 @@ export type TenantMembershipUpdate = Database['public']['Tables']['tenant_member
 
 // Staff types (unified instructor/staff management)
 export type {
-  StaffInfo,
-  StaffMember,
-  StaffStats,
-  StaffJobFunction,
-  StaffRole,
-  StaffStatus,
-  CreateStaffRequest,
-  UpdateStaffRequest
+  StaffInfo
 } from './staff.types'
 
 // Legacy instructor table (will be deprecated)
