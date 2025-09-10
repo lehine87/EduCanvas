@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import InstructorSearchSidebar from './InstructorSearchSidebar'
 import InstructorDetailMain from './InstructorDetailMain'
 import InstructorOverviewDashboard from './InstructorOverviewDashboard'
-import type { Instructor } from '@/types/instructor.types'
+import type { Instructor } from '@/types/staff.types'
 
 interface InstructorsPageLayoutProps {
   className?: string

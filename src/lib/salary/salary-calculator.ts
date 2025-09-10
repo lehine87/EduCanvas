@@ -4,7 +4,7 @@
  * @module T-V2-012
  */
 
-import type { SalaryPolicyType, SalaryCalculationDetail } from '@/types/instructor.types'
+import type { SalaryPolicyType, SalaryCalculationDetail } from '@/types/staff.types'
 
 // ============================================================================
 // Types & Interfaces

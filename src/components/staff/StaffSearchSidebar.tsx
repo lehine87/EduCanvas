@@ -24,7 +24,7 @@ import {
   PhoneIcon,
   EnvelopeIcon
 } from '@heroicons/react/24/outline'
-import type { Instructor, StaffInfo } from '@/types/instructor.types'
+import type { Instructor, StaffInfo } from '@/types/staff.types'
 
 interface InstructorSearchSidebarProps {
   selectedInstructor: Instructor | null

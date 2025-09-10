@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query'
-import { createInstructor, updateInstructor, deleteInstructor } from '@/lib/api/instructors.api'
+import { createInstructor, updateInstructor, deleteInstructor } from '@/lib/api/staff.api'
 import { instructorQueryKeys } from '@/lib/react-query'
-import type { Instructor } from '@/types/instructor.types'
+import type { Instructor } from '@/types/staff.types'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '@/store/useAuthStore'
 

@@ -5,10 +5,10 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { updateInstructor } from '@/lib/api/instructors.api'
+import { updateInstructor } from '@/lib/api/staff.api'
 import { instructorKeys } from './useInstructors'
 import { useToast } from '@/components/ui/use-toast'
-import type { UpdateInstructorRequest, Instructor } from '@/types/instructor.types'
+import type { UpdateInstructorRequest, Instructor } from '@/types/staff.types'
 
 /**
  * 강사 수정 Mutation Hook

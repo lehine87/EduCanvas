@@ -4,17 +4,17 @@
  * @module T-V2-012
  */
 
-// Instructors Query Hooks
-export * from './useInstructors'
-export * from './useInstructor' 
-export * from './useCreateInstructor'
-export * from './useUpdateInstructor'
-export * from './useDeleteInstructor'
+// Staff Query Hooks
+export * from './useStaffs'
+export * from './useStaff' 
+export * from './useCreateStaff'
+export * from './useUpdateStaff'
+export * from './useDeleteStaff'
 
 // Alias exports for backward compatibility
-export { useInstructor as useInstructorDetail } from './useInstructor'
-export { useInstructorsWithFilters } from './useInstructors'
-export { useInstructorStats, useInstructorSearch } from './useInstructor'
+export { useStaff as useInstructorDetail, useStaff as useInstructor } from './useStaff'
+export { useStaffsWithFilters as useInstructorsWithFilters } from './useStaffs'
+export { useStaffStats as useInstructorStats, useStaffSearch as useInstructorSearch } from './useStaff'
 
 // Re-export types for convenience
 export type { 
@@ -22,4 +22,4 @@ export type {
   InstructorFilters,
   CreateInstructorRequest,
   UpdateInstructorRequest 
-} from '@/types/instructor.types'
+} from '@/types/staff.types'

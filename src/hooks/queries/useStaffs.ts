@@ -5,9 +5,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { fetchInstructors, type FetchInstructorsParams } from '@/lib/api/instructors.api'
+import { fetchInstructors, type FetchInstructorsParams } from '@/lib/api/staff.api'
 import { useAuthStore } from '@/store/useAuthStore'
-import type { Instructor, InstructorFilters } from '@/types/instructor.types'
+import type { Instructor, InstructorFilters } from '@/types/staff.types'
 
 // Query Keys
 export const instructorKeys = {

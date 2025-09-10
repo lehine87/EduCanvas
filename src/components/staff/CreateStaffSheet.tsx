@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useCreateInstructor } from '@/hooks/queries'
 import { useToast } from '@/components/ui/use-toast'
-import type { CreateInstructorRequest, StaffInfo } from '@/types/instructor.types'
+import type { CreateInstructorRequest, StaffInfo } from '@/types/staff.types'
 
 // 폼 스키마
 const createInstructorSchema = z.object({

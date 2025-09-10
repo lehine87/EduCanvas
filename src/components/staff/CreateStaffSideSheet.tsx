@@ -30,7 +30,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { Loader2 } from 'lucide-react'
-import type { Instructor } from '@/types/instructor.types'
+import type { Instructor } from '@/types/staff.types'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 

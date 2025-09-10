@@ -17,7 +17,7 @@ import {
   DocumentTextIcon,
   PencilIcon
 } from '@heroicons/react/24/outline'
-import type { Instructor, StaffInfo, SalaryCalculation, AttendanceRecord } from '@/types/instructor.types'
+import type { Instructor, StaffInfo, SalaryCalculation, AttendanceRecord } from '@/types/staff.types'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 

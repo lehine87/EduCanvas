@@ -5,9 +5,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { fetchInstructorById } from '@/lib/api/instructors.api'
+import { fetchInstructorById } from '@/lib/api/staff.api'
 import { instructorKeys } from './useInstructors'
-import type { Instructor } from '@/types/instructor.types'
+import type { Instructor } from '@/types/staff.types'
 
 /**
  * 강사 상세 조회 Hook
@@ -137,7 +137,7 @@ export function useInstructorSearch(query: string, enabled: boolean = true) {
       
       // 실제로는 searchInstructors API 사용
       try {
-        const { searchInstructors } = await import('@/lib/api/instructors.api')
+        const { searchInstructors } = await import('@/lib/api/staff.api')
         const results = await searchInstructors(query, 20, signal)
         return { instructors: results }
       } catch (error) {

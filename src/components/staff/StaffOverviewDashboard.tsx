@@ -21,10 +21,10 @@ import {
   BriefcaseIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
-import type { Instructor, InstructorFilters, StaffInfo, InstructorDashboardStats } from '@/types/instructor.types'
+import type { Instructor, InstructorFilters, StaffInfo, InstructorDashboardStats } from '@/types/staff.types'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useAuthStore } from '@/store/useAuthStore'
-import { useInstructorsStore } from '@/store/instructorsStore'
+import { useInstructorsStore } from '@/store/staffStore'
 
 interface InstructorOverviewDashboardProps {
   onInstructorSelect?: (instructor: Instructor) => void

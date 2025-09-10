@@ -5,7 +5,7 @@
  */
 
 import { toast } from '@/components/ui/use-toast'
-import type { ApiError } from './instructors.api'
+import type { ApiError } from './staff.api'
 
 // 에러 타입 정의
 export interface AppError extends Error {

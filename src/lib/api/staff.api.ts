@@ -3,7 +3,7 @@ import type {
   Instructor, 
   CreateInstructorRequest, 
   UpdateInstructorRequest 
-} from '@/types/instructor.types'
+} from '@/types/staff.types'
 import type { PaginatedData, StandardApiResponse } from '@/lib/api-response'
 
 /**
@@ -143,7 +143,7 @@ export async function fetchInstructors({
   })
   
   return apiCall<{ instructors: Instructor[], pagination: any }>(
-    `/api/instructors?${params}`,
+    `/api/staff?${params}`,
     { signal }
   )
 }
@@ -156,7 +156,7 @@ export async function fetchInstructorById(
   signal?: AbortSignal
 ): Promise<{ instructor: Instructor }> {
   return apiCall<{ instructor: Instructor }>(
-    `/api/instructors/${id}`,
+    `/api/staff/${id}`,
     { signal }
   )
 }
@@ -167,7 +167,7 @@ export async function fetchInstructorById(
 export async function createInstructor(
   data: CreateInstructorRequest & { user_data?: { email: string; name: string; phone?: string } }
 ): Promise<{ instructor: Instructor, message: string }> {
-  return apiCall<{ instructor: Instructor, message: string }>('/api/instructors', {
+  return apiCall<{ instructor: Instructor, message: string }>('/api/staff', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -180,7 +180,7 @@ export async function updateInstructor(
   id: string,
   updates: UpdateInstructorRequest
 ): Promise<{ instructor: Instructor }> {
-  return apiCall<{ instructor: Instructor }>(`/api/instructors/${id}`, {
+  return apiCall<{ instructor: Instructor }>(`/api/staff/${id}`, {
     method: 'PUT',
     body: JSON.stringify(updates)
   })
@@ -192,7 +192,7 @@ export async function updateInstructor(
 export async function deleteInstructor(
   id: string
 ): Promise<{ success: boolean }> {
-  return apiCall<{ success: boolean }>(`/api/instructors/${id}`, {
+  return apiCall<{ success: boolean }>(`/api/staff/${id}`, {
     method: 'DELETE'
   })
 }
@@ -211,7 +211,7 @@ export async function searchInstructors(
   })
   
   const response = await apiCall<{ instructors: Instructor[] }>(
-    `/api/instructors/search?${params}`,
+    `/api/staff/search?${params}`,
     { signal }
   )
   

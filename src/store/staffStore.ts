@@ -6,7 +6,7 @@
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { Instructor, InstructorFilters, StaffInfo } from '@/types/instructor.types'
+import type { Instructor, InstructorFilters, StaffInfo } from '@/types/staff.types'
 
 interface InstructorsState {
   // 상태
@@ -63,7 +63,7 @@ export const useInstructorsStore = create<InstructorsState>()(
           set({ loading: true, error: null })
           
           try {
-            const response = await fetch(`/api/instructors?tenant_id=${tenantId}`)
+            const response = await fetch(`/api/staff?tenant_id=${tenantId}`)
             if (!response.ok) {
               throw new Error(`Failed to fetch instructors: ${response.statusText}`)
             }
@@ -87,7 +87,7 @@ export const useInstructorsStore = create<InstructorsState>()(
           set({ loading: true, error: null })
           
           try {
-            const response = await fetch('/api/instructors', {
+            const response = await fetch('/api/staff', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export const useInstructorsStore = create<InstructorsState>()(
           set({ loading: true, error: null })
           
           try {
-            const response = await fetch(`/api/instructors/${id}`, {
+            const response = await fetch(`/api/staff/${id}`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export const useInstructorsStore = create<InstructorsState>()(
           set({ loading: true, error: null })
           
           try {
-            const response = await fetch(`/api/instructors/${id}`, {
+            const response = await fetch(`/api/staff/${id}`, {
               method: 'DELETE',
             })
             

@@ -25,7 +25,7 @@ import {
 import {
   StarIcon as StarSolidIcon,
 } from '@heroicons/react/24/solid'
-import type { Instructor, StaffInfo } from '@/types/instructor.types'
+import type { Instructor, StaffInfo } from '@/types/staff.types'
 
 interface InstructorQuickAccessPanelProps {
   selectedInstructor: Instructor | null

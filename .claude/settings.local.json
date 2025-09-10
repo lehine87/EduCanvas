@@ -119,7 +119,8 @@
       "WebFetch(domain:support.anthropic.com)",
       "WebFetch(domain:claudelog.com)",
       "Bash(start http://localhost:3000/main/instructors)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

@@ -33,7 +33,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import { Loader2 } from 'lucide-react'
-import type { Instructor, StaffInfo } from '@/types/instructor.types'
+import type { Instructor, StaffInfo } from '@/types/staff.types'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
