@@ -12,9 +12,10 @@ import { Separator } from '@/components/ui/separator'
 import { StudentDetailSideSheet } from './StudentDetailSideSheet'
 import { CreateStudentSideSheet } from './CreateStudentSideSheet'
 import QuickAccessPanel from './QuickAccessPanel'
-import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useStudents, useStudentSearch } from '@/hooks/queries/useStudents'
+import { useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/hooks/mutations/useStudentMutations'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -33,7 +34,7 @@ interface StudentSearchSidebarProps {
   showCreateSheet: boolean
   showDetailSheet: boolean
   onCreateSuccess: () => void
-  onUpdateSuccess: () => void
+  onUpdateSuccess: (updatedStudent: Student) => void
   onDeleteSuccess: () => void
   onCloseCreateSheet: () => void
   onCloseDetailSheet: () => void
@@ -57,174 +58,90 @@ export default function StudentSearchSidebar({
   onPendingStudentLoaded
 }: StudentSearchSidebarProps) {
   const { profile } = useAuthStore()
-  const { students, loading, actions } = useStudentsStore()
   
   const [basicSearchTerm, setBasicSearchTerm] = useState('')
-  const [searchResults, setSearchResults] = useState<Student[]>([])
   const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1)
   
   const debouncedBasicSearch = useDebounce(basicSearchTerm, 300)
-
   const tenantId = profile?.tenant_id
 
-  // 초기 학생 목록 로드
-  useEffect(() => {
-    console.log('📚 Student fetch useEffect:', { tenantId, hasActions: !!actions })
-    if (tenantId) {
-      console.log('📞 Fetching students for tenant:', tenantId)
-      actions.fetchStudents(tenantId)
-    }
-  }, [tenantId, actions])
+  // React Query hooks
+  const { 
+    data: studentsData, 
+    isLoading: loading, 
+    refetch: refetchStudents 
+  } = useStudents()
+  
+  const { 
+    data: searchData, 
+    isLoading: searchLoading 
+  } = useStudentSearch(debouncedBasicSearch)
+
+  // Mutations
+  const createStudentMutation = useCreateStudent()
+  const updateStudentMutation = useUpdateStudent()
+  const deleteStudentMutation = useDeleteStudent()
+
+  const students = studentsData?.items || []
+  const searchResults = searchData?.items || []
   
   // pendingStudentId가 있을 때 해당 학생 자동 선택
   useEffect(() => {
-    console.log('🔄 useEffect triggered:', { 
-      pendingStudentId, 
-      studentsLength: students.length, 
-      tenantId,
-      hasOnStudentSelect: !!onStudentSelect,
-      hasOnPendingStudentLoaded: !!onPendingStudentLoaded
-    })
-    
-    const selectPendingStudent = () => {
-      if (pendingStudentId && students.length > 0) {
-        console.log('🔍 Looking for pending student:', { pendingStudentId, studentsCount: students.length })
-        
-        // 이미 로드된 학생 목록에서 해당 ID 찾기
-        const targetStudent = students.find(student => student.id === pendingStudentId)
-        
-        if (targetStudent) {
-          console.log('✅ Found and selecting student:', targetStudent.name)
-          onStudentSelect(targetStudent)
-          onPendingStudentLoaded?.()
-        } else {
-          console.warn('⚠️ Student not found in loaded list:', pendingStudentId)
-          // 학생을 찾을 수 없으면 API로 다시 시도
-          loadStudentFromApi()
-        }
+    if (pendingStudentId && students.length > 0) {
+      console.log('🔍 Looking for pending student:', { pendingStudentId, studentsCount: students.length })
+      
+      const targetStudent = students.find((student: Student) => student.id === pendingStudentId)
+      
+      if (targetStudent) {
+        console.log('✅ Found and selecting student:', targetStudent.name)
+        onStudentSelect(targetStudent)
+        onPendingStudentLoaded?.()
       }
     }
-    
-    const loadStudentFromApi = async () => {
-      if (pendingStudentId && tenantId) {
-        console.log('📞 Fetching student from API:', pendingStudentId)
-        try {
-          const response = await fetch(`/api/students/${pendingStudentId}`)
-          console.log('📞 API response status:', response.status)
-          
-          if (response.ok) {
-            const data = await response.json()
-            console.log('📄 API response data:', data)
-            
-            if (data.success && data.data) {
-              console.log('✅ Selecting student from API:', data.data.name)
-              onStudentSelect(data.data)
-              onPendingStudentLoaded?.()
-            } else {
-              console.warn('⚠️ API returned no student data')
-              onPendingStudentLoaded?.()
-            }
-          } else {
-            console.error('❌ API call failed:', response.status)
-            onPendingStudentLoaded?.()
-          }
-        } catch (error) {
-          console.error('💥 Failed to load pending student:', error)
-          onPendingStudentLoaded?.()
-        }
-      }
-    }
-    
-    selectPendingStudent()
-  }, [pendingStudentId, students, tenantId, onStudentSelect, onPendingStudentLoaded])
+  }, [pendingStudentId, students, onStudentSelect, onPendingStudentLoaded])
 
-  // 기본 검색 처리 - API 호출 방식
-  useEffect(() => {
-    const searchStudents = async () => {
-      if (debouncedBasicSearch.length >= 2) {
-        try {
-          const response = await fetch('/api/search', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: debouncedBasicSearch,
-              context: 'students',
-              limit: 10
-            })
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            const studentResults = data.results
-              ?.filter((r: any) => r.type === 'student')
-              ?.map((r: any) => ({
-                id: r.id,
-                name: r.title,
-                student_number: r.subtitle?.split(' • ')[0] || '',
-                phone: r.metadata?.phone || '',
-                email: r.metadata?.email || '',
-                status: r.metadata?.status || 'active',
-                avatar_url: r.metadata?.avatar,
-                tenant_id: tenantId
-              })) || []
-            setSearchResults(studentResults)
-            setSelectedSearchIndex(-1)
-          }
-        } catch (error) {
-          console.error('Search error:', error)
-          setSearchResults([])
-        }
-      } else {
-        setSearchResults([])
-        setSelectedSearchIndex(-1)
-      }
-    }
-    
-    searchStudents()
-  }, [debouncedBasicSearch, tenantId])
+  // 검색 결과 표시 로직
+  const displayStudents: Student[] = debouncedBasicSearch.length >= 2 ? searchResults : students
+  const isSearchMode = debouncedBasicSearch.length >= 2
 
-  // 기본검색 키보드 네비게이션
+  // 검색 키보드 네비게이션
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (searchResults.length === 0) return
+      if (displayStudents.length === 0) return
 
       if (e.key === 'ArrowDown') {
         e.preventDefault()
         setSelectedSearchIndex(prev => 
-          prev < searchResults.length - 1 ? prev + 1 : 0
+          prev < displayStudents.length - 1 ? prev + 1 : 0
         )
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         setSelectedSearchIndex(prev => 
-          prev > 0 ? prev - 1 : searchResults.length - 1
+          prev > 0 ? prev - 1 : displayStudents.length - 1
         )
       } else if (e.key === 'Enter' && selectedSearchIndex >= 0) {
         e.preventDefault()
-        const selectedStudent = searchResults[selectedSearchIndex]
+        const selectedStudent = displayStudents[selectedSearchIndex]
         if (selectedStudent) {
           handleBasicSearchSelect(selectedStudent)
         }
       } else if (e.key === 'Escape') {
-        setSearchResults([])
         setSelectedSearchIndex(-1)
         setBasicSearchTerm('')
       }
     }
 
-    if (searchResults.length > 0) {
+    if (displayStudents.length > 0 && isSearchMode) {
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
     return undefined
-  }, [searchResults, selectedSearchIndex])
-
+  }, [displayStudents, selectedSearchIndex, isSearchMode])
 
   const handleBasicSearchSelect = useCallback((student: Student) => {
     onStudentSelect(student)
     setBasicSearchTerm('')
-    setSearchResults([])
+    setSelectedSearchIndex(-1)
   }, [onStudentSelect])
 
 
@@ -266,14 +183,14 @@ export default function StudentSearchSidebar({
             
             {/* 검색 결과 드롭다운 */}
             <AnimatePresence>
-              {searchResults.length > 0 && (
+              {isSearchMode && displayStudents.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
                 >
-                  {searchResults.slice(0, 8).map((student, index) => (
+                  {displayStudents.slice(0, 8).map((student, index) => (
                     <button
                       key={student.id}
                       onClick={() => handleBasicSearchSelect(student)}
@@ -395,7 +312,14 @@ export default function StudentSearchSidebar({
       <CreateStudentSideSheet
         open={showCreateSheet}
         onOpenChange={onCloseCreateSheet}
-        onSuccess={onCreateSuccess}
+        onSuccess={(newStudent) => {
+          // 부모 컴포넌트의 콜백 호출
+          onCreateSuccess()
+          // 새로 생성된 학생 선택
+          if (newStudent) {
+            onStudentSelect(newStudent)
+          }
+        }}
         sidebarWidth={384} // 사이드바 너비 전달
       />
 
@@ -404,8 +328,16 @@ export default function StudentSearchSidebar({
           open={showDetailSheet}
           onOpenChange={onCloseDetailSheet}
           studentId={selectedStudent.id}
-          onUpdateSuccess={onUpdateSuccess}
-          onDeleteSuccess={onDeleteSuccess}
+          onUpdateSuccess={(updatedStudent) => {
+            // 부모 컴포넌트의 콜백 호출 (업데이트된 학생 데이터 전달)
+            onUpdateSuccess(updatedStudent)
+            // 선택된 학생 업데이트
+            onStudentSelect(updatedStudent)
+          }}
+          onDeleteSuccess={(deletedId) => {
+            // 부모 컴포넌트의 콜백 호출
+            onDeleteSuccess()
+          }}
           sidebarWidth={384} // 사이드바 너비 전달
         />
       )}

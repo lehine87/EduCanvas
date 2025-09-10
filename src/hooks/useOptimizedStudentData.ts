@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { smartSearch, type SearchContext, type SmartSearchResult } from '@/lib/ai/smartSearch'
-import type { Student, StudentFilters } from '@/types/student.types'
+import type { Student, StudentFilters, StudentStatus } from '@/types/student.types'
 
 // 성능 설정
 const PERFORMANCE_CONFIG = {
@@ -442,8 +442,8 @@ function searchInCache(
     if (!matchesSearch) continue
 
     // 필터 적용
-    if (filters?.status && student.status && !filters.status.includes(student.status as 'active' | 'inactive' | 'graduated' | 'withdrawn' | 'suspended')) continue
-    if (filters?.grade_level && !filters.grade_level.includes(student.grade_level || '')) continue
+    if (filters?.status && student.status && !filters.status.includes(student.status as StudentStatus)) continue
+    if (filters?.grade && !filters.grade.includes(student.grade_level || '')) continue
 
     results.push(student)
   }

@@ -93,6 +93,7 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
   const { selectedStudent, actions: studentActions, loading } = useStudentsStore()
   const { profile: userProfile } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<StudentFormData>({
     name: '',
     student_number: '',
@@ -186,10 +187,10 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
       return
     }
 
-    setIsLoading(true)
+    setIsSaving(true)
 
     try {
-      await studentActions.updateStudent(selectedStudent.id, {
+      const updateData = {
         ...formData,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
@@ -202,15 +203,20 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
         school_name: formData.school_name || undefined,
         address: formData.address || undefined,
         notes: formData.notes || undefined
-      }, userProfile.tenant_id)
+      }
+
+      // API 호출 및 업데이트된 학생 데이터 받기
+      const updatedStudent = await studentActions.updateStudent(selectedStudent.id, updateData, userProfile.tenant_id)
 
       toast.success('학생 정보가 수정되었습니다')
-      onUpdateSuccess?.(selectedStudent)
+      
+      // 수정된 학생 데이터를 콜백으로 전달
+      onUpdateSuccess?.(updatedStudent)
     } catch (error) {
       console.error('학생 정보 수정 실패:', error)
       toast.error('학생 정보 수정에 실패했습니다')
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }, [formData, selectedStudent, userProfile, studentActions, validateForm, onUpdateSuccess])
 
@@ -584,16 +590,16 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
                       variant="outline"
                       onClick={() => onOpenChange(false)}
                       className="flex-1 h-9"
-                      disabled={isLoading}
+                      disabled={isSaving || loading}
                     >
                       취소
                     </Button>
                     <Button
                       onClick={handleSave}
                       className="flex-1 h-9 bg-educanvas-500 hover:bg-educanvas-600"
-                      disabled={isLoading}
+                      disabled={isSaving || loading}
                     >
-                      {isLoading ? (
+                      {isSaving ? (
                         <>
                           <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
                           저장 중...

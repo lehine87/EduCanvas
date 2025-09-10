@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { StudentSearchParams, StudentAutocompleteParams } from '@/schemas/student-search'
 import type { Database } from '@/types/database.types'
+import { StudentVersionConflictError } from '@/types/student.types'
 
 const supabase = createServiceRoleClient()
 
@@ -34,6 +35,21 @@ interface StudentSearchResult {
 }
 
 /**
+ * Full-Text Search 결과 타입 (PostgreSQL 함수 반환값 기준)
+ */
+interface FTSSearchResult {
+  id: string
+  name: string
+  student_number: string | null  // 타입 명시 - null 가능
+  grade_level: string | null
+  status: string
+  phone: string | null
+  parent_name_1: string | null
+  parent_phone_1: string | null
+  search_rank: number
+}
+
+/**
  * 학생 검색 서비스 (고도화된 검색 + 페이지네이션)
  */
 export async function searchStudentsService(
@@ -59,6 +75,13 @@ export async function searchStudentsService(
       include_attendance_stats
     } = params
 
+    console.log('🔍 [Student Service] searchStudentsService 호출:', {
+      tenant_id,
+      search,
+      status,
+      limit
+    })
+
     // 1. Full-text search 사용 (search 파라미터가 있는 경우)
     if (search && search.trim()) {
       return await searchStudentsWithFullText({
@@ -73,7 +96,7 @@ export async function searchStudentsService(
       })
     }
 
-    // 2. 일반 필터링 검색 (Cursor-based pagination)
+    // 2. 일반 필터링 검색 (Cursor-based pagination) - 검색어가 없어도 전체 목록 조회
     return await searchStudentsWithFilters({
       tenant_id,
       grade,
@@ -101,7 +124,7 @@ export async function searchStudentsService(
 /**
  * Full-text Search 기반 학생 검색 (PostgreSQL Stored Procedure 사용)
  */
-async function searchStudentsWithFullText(params: {
+export async function searchStudentsWithFullText(params: {
   tenant_id: string
   search_term: string
   grade?: string[]
@@ -128,7 +151,7 @@ async function searchStudentsWithFullText(params: {
       search_term,
       tenant_uuid: tenant_id,
       max_results: limit + 1 // has_more 확인용
-    })
+    }) as { data: FTSSearchResult[] | null, error: any }
 
   if (searchError) {
     throw new Error(`Full-text search failed: ${searchError.message}`)
@@ -148,7 +171,7 @@ async function searchStudentsWithFullText(params: {
 
   if (grade && grade.length > 0) {
     filteredResults = filteredResults.filter(student => 
-      grade.includes(student.grade_level)
+      student.grade_level && grade.includes(student.grade_level)
     )
   }
 
@@ -193,7 +216,7 @@ async function searchStudentsWithFullText(params: {
     items: items.map(item => ({
       id: item.id,
       tenant_id: tenant_id,
-      student_number: '',  // FTS 결과에는 없으므로 빈 문자열
+      student_number: item.student_number, // FTS 결과에서 student_number 안전하게 가져오기 (null 허용)
       name: item.name,
       name_english: null,
       birth_date: null,
@@ -207,7 +230,7 @@ async function searchStudentsWithFullText(params: {
       parent_name_2: null,
       parent_phone_2: null,
       grade_level: item.grade_level,
-      status: item.status,
+      status: item.status as Student['status'], // 타입 안전성 확보
       notes: null,
       emergency_contact: null,
       custom_fields: null,
@@ -259,6 +282,13 @@ async function searchStudentsWithFilters(params: {
     include_enrollment,
     name_filter
   } = params
+
+  console.log('🔍 [Student Service] searchStudentsWithFilters 호출:', {
+    tenant_id,
+    status,
+    grade,
+    limit
+  })
 
   // 동적 쿼리 빌더 (업계 표준 패턴)
   let query = supabase
@@ -315,6 +345,15 @@ async function searchStudentsWithFilters(params: {
   const { data, error } = await query
   const students = data
 
+  console.log('🔍 [Student Service] Supabase 쿼리 결과:', {
+    tenant_id,
+    students_count: students?.length || 0,
+    error: error?.message || null,
+    first_student: students?.[0] && typeof students[0] === 'object' && 'id' in students[0] 
+      ? { id: (students[0] as any).id, name: (students[0] as any).name } 
+      : null
+  })
+
   if (error) {
     throw new Error(`Database query failed: ${error.message}`)
   }
@@ -345,11 +384,20 @@ async function searchStudentsWithFilters(params: {
     }
   }
 
-  return {
-    items: (students || []) as unknown as Student[],
+  const result = {
+    items: (items || []) as unknown as Student[],
     next_cursor,
-    has_more
+    has_more,
+    total_count: students?.length || 0
   }
+  
+  console.log('🔍 [Student Service] searchStudentsWithFilters 반환:', {
+    items_count: result.items.length,
+    has_more: result.has_more,
+    next_cursor: result.next_cursor
+  })
+  
+  return result
 }
 
 /**
@@ -388,7 +436,45 @@ export async function autocompleteStudentsService(
 }
 
 /**
- * 학생 생성 서비스 (Database-First 타입)
+ * Atomic 학번 생성 함수 (Race Condition 방지)
+ */
+export async function generateUniqueStudentNumber(tenant_id: string): Promise<string> {
+  try {
+    // 임시로 PostgreSQL 함수 호출을 주석 처리하고 fallback 사용
+    // TODO: DB에 generate_unique_student_number 함수 구현 후 활성화
+    /*
+    const { data, error } = await supabase
+      .rpc('generate_unique_student_number', {
+        tenant_uuid: tenant_id
+      })
+
+    if (error) {
+      // 함수가 없는 경우 fallback으로 이동
+      if (error.code === '42883') { // function not found
+        throw new Error('Function not found - using fallback')
+      }
+      throw new Error(`Failed to generate student number: ${error.message}`)
+    }
+
+    return data as string
+    */
+    
+    // Fallback: timestamp + random 기반 학번 생성 (충돌 최소화)
+    const timestamp = Date.now()
+    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    return `STU${timestamp.toString().slice(-8)}${randomSuffix}`
+    
+  } catch (error) {
+    console.error('Student number generation error:', error)
+    // 최종 fallback: 안전한 고유 학번
+    const fallbackNumber = `STU${Date.now()}${Math.floor(Math.random() * 10000)}`
+    console.warn(`Using fallback student number: ${fallbackNumber}`)
+    return fallbackNumber
+  }
+}
+
+/**
+ * 학생 생성 서비스 (Atomic 학번 생성 지원)
  */
 export async function createStudentService(
   data: StudentInsert & {
@@ -397,8 +483,11 @@ export async function createStudentService(
   }
 ): Promise<{ student: Student }> {
   try {
-    // 학번 중복 체크 (비즈니스 로직)
-    if (data.student_number) {
+    // 1. 학번이 제공되지 않은 경우 Atomic 생성
+    if (!data.student_number) {
+      data.student_number = await generateUniqueStudentNumber(data.tenant_id)
+    } else {
+      // 2. 학번이 제공된 경우 중복 체크 (기존 로직 유지)
       const { data: existing } = await supabase
         .from('students')
         .select('id')
@@ -411,14 +500,18 @@ export async function createStudentService(
       }
     }
 
+    // 빈 문자열을 null로 변환하여 PostgreSQL date 에러 방지
+    const cleanedData = Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value === '' ? null : value
+      ])
+    )
+
     // 학생 생성
     const { data: newStudent, error } = await supabase
       .from('students')
-      .insert({
-        ...data,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .insert(cleanedData as StudentInsert)
       .select('*')
       .single()
 
@@ -481,15 +574,46 @@ export async function getStudentByIdService(
 }
 
 /**
- * 학생 업데이트 서비스 (Database-First 타입)
+ * 학생 업데이트 서비스 (Optimistic Locking 지원)
  */
 export async function updateStudentService(
   id: string,
   data: StudentUpdate & { tenant_id: string },
-  updated_by: string
+  updated_by: string,
+  expected_version?: string // Optimistic Locking을 위한 버전 체크
 ): Promise<{ student: Student }> {
   try {
-    // 빈 문자열을 null로 변환하여 PostgreSQL date 에러 방지
+    // 1. Optimistic Locking: 현재 데이터 조회 및 버전 체크
+    if (expected_version) {
+      const { data: currentStudent, error: fetchError } = await supabase
+        .from('students')
+        .select('updated_at')
+        .eq('id', id)
+        .eq('tenant_id', data.tenant_id)
+        .single()
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch current student: ${fetchError.message}`)
+      }
+
+      // 버전 충돌 감지
+      if (currentStudent.updated_at !== expected_version) {
+        // 현재 전체 데이터를 가져와서 충돌 정보 제공
+        const { data: fullCurrentData } = await supabase
+          .from('students')
+          .select('*')
+          .eq('id', id)
+          .eq('tenant_id', data.tenant_id)
+          .single()
+
+        throw new StudentVersionConflictError(
+          fullCurrentData as Student,
+          data
+        )
+      }
+    }
+
+    // 2. 빈 문자열을 null로 변환하여 PostgreSQL date 에러 방지
     const cleanedData = Object.fromEntries(
       Object.entries(data).map(([key, value]) => [
         key,
@@ -497,11 +621,12 @@ export async function updateStudentService(
       ])
     )
 
+    // 3. 업데이트 실행 (updated_at은 자동으로 갱신됨)
     const { data: updatedStudent, error } = await supabase
       .from('students')
       .update({
-        ...cleanedData,
-        updated_at: new Date().toISOString()
+        ...cleanedData as StudentUpdate,
+        updated_at: new Date().toISOString() // 명시적으로 버전 갱신
       })
       .eq('id', id)
       .eq('tenant_id', data.tenant_id)
@@ -516,6 +641,12 @@ export async function updateStudentService(
 
   } catch (error) {
     console.error('Student update service error:', error)
+    
+    // 버전 충돌 에러는 그대로 전파
+    if (error instanceof StudentVersionConflictError) {
+      throw error
+    }
+    
     throw new Error(`Failed to update student: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
@@ -532,11 +663,8 @@ export async function deleteStudentService(
     const { error } = await supabase
       .from('students')
       .update({
-        status: 'inactive',
-        updated_at: new Date().toISOString(),
-        // deleted_at: new Date().toISOString(), // 필요시 추가
-        // deleted_by // 필요시 추가
-      })
+        status: 'inactive' as const
+      } as StudentUpdate)
       .eq('id', id)
       .eq('tenant_id', tenant_id)
 

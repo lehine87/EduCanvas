@@ -33,6 +33,8 @@ import { Loader2 } from 'lucide-react'
 import type { Student, StudentStatus } from '@/types/student.types'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { createStudent } from '@/lib/api/students.api'
+import { validateStudentData } from '@/lib/validation/student-validation'
 
 /**
  * CreateStudentSheet Props
@@ -101,6 +103,7 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
   // 로컬 상태
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState<StudentFormData>({
     name: '',
     status: 'active'
@@ -117,24 +120,67 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
         status: 'active'
       })
       setError(null)
+      setValidationErrors({})
     }
   }, [open])
 
-  // 입력값 변경 핸들러
+  // 입력값 변경 핸들러 (실시간 검증 포함)
   const handleInputChange = useCallback((field: keyof StudentFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (error) setError(null) // 에러 초기화
-  }, [error])
+    
+    // 기본 에러 초기화
+    if (error) setError(null)
+    
+    // 실시간 필드별 검증 (디바운싱 없이 즉시)
+    const newValidationErrors = { ...validationErrors }
+    
+    // 해당 필드의 에러 제거
+    delete newValidationErrors[field]
+    
+    // 이름 실시간 검증
+    if (field === 'name' && value) {
+      const { validateStudentName } = require('@/lib/validation/student-validation')
+      const nameValidation = validateStudentName(value)
+      if (!nameValidation.isValid) {
+        newValidationErrors.name = nameValidation.error
+      }
+    }
+    
+    // 이메일 실시간 검증
+    if (field === 'email' && value) {
+      const { validateEmail } = require('@/lib/validation/student-validation')
+      const emailValidation = validateEmail(value)
+      if (!emailValidation.isValid) {
+        newValidationErrors.email = emailValidation.error
+      }
+    }
+    
+    // 전화번호 실시간 검증
+    if ((field === 'phone' || field === 'parent_phone_1' || field === 'parent_phone_2') && value) {
+      const { validateAndNormalizePhone } = require('@/lib/validation/student-validation')
+      const phoneValidation = validateAndNormalizePhone(value)
+      if (!phoneValidation.isValid) {
+        newValidationErrors[field] = phoneValidation.error
+      }
+    }
+    
+    setValidationErrors(newValidationErrors)
+  }, [error, validationErrors])
 
-  // 폼 검증
-  const validateForm = useCallback((): string | null => {
-    if (!formData.name.trim()) {
-      return '학생 이름은 필수입니다.'
-    }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      return '올바른 이메일 형식이 아닙니다.'
-    }
-    return null
+  // 강화된 폼 검증
+  const validateForm = useCallback(() => {
+    const validation = validateStudentData({
+      name: formData.name,
+      student_number: formData.student_number,
+      email: formData.email,
+      phone: formData.phone,
+      parent_phone_1: formData.parent_phone_1,
+      parent_phone_2: formData.parent_phone_2,
+      birth_date: formData.birth_date
+    })
+
+    setValidationErrors(validation.errors)
+    return validation
   }, [formData])
 
   // 학생 생성 핸들러
@@ -144,9 +190,10 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
       return
     }
 
-    const validationError = validateForm()
-    if (validationError) {
-      setError(validationError)
+    // 강화된 폼 검증 실행
+    const validation = validateForm()
+    if (!validation.isValid) {
+      setError('입력 정보를 확인해주세요')
       return
     }
 
@@ -156,20 +203,25 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
     try {
       console.log('🎯 학생 생성 시작:', { formData, tenantId })
       
+      // 정규화된 데이터 사용 (전화번호 포맷팅 등)
       const studentData: Partial<Student> = {
-        ...formData,
+        ...validation.normalizedData,
         tenant_id: tenantId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status: formData.status
       }
       
-      // TODO: 실제 API 호출로 대체
-      await new Promise(resolve => setTimeout(resolve, 1000)) // 임시 딜레이
+      // student_number는 서버에서 자동 생성 (Atomic)
+      if (formData.student_number) {
+        studentData.student_number = formData.student_number
+      }
       
-      console.log('🎉 학생 생성 성공:', studentData)
+      // 실제 API 호출
+      const result = await createStudent(studentData, tenantId)
       
-      toast.success(`${formData.name} 학생이 등록되었습니다`)
-      onSuccess?.(studentData as Student)
+      console.log('🎉 학생 생성 성공:', result)
+      
+      toast.success(`${validation.normalizedData.name} 학생이 등록되었습니다`)
+      onSuccess?.(result.student)
       onOpenChange(false)
     } catch (error) {
       console.error('💥 학생 생성 실패:', error)
@@ -247,9 +299,12 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="학생 이름을 입력하세요"
                       className={cn(
-                        error && !formData.name.trim() && 'border-red-300 focus:border-red-500'
+                        validationErrors.name && 'border-red-300 focus:border-red-500'
                       )}
                     />
+                    {validationErrors.name && (
+                      <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -284,7 +339,7 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
                     </Label>
                     <Select 
                       value={formData.gender || ''} 
-                      onValueChange={(value) => handleInputChange('gender', value || undefined)}
+                      onValueChange={(value) => handleInputChange('gender', value === 'none' ? undefined : value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="성별 선택" />
@@ -350,7 +405,13 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
                       value={formData.phone || ''}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="010-0000-0000"
+                      className={cn(
+                        validationErrors.phone && 'border-red-300 focus:border-red-500'
+                      )}
                     />
+                    {validationErrors.phone && (
+                      <p className="text-xs text-red-600 mt-1">{validationErrors.phone}</p>
+                    )}
                   </div>
 
                   <div>
@@ -364,9 +425,12 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="student@example.com"
                       className={cn(
-                        error && formData.email && 'border-red-300 focus:border-red-500'
+                        validationErrors.email && 'border-red-300 focus:border-red-500'
                       )}
                     />
+                    {validationErrors.email && (
+                      <p className="text-xs text-red-600 mt-1">{validationErrors.email}</p>
+                    )}
                   </div>
                 </div>
 

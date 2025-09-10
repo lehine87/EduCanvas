@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css"; // PostCSS 플러그인 비활성화로 문제 해결 시도
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: "EduCanvas | 학원 관리 시스템",
@@ -18,7 +19,9 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <ThemeProvider>
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </ThemeProvider>
         </QueryProvider>
       </body>

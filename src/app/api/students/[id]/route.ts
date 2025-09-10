@@ -17,6 +17,7 @@ import {
   checkStudentDataAccess,
   type AuthenticatedUser 
 } from '@/lib/auth/apiPermissionMiddleware'
+import { StudentVersionConflictError } from '@/types/student.types'
 
 /**
  * 학생 개별 리소스 API - 업계 표준 구현 (Next.js 15 App Router)
@@ -47,13 +48,13 @@ const StudentDetailQuerySchema = z.object({
     .default(false)
 })
 
-// Database-First Student Update Schema (CLAUDE.md 30번째 줄 준수)
+// Database-First Student Update Schema with Optimistic Locking
 const StudentUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   student_number: z.string().min(1).max(50).optional(),
   name_english: z.string().max(100).optional(),
   birth_date: z.string().nullable().optional(), // Database: string | null
-  gender: z.string().optional(),
+  gender: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   email: z.string().nullable().optional(), 
   address: z.string().nullable().optional(),
@@ -68,7 +69,9 @@ const StudentUpdateSchema = z.object({
   parent_phone_1: z.string().nullable().optional(),
   parent_name_2: z.string().nullable().optional(),
   parent_phone_2: z.string().nullable().optional(),
-  enrollment_date: z.string().nullable().optional() // Database: string | null
+  enrollment_date: z.string().nullable().optional(), // Database: string | null
+  tenantId: z.string().uuid().optional(), // 클라이언트에서 전송하는 tenantId 허용
+  expected_version: z.string().optional() // Optimistic Locking을 위한 버전 체크
 })
 
 /**
@@ -190,15 +193,18 @@ export const PUT = withRouteValidation({
         )
       }
       
+      // tenantId와 expected_version은 클라이언트에서 오는 필드이므로 분리
+      const { tenantId, expected_version, ...updateFields } = body
       const updateData = {
-        ...body,
+        ...updateFields,
         tenant_id: user.tenant_id
       } as Database['public']['Tables']['students']['Update'] & { tenant_id: string }
       
       const result = await updateStudentService(
         id,
         updateData,
-        user.id
+        user.id,
+        expected_version // Optimistic Locking을 위한 버전 전달
       )
 
       return createSuccessResponse(
@@ -209,6 +215,25 @@ export const PUT = withRouteValidation({
 
     } catch (error) {
       console.error('Student update error:', error)
+      
+      // 버전 충돌 에러 처리 (409 Conflict)
+      if (error instanceof StudentVersionConflictError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'VERSION_CONFLICT',
+              message: 'Student was modified by another user',
+              details: {
+                current_data: error.currentData,
+                conflicting_data: error.conflictingData
+              }
+            },
+            timestamp: new Date().toISOString()
+          },
+          { status: 409 } // Conflict
+        )
+      }
       
       // 비즈니스 로직 에러 처리
       if (error instanceof Error) {

@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/store/useAuthStore'
+import { studentQueryKeys } from '@/lib/react-query'
+import { fetchStudentById } from '@/lib/api/students.api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -71,6 +75,8 @@ export default function QuickAccessPanel({
   onStudentSelect,
   className = ''
 }: QuickAccessPanelProps) {
+  const { profile } = useAuthStore()
+  const queryClient = useQueryClient()
   const [favoriteStudents, setFavoriteStudents] = useState<FavoriteStudent[]>([])
   const [recentStudents, setRecentStudents] = useState<RecentStudent[]>([])
   const [quickStats, setQuickStats] = useState<QuickStats>({
@@ -151,9 +157,9 @@ export default function QuickAccessPanel({
       const recentStudent: RecentStudent = {
         id: selectedStudent.id,
         name: selectedStudent.name,
-        grade_level: selectedStudent.grade_level,
+        grade_level: selectedStudent.grade_level || undefined,
         status: selectedStudent.status || 'active',
-        avatar_url: selectedStudent.profile_image,
+        avatar_url: selectedStudent.profile_image || undefined,
         viewedAt: Date.now()
       }
 
@@ -189,9 +195,9 @@ export default function QuickAccessPanel({
       const favoriteStudent: FavoriteStudent = {
         id: student.id,
         name: student.name,
-        grade_level: student.grade_level,
-        status: student.status,
-        avatar_url: student.avatar_url,
+        grade_level: 'grade_level' in student ? student.grade_level || undefined : undefined,
+        status: student.status || 'active',
+        avatar_url: 'avatar_url' in student ? student.avatar_url || undefined : 'profile_image' in student ? student.profile_image || undefined : undefined,
         addedAt: Date.now()
       }
       const updated = [...favoriteStudents, favoriteStudent].slice(0, 10) // 최대 10개
@@ -270,9 +276,21 @@ export default function QuickAccessPanel({
                   <div
                     key={student.id}
                     className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                    onClick={() => {
-                      // TODO: API에서 전체 학생 정보 가져와서 onStudentSelect 호출
-                      console.log('Select favorite student:', student.id)
+                    onClick={async () => {
+                      // API에서 전체 학생 정보 가져오기
+                      if (profile?.tenant_id) {
+                        try {
+                          const result = await queryClient.fetchQuery({
+                            queryKey: studentQueryKeys.detail(student.id),
+                            queryFn: () => fetchStudentById(student.id, profile.tenant_id!)
+                          })
+                          if (result?.student) {
+                            onStudentSelect(result.student)
+                          }
+                        } catch (error) {
+                          console.error('Failed to fetch favorite student:', error)
+                        }
+                      }
                     }}
                   >
                     <Avatar className="h-6 w-6">
@@ -336,9 +354,21 @@ export default function QuickAccessPanel({
                   <div
                     key={student.id}
                     className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                    onClick={() => {
-                      // TODO: API에서 전체 학생 정보 가져와서 onStudentSelect 호출
-                      console.log('Select recent student:', student.id)
+                    onClick={async () => {
+                      // API에서 전체 학생 정보 가져오기
+                      if (profile?.tenant_id) {
+                        try {
+                          const result = await queryClient.fetchQuery({
+                            queryKey: studentQueryKeys.detail(student.id),
+                            queryFn: () => fetchStudentById(student.id, profile.tenant_id!)
+                          })
+                          if (result?.student) {
+                            onStudentSelect(result.student)
+                          }
+                        } catch (error) {
+                          console.error('Failed to fetch recent student:', error)
+                        }
+                      }
                     }}
                   >
                     <Avatar className="h-6 w-6">

@@ -17,6 +17,9 @@ interface StudentStatsGridProps {
   students: Student[]
   totalStudents: number
   className?: string
+  onFilterApply?: (filterType: 'all' | 'active' | 'inactive' | 'graduated' | 'recent' | 'grade', filterValue?: string) => void
+  activeFilter?: { type: string, value?: string }
+  statsData?: any // API에서 가져온 전체 통계 데이터
 }
 
 interface StatCard {
@@ -25,6 +28,9 @@ interface StatCard {
   subtitle?: string
   icon: React.ComponentType<{ className?: string }>
   color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'indigo'
+  filterType: 'all' | 'active' | 'inactive' | 'graduated' | 'recent' | 'grade'
+  filterValue?: string
+  clickable?: boolean
   trend?: {
     value: number
     isPositive: boolean
@@ -34,11 +40,29 @@ interface StatCard {
 export default function StudentStatsGrid({
   students,
   totalStudents,
-  className = ''
+  className = '',
+  onFilterApply,
+  activeFilter,
+  statsData
 }: StudentStatsGridProps) {
   
-  // 통계 계산
+  // 통계 계산 - API 데이터 우선 사용, fallback으로 필터링된 데이터 사용
   const stats = useMemo(() => {
+    if (statsData) {
+      // API에서 가져온 전체 통계 데이터 사용
+      return {
+        total: statsData.total_students || 0,
+        active: statsData.active_students || 0,
+        inactive: statsData.inactive_students || 0,
+        graduated: statsData.graduated_students || 0,
+        withdrawn: statsData.withdrawn_students || 0,
+        suspended: statsData.suspended_students || 0,
+        recent: statsData.new_registrations_this_month || 0,
+        gradeDistribution: {} // TODO: API에서 학년별 분포 데이터가 추가되면 사용
+      }
+    }
+    
+    // Fallback: 필터링된 데이터로 계산 (기존 로직)
     const activeStudents = students.filter(s => s.status === 'active').length
     const inactiveStudents = students.filter(s => s.status === 'inactive').length
     const graduatedStudents = students.filter(s => s.status === 'graduated').length
@@ -65,11 +89,13 @@ export default function StudentStatsGrid({
       active: activeStudents,
       inactive: inactiveStudents,
       graduated: graduatedStudents,
-      recentEnrollments,
+      withdrawn: students.filter(s => s.status === 'withdrawn').length,
+      suspended: students.filter(s => s.status === 'suspended').length,
+      recent: recentEnrollments,
       topGrade: topGrade ? `${topGrade[0]} (${topGrade[1]}명)` : '데이터 없음',
       gradeDistribution
     }
-  }, [students, totalStudents])
+  }, [students, totalStudents, statsData])
 
   // 통계 카드 데이터
   const statCards: StatCard[] = [
@@ -79,6 +105,8 @@ export default function StudentStatsGrid({
       subtitle: `활성: ${stats.active}명`,
       icon: UserGroupIcon,
       color: 'blue',
+      filterType: 'all',
+      clickable: true,
       trend: {
         value: 12,
         isPositive: true
@@ -89,28 +117,36 @@ export default function StudentStatsGrid({
       value: stats.active,
       subtitle: `전체의 ${stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}%`,
       icon: AcademicCapIcon,
-      color: 'green'
+      color: 'green',
+      filterType: 'active',
+      clickable: true
     },
     {
       title: '휴학/정지',
       value: stats.inactive,
       subtitle: stats.inactive > 0 ? '관리 필요' : '양호',
       icon: ClockIcon,
-      color: stats.inactive > 0 ? 'yellow' : 'green'
+      color: stats.inactive > 0 ? 'yellow' : 'green',
+      filterType: 'inactive',
+      clickable: true
     },
     {
       title: '졸업',
       value: stats.graduated,
       subtitle: '완료된 과정',
       icon: AcademicCapIcon,
-      color: 'indigo'
+      color: 'indigo',
+      filterType: 'graduated',
+      clickable: true
     },
     {
       title: '최근 등록',
-      value: stats.recentEnrollments,
+      value: stats.recent,
       subtitle: '30일 이내',
       icon: CalendarDaysIcon,
       color: 'purple',
+      filterType: 'recent',
+      clickable: true,
       trend: {
         value: 25,
         isPositive: true
@@ -118,10 +154,15 @@ export default function StudentStatsGrid({
     },
     {
       title: '최다 학년',
-      value: stats.topGrade,
+      value: stats.topGrade || '정보 없음',
       subtitle: '학년별 분포',
       icon: ArrowTrendingUpIcon,
-      color: 'blue'
+      color: 'blue',
+      filterType: 'grade',
+      filterValue: Object.entries(stats.gradeDistribution).length > 0 
+        ? Object.entries(stats.gradeDistribution).sort(([,a], [,b]) => b - a)[0]?.[0] 
+        : '',
+      clickable: Object.entries(stats.gradeDistribution).length > 0
     }
   ]
 
@@ -168,23 +209,49 @@ export default function StudentStatsGrid({
     return styles[color]
   }
 
+  // 카드 클릭 핸들러
+  const handleCardClick = (stat: StatCard) => {
+    if (!stat.clickable || !onFilterApply) return
+    
+    // 같은 필터를 다시 클릭하면 전체보기로 전환
+    if (activeFilter?.type === stat.filterType && 
+        activeFilter?.value === stat.filterValue) {
+      onFilterApply('all')
+    } else {
+      onFilterApply(stat.filterType, stat.filterValue)
+    }
+  }
+
+  // 카드가 활성 상태인지 확인
+  const isCardActive = (stat: StatCard) => {
+    return activeFilter?.type === stat.filterType && 
+           activeFilter?.value === stat.filterValue
+  }
+
   return (
     <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 ${className}`}>
       {statCards.map((stat, index) => {
         const IconComponent = stat.icon
-        const isAlert = stat.color === 'yellow' || stat.color === 'red'
+        const isActive = isCardActive(stat)
 
         return (
           <div
             key={index}
+            onClick={() => handleCardClick(stat)}
             className={`
               relative overflow-hidden rounded-xl p-3
-              backdrop-blur-sm bg-white/30 dark:bg-black/30 
-              border border-white/20 dark:border-white/10
+              backdrop-blur-sm 
+              ${isActive 
+                ? 'bg-blue-100/70 dark:bg-blue-900/70 border-blue-300 dark:border-blue-600' 
+                : 'bg-white/30 dark:bg-black/30 border-white/20 dark:border-white/10'
+              }
               shadow-xl dark:shadow-none
-              hover:bg-white/40 dark:hover:bg-black/40
-              transition-all duration-200 cursor-pointer
-              ${isAlert ? 'ring-1 ring-orange-200 dark:ring-orange-800' : ''}
+              ${stat.clickable 
+                ? 'hover:bg-white/40 dark:hover:bg-black/40 cursor-pointer hover:scale-[1.02]' 
+                : 'cursor-default'
+              }
+              transition-all duration-200
+              ${isActive ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}
             `}
           >
             {/* 배경 그라디언트 */}
@@ -198,17 +265,26 @@ export default function StudentStatsGrid({
               ${stat.color === 'indigo' ? 'bg-gradient-to-br from-indigo-500 to-indigo-600' : ''}
             `} />
 
-            {/* 아이콘 */}
-            <div className={`
-              inline-flex p-2 rounded-lg mb-2
-              ${stat.color === 'blue' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : ''}
-              ${stat.color === 'green' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : ''}
-              ${stat.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' : ''}
-              ${stat.color === 'red' ? 'bg-red-500/20 text-red-600 dark:text-red-400' : ''}
-              ${stat.color === 'purple' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : ''}
-              ${stat.color === 'indigo' ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : ''}
-            `}>
-              <IconComponent className="h-4 w-4" />
+            {/* 헤더 영역 (아이콘 + 필터 표시) */}
+            <div className="flex items-center justify-between mb-2">
+              <div className={`
+                inline-flex p-2 rounded-lg
+                ${stat.color === 'blue' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : ''}
+                ${stat.color === 'green' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : ''}
+                ${stat.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' : ''}
+                ${stat.color === 'red' ? 'bg-red-500/20 text-red-600 dark:text-red-400' : ''}
+                ${stat.color === 'purple' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : ''}
+                ${stat.color === 'indigo' ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : ''}
+              `}>
+                <IconComponent className="h-4 w-4" />
+              </div>
+              
+              {/* 활성 필터 표시 */}
+              {isActive && (
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                </div>
+              )}
             </div>
             
             {/* 제목 */}

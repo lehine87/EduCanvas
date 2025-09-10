@@ -46,9 +46,11 @@ export default function StudentsPageLayout({ className, initialSelectedStudent }
     // 새로 생성된 학생을 선택하도록 할 수도 있음
   }, [])
 
-  const handleUpdateSuccess = useCallback(() => {
+  const handleUpdateSuccess = useCallback((updatedStudent: Student) => {
     setShowDetailSheet(false)
-    // 학생 정보 갱신 처리
+    // 업데이트된 학생 정보로 selectedStudent 갱신
+    setSelectedStudent(updatedStudent)
+    console.log('🔄 StudentsPageLayout: 학생 정보 업데이트 완료', updatedStudent.name)
   }, [])
 
   const handleDeleteSuccess = useCallback(() => {

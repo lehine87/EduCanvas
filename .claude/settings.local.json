@@ -112,7 +112,14 @@
       "mcp__playwright__browser_console_messages",
       "mcp__playwright__browser_fill_form",
       "mcp__playwright__browser_evaluate",
-      "Bash(start http://localhost:3001/main/students)"
+      "Bash(start http://localhost:3001/main/students)",
+      "Bash(start http://localhost:3000/main)",
+      "mcp__playwright__browser_network_requests",
+      "Bash(kill:*)",
+      "WebFetch(domain:support.anthropic.com)",
+      "WebFetch(domain:claudelog.com)",
+      "Bash(start http://localhost:3000/main/instructors)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

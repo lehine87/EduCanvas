@@ -13,6 +13,13 @@ import { Button } from '@/components/ui/button'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { AttendanceRealtimeWidget } from './widgets/attendance'
 
+// 🚀 성능 최적화: 위젯 지연 로딩
+const RevenueAnalyticsWidget = React.lazy(() => import('./widgets/RevenueAnalyticsWidget'))
+const CriticalAlertsWidget = React.lazy(() => import('./widgets/CriticalAlertsWidget'))
+const StudentOverviewWidget = React.lazy(() => import('./widgets/StudentOverviewWidget'))
+const QuickActionsWidget = React.lazy(() => import('./widgets/QuickActionsWidget'))
+const AIInsightsWidget = React.lazy(() => import('./widgets/AIInsightsWidget'))
+
 // Import Icons
 import { 
   ChartBarIcon,
@@ -52,150 +59,15 @@ interface DashboardStats {
   }>
 }
 
-// 위젯 컴포넌트들
-function RevenueAnalyticsWidget({ stats }: { stats: DashboardStats | null }) {
-  const revenue = stats ? stats.active_students * 150000 : 0 // 평균 수강료 가정
-  const growth = '+12.5%'
-  
-  return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-          ₩{revenue.toLocaleString()}
-        </div>
-        <div className="text-sm text-emerald-600 dark:text-emerald-400">
-          {growth} vs 지난달
-        </div>
-      </div>
-      <div className="h-20 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-lg flex items-end justify-center">
-        <div className="text-xs text-neutral-600 dark:text-neutral-400">매출 차트 영역</div>
-      </div>
-    </div>
-  )
-}
-
-function CriticalAlertsWidget({ stats }: { stats: DashboardStats | null }) {
-  const alerts = stats?.urgent_actions || 0
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-          {alerts}
-        </div>
-        <motion.div
-          animate={{ 
-            scale: alerts > 0 ? [1, 1.1, 1] : 1,
-            opacity: alerts > 0 ? [1, 0.7, 1] : 1
-          }}
-          transition={{ 
-            duration: 2, 
-            repeat: alerts > 0 ? Infinity : 0 
-          }}
-          className="w-3 h-3 bg-red-500 rounded-full"
-        />
-      </div>
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-neutral-600 dark:text-neutral-400">미납금</span>
-          <span className="font-medium">{stats?.unpaid_students || 0}명</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-neutral-600 dark:text-neutral-400">장기결석</span>
-          <span className="font-medium">2명</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-neutral-600 dark:text-neutral-400">상담요청</span>
-          <span className="font-medium">3건</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function StudentOverviewWidget({ stats }: { stats: DashboardStats | null }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {stats?.active_students || 0}
-          </div>
-          <div className="text-xs text-neutral-600 dark:text-neutral-400">활동중</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {stats?.new_registrations_this_month || 0}
-          </div>
-          <div className="text-xs text-neutral-600 dark:text-neutral-400">신규</div>
-        </div>
-      </div>
-      <div className="h-16 bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900/20 dark:to-emerald-900/20 rounded-lg flex items-center justify-center">
-        <div className="text-xs text-neutral-600 dark:text-neutral-400">학생 현황 차트</div>
-      </div>
-    </div>
-  )
-}
+// 🚀 성능 최적화: 위젯 컴포넌트들은 별도 파일로 분리하여 지연 로딩
 
 // AttendanceWidget는 이제 AttendanceRealtimeWidget으로 대체됨
 // 이 함수는 하위 호환성을 위해 유지하되, 새로운 위젯을 래핑함
 
+// AttendanceWidget는 이제 AttendanceRealtimeWidget으로 대체됨
 function AttendanceWidget({ stats }: { stats: DashboardStats | null }) {
   // 새로운 실시간 출석 위젯 사용
   return <AttendanceRealtimeWidget className="h-full" />
-}
-
-function QuickActionsWidget() {
-  const actions = [
-    { label: '신규 등록', icon: UserGroupIcon, color: 'text-blue-500' },
-    { label: '출석 체크', icon: ClockIcon, color: 'text-green-500' },
-    { label: '상담 예약', icon: PhoneIcon, color: 'text-purple-500' },
-    { label: '수강료 관리', icon: CurrencyDollarIcon, color: 'text-yellow-500' }
-  ]
-  
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {actions.map((action, index) => {
-        const Icon = action.icon
-        return (
-          <motion.button
-            key={action.label}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-3 rounded-lg bg-white/50 dark:bg-black/50 border border-white/30 dark:border-white/10 hover:bg-white/70 dark:hover:bg-black/70 transition-colors"
-          >
-            <Icon className={`w-5 h-5 ${action.color} mb-1 mx-auto`} />
-            <div className="text-xs font-medium text-center">{action.label}</div>
-          </motion.button>
-        )
-      })}
-    </div>
-  )
-}
-
-function AIInsightsWidget() {
-  const insights = [
-    "수학 클래스 출석률이 10% 증가했습니다",
-    "3명의 학생이 레벨업 대상입니다", 
-    "김민수 학생의 학부모 상담이 필요합니다"
-  ]
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center space-x-2">
-        <SparklesIcon className="w-5 h-5 text-purple-500" />
-        <span className="font-medium text-purple-600 dark:text-purple-400">AI 인사이트</span>
-      </div>
-      <ul className="space-y-2">
-        {insights.map((insight, index) => (
-          <li key={index} className="text-sm text-neutral-700 dark:text-neutral-300 flex items-start space-x-2">
-            <span className="text-purple-500 mt-1">•</span>
-            <span>{insight}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
 }
 
 // 메인 DashboardV2 컴포넌트
@@ -253,22 +125,74 @@ export default function DashboardV2() {
     }
   }, [profile?.role])
 
-  // 대시보드 통계 데이터 로드
+  // 🚀 성능 최적화: 개별 데이터 페칭 함수들
   const fetchDashboardStats = useCallback(async () => {
+    if (!profile?.tenant_id) {
+      return {
+        total_students: 156,
+        active_students: 142,
+        inactive_students: 14,
+        graduated_students: 89,
+        withdrawn_students: 12,
+        suspended_students: 3,
+        urgent_actions: 5,
+        today_attendance: 128,
+        unpaid_students: 8,
+        consultation_scheduled: 12,
+        new_registrations_this_month: 23,
+        recent_activities: []
+      }
+    }
+    
+    const response = await fetch(`/api/students/dashboard-stats?tenantId=${profile.tenant_id}`)
+    if (response.ok) {
+      const data = await response.json()
+      return data.data
+    }
+    throw new Error('Failed to fetch dashboard stats')
+  }, [profile?.tenant_id])
+
+  const fetchAttendanceData = useCallback(async () => {
+    if (!profile?.tenant_id) {
+      return { attendance_rate: 85, present_today: 128, total_today: 150 }
+    }
+    
+    try {
+      const response = await fetch(`/api/dashboard/attendance/realtime?tenantId=${profile.tenant_id}`)
+      if (response.ok) {
+        const data = await response.json()
+        return data.data
+      }
+    } catch (error) {
+      console.log('출석 데이터 로드 실패, 기본값 사용')
+    }
+    return { attendance_rate: 85, present_today: 128, total_today: 150 }
+  }, [profile?.tenant_id])
+
+  const fetchAIInsights = useCallback(async () => {
+    // AI 인사이트는 정적 데이터로 즉시 반환 (실제 구현시 API 호출)
+    return [
+      "수학 클래스 출석률이 10% 증가했습니다",
+      "3명의 학생이 레벨업 대상입니다", 
+      "김민수 학생의 학부모 상담이 필요합니다"
+    ]
+  }, [])
+
+  // 🚀 성능 최적화: 모든 데이터를 병렬로 로딩
+  const loadAllDashboardData = useCallback(async () => {
     setIsLoadingStats(true)
     try {
-      // 인증된 경우만 실제 API 호출
-      if (profile?.tenant_id) {
-        const response = await fetch(`/api/students/dashboard-stats?tenantId=${profile.tenant_id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data.data)
-        } else {
-          throw new Error('Failed to fetch dashboard stats')
-        }
+      const [dashboardStats, attendanceData, aiInsights] = await Promise.allSettled([
+        fetchDashboardStats(),
+        fetchAttendanceData(),
+        fetchAIInsights()
+      ])
+
+      // 각 결과를 개별적으로 처리
+      if (dashboardStats.status === 'fulfilled') {
+        setStats(dashboardStats.value)
       } else {
-        // 비로그인 또는 프로필 없는 경우 데모 데이터 설정
-        console.log('🔒 비로그인 상태 - 데모 데이터 사용')
+        console.error('대시보드 통계 로드 실패:', dashboardStats.reason)
         setStats({
           total_students: 156,
           active_students: 142,
@@ -284,43 +208,36 @@ export default function DashboardV2() {
           recent_activities: []
         })
       }
-    } catch (error) {
-      console.error('대시보드 통계 로드 실패:', error)
-      // 에러 시 기본값 설정
-      setStats({
-        total_students: 156,
-        active_students: 142,
-        inactive_students: 14,
-        graduated_students: 89,
-        withdrawn_students: 12,
-        suspended_students: 3,
-        urgent_actions: 5,
-        today_attendance: 128,
-        unpaid_students: 8,
-        consultation_scheduled: 12,
-        new_registrations_this_month: 23,
-        recent_activities: []
+
+      // 출석 및 AI 인사이트 데이터는 나중에 각 위젯에서 개별적으로 처리
+      console.log('🚀 병렬 데이터 로딩 완료:', {
+        dashboardStats: dashboardStats.status,
+        attendanceData: attendanceData.status,
+        aiInsights: aiInsights.status
       })
+      
+    } catch (error) {
+      console.error('대시보드 데이터 로딩 실패:', error)
     } finally {
-      // 최소 로딩 시간 보장 (800ms) - Layout shift 없는 자연스러운 로딩
+      // 🚀 성능 최적화: 최소 로딩 시간 단축 (200ms) - Layout shift 방지하면서 빠른 로딩
       setTimeout(() => {
         setIsLoadingStats(false)
-      }, 800)
+      }, 200)
     }
-  }, [profile?.tenant_id])
+  }, [fetchDashboardStats, fetchAttendanceData, fetchAIInsights])
 
   // 새로고침 핸들러
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
-    await fetchDashboardStats()
+    await loadAllDashboardData()
     setTimeout(() => setRefreshing(false), 500) // 시각적 피드백
-  }, [fetchDashboardStats])
+  }, [loadAllDashboardData])
 
   useEffect(() => {
-    fetchDashboardStats()
-  }, [fetchDashboardStats])
+    loadAllDashboardData()
+  }, [loadAllDashboardData])
 
-  // 위젯 설정 정의 (새로운 권한 시스템)
+  // 🚀 성능 최적화: 위젯 설정 메모이제이션 (새로운 권한 시스템)
   const widgetConfigs: WidgetConfig[] = useMemo(() => [
     {
       id: 'revenue-analytics',
@@ -394,7 +311,7 @@ export default function DashboardV2() {
     }
   ], [stats])
 
-  // Role Adapter 사용
+  // 🚀 성능 최적화: Role Adapter 결과 메모이제이션
   const { 
     widgets: adaptedWidgets, 
     layoutConfig, 
@@ -402,6 +319,51 @@ export default function DashboardV2() {
     colors,
     roleInfo
   } = useRoleAdapter(userRoleInfo, widgetConfigs)
+
+  // 🚀 성능 최적화: 어댑티드 위젯 메모이제이션
+  const memoizedAdaptedWidgets = useMemo(() => 
+    adaptedWidgets.map(widget => ({
+      id: widget.id,
+      title: widget.title,
+      subtitle: widget.subtitle,
+      icon: widget.icon,
+      component: ({ children, ...props }: any) => (
+        <GlassWidget
+          opacity={widget.id === 'critical-alerts' ? 'critical' : (theme.styles.primary as any)}
+          size="md"
+          animate={theme.animations}
+          glow={true}
+          float={false}
+          className={cardShadowClass}
+        >
+          <React.Suspense fallback={
+            <div className="animate-pulse space-y-3">
+              <div className="h-4 bg-white/30 dark:bg-black/30 rounded w-24"></div>
+              <div className="h-8 bg-white/30 dark:bg-black/30 rounded w-32"></div>
+              <div className="h-20 bg-white/30 dark:bg-black/30 rounded"></div>
+            </div>
+          }>
+            <widget.component {...widget.props} />
+          </React.Suspense>
+        </GlassWidget>
+      ),
+      props: widget.props,
+      size: widget.size,
+      priority: widget.priority
+    })), 
+    [adaptedWidgets, theme.styles.primary, theme.animations, cardShadowClass]
+  )
+
+  // 🚀 성능 최적화: 콜백 함수들을 미리 정의 (hooks 순서 보장)
+  const handleReorder = useCallback((newOrder: string[]) => {
+    console.log('새로운 위젯 순서:', newOrder)
+    // TODO: 사용자 설정 저장
+  }, [])
+
+  const handleSizeChange = useCallback((widgetId: string, newSize: string) => {
+    console.log('위젯 크기 변경:', widgetId, newSize)
+    // TODO: 사용자 설정 저장
+  }, [])
 
   // 로딩 상태 (Layout Shift 방지용)
   if (isLoadingStats) {
@@ -547,37 +509,11 @@ export default function DashboardV2() {
           </div>
         </motion.div>
 
-        {/* Draggable Widgets Grid */}
+        {/* 🚀 성능 최적화: 메모이제이션된 Draggable Widgets Grid */}
         <DraggableGrid
-          widgets={adaptedWidgets.map(widget => ({
-            id: widget.id,
-            title: widget.title,
-            subtitle: widget.subtitle,
-            icon: widget.icon,
-            component: ({ children, ...props }: any) => (
-              <GlassWidget
-                opacity={widget.id === 'critical-alerts' ? 'critical' : (theme.styles.primary as any)}
-                size="md"
-                animate={theme.animations}
-                glow={true}
-                float={false}
-                className={cardShadowClass}
-              >
-                <widget.component {...widget.props} />
-              </GlassWidget>
-            ),
-            props: widget.props,
-            size: widget.size,
-            priority: widget.priority
-          }))}
-          onReorder={(newOrder) => {
-            console.log('새로운 위젯 순서:', newOrder)
-            // TODO: 사용자 설정 저장
-          }}
-          onSizeChange={(widgetId, newSize) => {
-            console.log('위젯 크기 변경:', widgetId, newSize)
-            // TODO: 사용자 설정 저장
-          }}
+          widgets={memoizedAdaptedWidgets}
+          onReorder={handleReorder}
+          onSizeChange={handleSizeChange}
         />
 
       </div>

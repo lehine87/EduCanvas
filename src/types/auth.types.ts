@@ -335,6 +335,27 @@ export function isActiveUser(profile: UserProfile): boolean {
 }
 
 /**
+ * 승인 대기 중인 사용자인지 확인
+ */
+export function isPendingApproval(profile: UserProfile): boolean {
+  return profile.status === 'pending_approval'
+}
+
+/**
+ * 온보딩이 필요한 사용자인지 확인 (pending_approval이면서 tenant_id가 없는 경우)
+ */
+export function needsOnboarding(profile: UserProfile): boolean {
+  return profile.status === 'pending_approval' && !hasTenantId(profile)
+}
+
+/**
+ * 승인 대기 페이지로 가야 하는 사용자인지 확인 (pending_approval이면서 tenant_id가 있는 경우)
+ */
+export function needsApprovalWaiting(profile: UserProfile): boolean {
+  return profile.status === 'pending_approval' && hasTenantId(profile)
+}
+
+/**
  * 이메일 인증된 사용자인지 확인
  */
 export function isEmailVerified(profile: UserProfile): profile is UserProfile & { email_verified: true } {

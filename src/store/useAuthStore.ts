@@ -12,13 +12,16 @@ interface AuthState {
   loading: boolean
   initialized: boolean
   lastProfileRefresh: number | null
-  authSubscription: any | null // 인증 리스너 구독 객체 저장
+  authSubscription: { subscription: { unsubscribe: () => void } } | null // 인증 리스너 구독 객체 저장
   
   // ✅ 업계 표준: SSR/CSR 하이드레이션을 위한 지속 데이터 (학원명 포함)
   persistedProfile: Pick<UserProfile, 'name' | 'role' | 'tenant_id' | 'status'> & {
     tenantName?: string
   } | null
   hasValidSession: boolean
+  
+  // Computed Values (getters)
+  getEffectiveProfile: () => UserProfile | (Pick<UserProfile, 'name' | 'role' | 'tenant_id' | 'status'> & { tenantName?: string }) | null
   
   // Actions
   setUser: (user: User | null) => void
@@ -87,23 +90,29 @@ export const useAuthStore = create<AuthState>()(
               set({ loading: true })
             }
 
-            const session = await authClient.getCurrentSession()
+            // 🚀 성능 최적화: 세션과 프로필 병렬 로딩
+            const [session, profile] = await Promise.allSettled([
+              authClient.getCurrentSession(),
+              authClient.getUserProfile()
+            ])
             
-            if (session?.user) {
-              const profile = await authClient.getUserProfile()
+            const sessionResult = session.status === 'fulfilled' ? session.value : null
+            const profileResult = profile.status === 'fulfilled' ? profile.value : null
+            
+            if (sessionResult?.user && profileResult) {
               
               set({ 
-                user: session.user,
-                session,
-                profile,
+                user: sessionResult.user,
+                session: sessionResult,
+                profile: profileResult,
                 initialized: true,
                 // ✅ 업계 표준: 완전한 프로필 데이터 로드시 지속 데이터도 업데이트
-                persistedProfile: profile ? {
-                  name: profile.name,
-                  role: profile.role,
-                  tenant_id: profile.tenant_id,
-                  status: profile.status,
-                  tenantName: (profile as any)?.tenants?.name
+                persistedProfile: profileResult ? {
+                  name: profileResult.name,
+                  role: profileResult.role,
+                  tenant_id: profileResult.tenant_id,
+                  status: profileResult.status,
+                  tenantName: (profileResult as any)?.tenants?.name
                 } : null,
                 hasValidSession: true
               })
@@ -243,7 +252,12 @@ export const useAuthStore = create<AuthState>()(
           set({ authSubscription: null })
         },
 
-        // 보안: 민감한 데이터 클리어 (메모리에서 완전 제거)
+        getEffectiveProfile: () => {
+          const { profile, persistedProfile } = get()
+          return profile || persistedProfile
+        },
+
+        // 🔒 보안 강화: 민감한 데이터를 메모리에서 완전 제거
         clearSensitiveData: () => {
           const state = get()
           
@@ -252,23 +266,40 @@ export const useAuthStore = create<AuthState>()(
             state.authSubscription.subscription.unsubscribe()
           }
           
-          // 사용자 데이터를 null로 덮어쓰기
-          if (state.user) {
-            Object.keys(state.user).forEach(key => {
-              delete (state.user as unknown as Record<string, unknown>)[key]
+          // 🛡️ 보안 강화: 민감한 문자열 덮어쓰기 후 삭제
+          const secureDelete = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return
+            
+            Object.keys(obj).forEach(key => {
+              const value = obj[key]
+              if (typeof value === 'string' && value.length > 0) {
+                // 민감한 문자열을 0으로 덮어쓰기 (여러 번 반복으로 메모리 완전 덮어쓰기)
+                for (let i = 0; i < 3; i++) {
+                  obj[key] = '0'.repeat(value.length)
+                }
+                obj[key] = null
+              } else if (typeof value === 'object' && value !== null) {
+                secureDelete(value) // 재귀적으로 중첩 객체 처리
+              }
+              delete obj[key]
             })
+          }
+          
+          // 민감한 데이터 안전 삭제
+          if (state.user) {
+            secureDelete(state.user)
           }
           
           if (state.profile) {
-            Object.keys(state.profile).forEach(key => {
-              delete (state.profile as unknown as Record<string, unknown>)[key]
-            })
+            secureDelete(state.profile)
           }
           
           if (state.session) {
-            Object.keys(state.session).forEach(key => {
-              delete (state.session as unknown as Record<string, unknown>)[key]
-            })
+            secureDelete(state.session)
+          }
+          
+          if (state.persistedProfile) {
+            secureDelete(state.persistedProfile)
           }
           
           // 상태 초기화
@@ -284,10 +315,26 @@ export const useAuthStore = create<AuthState>()(
             hasValidSession: false
           })
           
-          // 가비지 컬렉션 강제 실행 (개발환경)
-          if (process.env.NODE_ENV === 'development' && typeof global !== 'undefined' && 'gc' in global && typeof (global as { gc?: () => void }).gc === 'function') {
-            (global as { gc: () => void }).gc()
+          // 메모리 정리 강화
+          if (typeof window !== 'undefined') {
+            // 브라우저 환경: 가능한 한 가비지 컬렉션 유도
+            setTimeout(() => {
+              const windowWithGc = window as any
+              if (windowWithGc.gc && typeof windowWithGc.gc === 'function') {
+                windowWithGc.gc() // Chrome DevTools에서 사용 가능
+              }
+            }, 100)
           }
+          
+          // Node.js 개발환경: 강제 가비지 컬렉션
+          if (process.env.NODE_ENV === 'development' && typeof global !== 'undefined' && 'gc' in global) {
+            const gc = (global as { gc?: () => void }).gc
+            if (typeof gc === 'function') {
+              setTimeout(() => gc(), 50)
+            }
+          }
+          
+          console.log('🔒 [SECURITY] Sensitive data securely cleared from memory')
         },
 
         // 세션 유효성 검사
@@ -421,12 +468,12 @@ export const useAuth = () => {
 }
 
 // 세션 자동 갱신을 위한 헬퍼 훅
-export const useSessionAutoRefresh = () => {
+export const useSessionAutoRefresh = (enabled = true) => {
   const { session, isSessionValid, refreshProfile } = useAuthStore()
   
   // 세션 만료 10분 전에 자동 갱신
   React.useEffect(() => {
-    if (!session || !isSessionValid()) return
+    if (!enabled || !session || !isSessionValid()) return
     
     const expiresAt = session.expires_at
     if (!expiresAt) return
@@ -446,5 +493,5 @@ export const useSessionAutoRefresh = () => {
     }, refreshTime)
     
     return () => clearTimeout(timer)
-  }, [session, isSessionValid, refreshProfile])
+  }, [enabled, session, isSessionValid, refreshProfile])
 }

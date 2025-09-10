@@ -52,15 +52,59 @@ export interface StudentFormData extends Omit<StudentInsert, 'id' | 'tenant_id' 
 }
 
 /**
- * Student 필터 조건 타입
+ * Optimistic Locking을 위한 Student 업데이트 요청 타입
+ */
+export interface StudentUpdateRequest {
+  updates: Partial<Student>
+  expected_version: string // updated_at 값으로 버전 체크
+}
+
+/**
+ * 버전 충돌 에러 타입
+ */
+export class StudentVersionConflictError extends Error {
+  constructor(
+    public currentData: Student,
+    public conflictingData: Partial<Student>
+  ) {
+    super('Student was modified by another user')
+    this.name = 'StudentVersionConflictError'
+  }
+}
+
+/**
+ * Student 필터 조건 타입 (T-V2-009 고도화된 필터링 지원)
  */
 export interface StudentFilters {
-  status?: StudentStatus[]
-  class_id?: string[]
-  grade_level?: string[]
+  // 기본 검색
   search?: string
-  created_after?: string
-  created_before?: string
+  
+  // 카테고리 필터
+  grade?: string[]  // 학년 (초1, 중2, 고3 등)
+  class_id?: string[]
+  status?: StudentStatus[]
+  
+  // 날짜 범위 필터
+  enrollment_date_from?: string
+  enrollment_date_to?: string
+  
+  // 고급 필터
+  has_overdue_payment?: boolean
+  attendance_rate_min?: number
+  attendance_rate_max?: number
+  
+  // 정렬
+  sort_field?: 'name' | 'enrollment_date' | 'class_name' | 'attendance_rate' | 'last_payment_date'
+  sort_order?: 'asc' | 'desc'
+  
+  // 페이지네이션
+  cursor?: string
+  limit?: number
+  
+  // 추가 옵션
+  include_enrollment?: boolean
+  include_attendance_stats?: boolean
+  include_payment_history?: boolean
 }
 
 /**

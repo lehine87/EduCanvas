@@ -102,9 +102,9 @@ interface StudentsState {
   }
 }
 
-// 초기 상태
+// 초기 상태 (모든 상태의 학생 표시)
 const initialFilters: StudentFilters = {
-  status: ['active'],
+  status: [], // 빈 배열로 모든 상태 표시
   search: ''
 }
 
@@ -115,45 +115,31 @@ const initialPagination = {
   hasMore: false
 }
 
-// API 호출 유틸리티 함수 (에러 처리 강화 + 인증 헤더 추가)
+// API 호출 유틸리티 함수 (성능 최적화 + 간소화된 로깅)
 const apiCall = async <T>(
   url: string, 
   options: RequestInit = {}
 ): Promise<T> => {
   try {
-    // Supabase 세션 가져오기
+    // Supabase 세션 가져오기 (캐시된 세션 사용)
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     
-    console.log('🔐 [API-CALL] 세션 상태:', {
-      hasSession: !!session,
-      hasAccessToken: !!session?.access_token,
-      tokenLength: session?.access_token?.length || 0
-    })
-    
-    // 인증 헤더 구성
+    // 인증 헤더 구성 (간소화)
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
     }
     
-    // 세션이 있으면 Authorization 헤더 추가
     if (session?.access_token) {
       (headers as any)['Authorization'] = `Bearer ${session.access_token}`
     }
     
-    // AbortController로 타임아웃 설정
+    // 타임아웃 최적화 (5초로 단축)
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15초 타임아웃
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     
     try {
-      console.log('🌐 [API-CALL] 요청 시작:', {
-        url,
-        method: options.method || 'GET',
-        headers,
-        hasBody: !!options.body
-      })
-
       const response = await fetch(url, {
         ...options,
         headers,
@@ -162,61 +148,45 @@ const apiCall = async <T>(
       
       clearTimeout(timeoutId)
 
-      console.log('🌐 [API-CALL] 응답 수신:', {
-        url,
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText
-      })
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('🌐 [API-CALL] 응답 에러:', {
-          url,
-          status: response.status,
-          statusText: response.statusText,
-          errorData
-        })
-        throw createApiError(url, response.status, errorData.message || response.statusText, {
-          component: 'studentsStore',
-          action: 'apiCall'
-        })
+        // 개발 환경에서만 에러 로깅
+        if (process.env.NODE_ENV === 'development') {
+          console.error('API 에러:', {
+            url,
+            status: response.status,
+            message: errorData.message
+          })
+        }
+        throw new Error(errorData.message || response.statusText)
       }
 
       const result: StandardApiResponse<T> = await response.json()
       
       if (!result.success) {
         const errorMessage = result.error?.message || 'API 호출 실패'
-        throw createApiError(url, 400, errorMessage, {
-          component: 'studentsStore',
-          action: 'apiCall'
-        })
+        throw new Error(errorMessage)
       }
 
       if (!result.data) {
-        throw createApiError(url, 500, 'API 응답 데이터가 없습니다.', {
-          component: 'studentsStore',
-          action: 'apiCall'
-        })
+        throw new Error('API 응답 데이터가 없습니다.')
       }
 
       return result.data
     } catch (fetchError) {
       clearTimeout(timeoutId)
       
-      // AbortError 처리
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        throw createApiError(url, 408, 'API 요청 시간이 초과되었습니다.', {
-          component: 'studentsStore',
-          action: 'apiCall'
-        })
+        throw new Error('요청 시간 초과')
       }
       
       throw fetchError
     }
   } catch (error) {
-    // 에러 로깅
-    console.error('❌ [API-CALL] 실패:', error)
+    // 개발 환경에서만 에러 로깅
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API 호출 에러:', error)
+    }
     throw error
   }
 }
@@ -237,6 +207,13 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
     // 학생 목록 조회
     fetchStudents: async (tenantId?: string, filters?: Partial<StudentFilters>) => {
       console.log('🚀 [STUDENTS-STORE] fetchStudents 호출:', { tenantId, filters })
+      
+      // 이미 로딩 중이면 중복 호출 방지
+      if (get().loading) {
+        console.log('⏭️ [STUDENTS-STORE] 이미 로딩 중이므로 요청 스킵')
+        return
+      }
+      
       set({ loading: true, error: null })
       
       try {
@@ -347,11 +324,14 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
 
     // 개별 학생 조회
     fetchStudent: async (studentId: string, tenantId: string) => {
+      console.log('🔍 [STUDENTS-STORE] fetchStudent 호출:', { studentId, tenantId })
       set({ loading: true, error: null })
       
       try {
-        const params = new URLSearchParams({ tenantId })
-        const data = await apiCall<{ student: Student }>(`/api/students/${studentId}?${params}`)
+        // API는 인증 헤더에서 tenant 정보를 가져오므로 쿼리 파라미터 제거
+        const data = await apiCall<{ student: Student }>(`/api/students/${studentId}`)
+        
+        console.log('✅ [STUDENTS-STORE] 학생 상세 조회 성공:', data.student)
         
         set(produce((draft) => {
           draft.selectedStudent = data.student
@@ -366,6 +346,7 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
         
         return data.student
       } catch (error) {
+        console.error('❌ [STUDENTS-STORE] 학생 상세 조회 실패:', error)
         set({ 
           error: error instanceof Error ? error.message : '학생 조회 실패',
           loading: false 
@@ -402,11 +383,27 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
 
     // 학생 수정
     updateStudent: async (studentId: string, updates: Partial<Student>, tenantId: string) => {
-      set({ loading: true, error: null })
+      // 이전 상태 백업 (롤백용)
+      const previousStudents = get().students
+      const previousSelected = get().selectedStudent
+      
+      // Optimistic Update: UI 즉시 업데이트 (로딩 없이)
+      set(produce((draft) => {
+        const index = draft.students.findIndex((s: Student) => s.id === studentId)
+        if (index !== -1) {
+          draft.students[index] = { ...draft.students[index], ...updates }
+        }
+        
+        if (draft.selectedStudent?.id === studentId) {
+          draft.selectedStudent = { ...draft.selectedStudent, ...updates }
+        }
+        
+        draft.error = null
+      }))
       
       try {
         const requestBody = { ...updates, tenantId }
-        console.log('🔄 [STUDENTS-STORE] API 요청 시작:', {
+        console.log('🔄 [STUDENTS-STORE] API 요청 시작 (Optimistic):', {
           url: `/api/students/${studentId}`,
           method: 'PUT',
           body: requestBody
@@ -419,32 +416,30 @@ export const useStudentsStore = create<StudentsState>()((set, get) => ({
 
         console.log('✅ [STUDENTS-STORE] API 응답 성공:', data)
         
+        // 서버 응답으로 최종 업데이트
         set(produce((draft) => {
-          // 목록 업데이트
           const index = draft.students.findIndex((s: Student) => s.id === studentId)
           if (index !== -1) {
             draft.students[index] = data.student
           }
           
-          // 선택된 학생도 선택된 학생이면 업데이트
           if (draft.selectedStudent?.id === studentId) {
             draft.selectedStudent = data.student
           }
-          
-          draft.loading = false
         }))
         
         return data.student
       } catch (error) {
-        console.error('❌ [STUDENTS-STORE] API 요청 실패:', {
+        // 실패 시 롤백
+        console.error('❌ [STUDENTS-STORE] API 요청 실패, 롤백:', {
           error,
           errorMessage: error instanceof Error ? error.message : '알 수 없는 오류',
-          studentId,
-          updates,
-          tenantId
+          studentId
         })
         
         set({ 
+          students: previousStudents,
+          selectedStudent: previousSelected,
           error: error instanceof Error ? error.message : '학생 수정 실패',
           loading: false 
         })

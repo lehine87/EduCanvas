@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       phone,
       role: position as string, // position을 role로 매핑
       tenant_id,
-      status: 'pending' as Database['public']['Enums']['user_status'], // 승인 대기 상태로 설정
+      status: 'pending_approval' as Database['public']['Enums']['user_status'], // 승인 대기 상태로 설정
       updated_at: new Date().toISOString()
     }
 

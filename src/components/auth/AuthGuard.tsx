@@ -3,14 +3,18 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore, useSessionAutoRefresh } from '@/store/useAuthStore'
+import { AuthPermissions, type PermissionAction } from '@/lib/auth/AuthorizationService'
+import type { UserRole } from '@/types/auth.types'
 import { Loading } from '@/components/ui'
 
 interface AuthGuardProps {
   children: React.ReactNode
   requireAuth?: boolean
   redirectTo?: string
-  allowedRoles?: string[]
+  allowedRoles?: UserRole[]
+  requiredPermissions?: PermissionAction[] // 🆕 세밀한 권한 제어
   requireTenantAccess?: string // 특정 테넌트 접근 권한 필요
+  permissionMode?: 'any' | 'all' // 🆕 다중 권한 검증 모드
   fallback?: React.ReactNode // 로딩 중 표시할 커스텀 컴포넌트
 }
 
@@ -19,7 +23,9 @@ export function AuthGuard({
   requireAuth = true,
   redirectTo = '/auth/login',
   allowedRoles = [],
+  requiredPermissions = [],
   requireTenantAccess,
+  permissionMode = 'any',
   fallback
 }: AuthGuardProps) {
   const { 
@@ -31,20 +37,9 @@ export function AuthGuard({
     clearSensitiveData
   } = useAuthStore()
   
-  // 인증 및 권한 검사 헬퍼 함수들
+  // 🔒 개선된 인증 및 권한 검사 (중앙집중식)
   const isAuthenticated = !!user && isSessionValid()
   const isActive = profile?.status === 'active'
-  
-  const hasRole = useCallback((roles: string | string[]) => {
-    if (!profile?.role) return false
-    const roleArray = Array.isArray(roles) ? roles : [roles]
-    return roleArray.includes(profile.role)
-  }, [profile?.role])
-  
-  const canAccessTenant = useCallback((tenantId: string) => {
-    if (profile?.role === 'system_admin') return true
-    return profile?.tenant_id === tenantId
-  }, [profile?.role, profile?.tenant_id])
   
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
@@ -68,36 +63,42 @@ export function AuthGuard({
     })
   }
 
-  // 세션 자동 갱신 적용
-  useSessionAutoRefresh()
+  // 세션 자동 갱신 적용 (인증이 필요한 페이지에서만)
+  useSessionAutoRefresh(requireAuth)
 
-  // 보안 검사 로직
+  // 🔒 개선된 보안 검사 로직 (중앙집중식 권한 관리)
   const performSecurityChecks = useCallback(() => {
-    if (!initialized) return
+    // 인증이 필요없는 페이지는 초기화 완료시 바로 통과
+    if (!requireAuth && initialized) {
+      setIsChecking(false)
+      setAuthError(null)
+      
+      // 인증된 사용자가 인증 불필요 페이지 접근 (로그인 페이지 등)
+      if (isAuthenticated) {
+        router.push('/main')
+        return
+      }
+      return
+    }
+
+    // 인증이 필요한 페이지는 profile까지 필요
+    if (!initialized || (requireAuth && !profile)) return
 
     setIsChecking(false)
     setAuthError(null)
 
     // 1. 기본 인증 검사
     if (requireAuth && !isAuthenticated) {
-      console.log('🚨 인증 필요한 페이지에 비인증 사용자 접근')
+      console.log('🚨 [AUTH-GUARD] Unauthenticated access attempt')
       const currentUrl = window.location.pathname + window.location.search
       router.push(`${redirectTo}?next=${encodeURIComponent(currentUrl)}`)
       return
     }
 
-    // 2. 인증된 사용자가 인증 불필요 페이지 접근 (로그인 페이지 등)
-    if (!requireAuth && isAuthenticated) {
-      router.push('/main')
-      return
-    }
-
-    if (requireAuth && isAuthenticated) {
+    if (requireAuth && isAuthenticated && profile) {
       // 3. 세션 유효성 검사
       if (!isSessionValid()) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🚨 만료된 세션으로 접근')
-        }
+        console.log('🚨 [AUTH-GUARD] Expired session detected')
         clearSensitiveData()
         router.push(`${redirectTo}?reason=session-expired`)
         return
@@ -105,51 +106,70 @@ export function AuthGuard({
 
       // 4. 계정 활성 상태 검사
       if (!isActive) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🚨 비활성 계정 접근:', profile?.status)
-        }
+        console.log('🚨 [AUTH-GUARD] Inactive account access:', profile.status)
         setAuthError('계정이 비활성화되었습니다. 관리자에게 문의하세요.')
         router.push('/auth/login?error=account-inactive')
         return
       }
 
-      // 5. 역할 기반 리다이렉트 (system_admin 특별 처리) - 무한 루프 방지를 위해 제거
-      // 대신 admin 페이지에서 사용자가 직접 system-admin으로 이동하도록 UI 제공
-      // if (profile?.role === 'system_admin' && window.location.pathname === '/admin') {
-      //   console.log('🔧 시스템 관리자 자동 리다이렉트: /admin → /system-admin')
-      //   router.push('/system-admin')
-      //   return
-      // }
-
-      // 6. 역할 기반 접근 제어
-      if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🚨 권한 없는 역할로 접근:', { 
-            userRole: profile?.role, 
+      // 5. 🆕 역할 기반 접근 제어 (중앙집중식)
+      if (allowedRoles.length > 0) {
+        const hasValidRole = AuthPermissions.hasRole(profile, allowedRoles)
+        if (!hasValidRole) {
+          console.log('🚨 [AUTH-GUARD] Insufficient role permissions:', { 
+            userRole: profile.role, 
             allowedRoles 
           })
+          setAuthError('이 페이지에 접근할 권한이 없습니다.')
+          router.push('/unauthorized')
+          return
         }
-        setAuthError('이 페이지에 접근할 권한이 없습니다.')
-        router.push('/unauthorized')
-        return
       }
 
-      // 7. 테넌트 접근 권한 검사
-      if (requireTenantAccess && !canAccessTenant(requireTenantAccess)) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🚨 테넌트 접근 권한 없음:', { 
-            requiredTenant: requireTenantAccess,
-            userTenant: profile?.tenant_id
+      // 6. 🆕 세밀한 권한 검증 (Permission-based)
+      if (requiredPermissions.length > 0) {
+        const hasPermissions = permissionMode === 'all' 
+          ? AuthPermissions.checkAll(profile, requiredPermissions, requireTenantAccess)
+          : AuthPermissions.checkAny(profile, requiredPermissions, requireTenantAccess)
+        
+        if (!hasPermissions) {
+          console.log('🚨 [AUTH-GUARD] Insufficient permissions:', { 
+            userRole: profile.role,
+            requiredPermissions,
+            permissionMode
           })
+          setAuthError('이 기능에 접근할 권한이 없습니다.')
+          router.push('/unauthorized')
+          return
         }
-        setAuthError('해당 학원에 접근할 권한이 없습니다.')
-        router.push('/unauthorized')
-        return
+      }
+
+      // 7. 테넌트 접근 권한 검사 (중앙집중식)
+      if (requireTenantAccess) {
+        const canAccess = AuthPermissions.canAccessTenant(profile, requireTenantAccess)
+        if (!canAccess) {
+          console.log('🚨 [AUTH-GUARD] Tenant access denied:', { 
+            requiredTenant: requireTenantAccess,
+            userTenant: profile.tenant_id
+          })
+          setAuthError('해당 학원에 접근할 권한이 없습니다.')
+          router.push('/unauthorized')
+          return
+        }
+      }
+
+      // 8. 권한 검사 통과 로그 (개발 환경)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ [AUTH-GUARD] Access granted:', {
+          user: profile.email,
+          role: profile.role,
+          path: window.location.pathname
+        })
       }
     }
   }, [
     initialized, requireAuth, isAuthenticated, isSessionValid, isActive, 
-    hasRole, canAccessTenant, allowedRoles, requireTenantAccess, 
+    allowedRoles, requiredPermissions, requireTenantAccess, permissionMode,
     profile, router, redirectTo, clearSensitiveData
   ])
 

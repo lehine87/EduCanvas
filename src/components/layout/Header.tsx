@@ -53,13 +53,13 @@ export function Header({
             <AvatarFallback className="bg-white/20 text-white text-sm font-bold">
               {/* ✅ 개선: 지속된 데이터 우선 사용 */}
               {profile?.tenants?.name?.charAt(0) || 
-               effectiveProfile?.tenantName?.charAt(0) || 
+               ('tenantName' in (effectiveProfile || {}) ? (effectiveProfile as any).tenantName?.charAt(0) : '') || 
                effectiveProfile?.tenant_id?.slice(0, 1)?.toUpperCase() || 'A'}
             </AvatarFallback>
           </Avatar>
           <h1 className="text-lg font-bold text-white">
             {/* ✅ 개선: 실제 데이터 우선, 로딩 중에는 기본값 표시 */}
-            {profile?.tenants?.name || (effectiveProfile ? (effectiveProfile.tenantName || '학원명') : '학원명')}
+            {profile?.tenants?.name || (effectiveProfile ? (('tenantName' in effectiveProfile ? (effectiveProfile as any).tenantName : '') || '학원명') : '학원명')}
           </h1>
         </div>
         

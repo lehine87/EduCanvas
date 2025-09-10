@@ -27,9 +27,16 @@ import { searchStudentsService, createStudentService } from '@/services/student-
 // Student Create Schema (업계 표준 스키마)
 const StudentCreateSchema = z.object({
   name: z.string().min(1, '학생 이름은 필수입니다').max(100),
-  student_number: z.string().min(1, '학번은 필수입니다').max(50),
+  student_number: z.string().optional(),
+  name_english: z.string().optional(),
+  birth_date: z.string().nullable().optional(), // YYYY-MM-DD 형식
+  gender: z.string().nullable().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.union([
+    z.string().email(), 
+    z.literal(''),
+    z.undefined()
+  ]).optional().transform(val => val === '' ? undefined : val),
   parent_name_1: z.string().optional(),
   parent_phone_1: z.string().optional(),
   parent_name_2: z.string().optional(),
@@ -42,6 +49,7 @@ const StudentCreateSchema = z.object({
   emergency_contact: z.record(z.string(), z.unknown()).optional(),
   custom_fields: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
+  enrollment_date: z.string().nullable().optional(), // YYYY-MM-DD 형식
 })
 
 /**
@@ -61,6 +69,13 @@ export const GET = withRouteValidation({
   rateLimitKey: 'students_search',
   handler: async (req: NextRequest, context) => {
     const { query, user, timer } = context;
+    
+    console.log('🔐 [Students API] 인증된 사용자 정보:', {
+      user_id: user?.id,
+      tenant_id: user?.tenant_id,
+      role: user?.role
+    })
+    
     try {
       // 서비스 레이어 호출 (비즈니스 로직 분리)
       const result = await searchStudentsService({
@@ -136,7 +151,7 @@ export const POST = withRouteValidation({
       const createData = {
         ...body,
         tenant_id: user.tenant_id,
-        created_by: user.id
+        created_by: user.profile_id || user.id // profile_id 우선 사용, 없으면 user.id
       } as Database['public']['Tables']['students']['Insert'] & { tenant_id: string; created_by: string }
       
       const result = await createStudentService(createData)

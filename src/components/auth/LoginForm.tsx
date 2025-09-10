@@ -73,39 +73,39 @@ export function LoginForm() {
   }, [searchParams])
 
   const onSubmit = async (data: SignInFormData) => {
-    console.log(`🔐 [LOGIN-ATTEMPT] Starting login process:`, {
-      email: data.email,
-      hasPassword: !!data.password,
-      timestamp: new Date().toISOString()
+    // 🔒 보안 개선: 민감정보 제거, 세션ID 기반 안전한 로깅
+    const sessionId = crypto.randomUUID()
+    console.log(`🔐 [AUTH] Login attempt initiated:`, {
+      sessionId,
+      timestamp: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 50) : 'unknown'
     })
 
     setIsLoading(true)
     setError(null)
 
-    // Vercel 환경에서만 상세 디버깅
+    // Vercel 환경에서만 상세 디버깅 (민감정보 제거)
     const isVercel = typeof window !== 'undefined' && 
       process.env.NODE_ENV === 'production' && 
       window.location.hostname.includes('vercel.app')
     const requestId = Math.random().toString(36).substring(7)
 
     if (isVercel) {
-      console.log(`🔐 [VERCEL-LOGIN-${requestId}] LOGIN ATTEMPT:`, {
-        email: data.email,
-        hasPassword: !!data.password,
+      console.log(`🔐 [VERCEL-AUTH-${requestId}] Authentication request:`, {
+        sessionId,
         currentPath: window.location.pathname,
-        referrer: document.referrer,
         timestamp: new Date().toISOString(),
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        environment: 'vercel',
         hostname: window.location.hostname,
-        origin: window.location.origin,
-        fullUrl: window.location.href
+        hasCredentials: !!(data.email && data.password)
       })
     }
 
     try {
       if (isVercel) {
-        console.log(`🔐 [VERCEL-LOGIN-${requestId}] BEFORE AUTH:`, {
-          cookiesBefore: document.cookie
+        console.log(`🔐 [VERCEL-AUTH-${requestId}] Pre-authentication state:`, {
+          sessionId,
+          hasCookies: !!document.cookie
         })
       }
       
@@ -114,13 +114,11 @@ export function LoginForm() {
       const { user, session } = authData
       
       if (isVercel) {
-        console.log(`✅ [VERCEL-LOGIN-${requestId}] AUTH SUCCESS:`, {
+        console.log(`✅ [VERCEL-AUTH-${requestId}] Authentication success:`, {
+          sessionId,
           hasUser: !!user,
           hasSession: !!session,
-          userId: user?.id,
-          userEmail: user?.email,
-          cookiesAfterAuth: document.cookie,
-          sessionExpiresAt: session?.expires_at
+          sessionValid: !!session?.expires_at
         })
       }
       
@@ -129,45 +127,74 @@ export function LoginForm() {
         const profile = await authClient.getUserProfile()
         
         if (isVercel) {
-          console.log(`👤 [VERCEL-LOGIN-${requestId}] PROFILE LOADED:`, {
+          console.log(`👤 [VERCEL-AUTH-${requestId}] Profile loaded:`, {
+            sessionId,
             hasProfile: !!profile,
-            profileRole: profile?.role,
-            profileStatus: profile?.status,
-            tenantId: profile?.tenant_id
+            hasValidStatus: !!(profile?.status),
+            hasTenant: !!(profile?.tenant_id)
           })
         }
         
         setUser(user)
         setProfile(profile)
         
+        // Status 기반 리다이렉트 로직 (업계 표준)
+        let redirectPath = '/main' // 기본값
+        
+        if (profile) {
+          // 온보딩이 필요한 경우 (pending_approval + tenant_id 없음)
+          if (profile.status === 'pending_approval' && !profile.tenant_id) {
+            redirectPath = '/onboarding'
+            setLoadingStep('온보딩 페이지로 이동 중...')
+            console.log(`🎯 [AUTH-REDIRECT] Onboarding required`, { sessionId })
+          }
+          // 승인 대기 중인 경우 (pending_approval + tenant_id 있음)
+          else if (profile.status === 'pending_approval' && profile.tenant_id) {
+            redirectPath = '/pending-approval'
+            setLoadingStep('승인 대기 페이지로 이동 중...')
+            console.log(`⏳ [AUTH-REDIRECT] Pending approval`, { sessionId })
+          }
+          // 활성 사용자인 경우
+          else if (profile.status === 'active') {
+            redirectPath = '/main'
+            setLoadingStep('메인 페이지로 이동 중...')
+            console.log(`✅ [AUTH-REDIRECT] Active user login`, { sessionId })
+          }
+          // 비활성/정지 상태
+          else if (profile.status === 'inactive' || profile.status === 'suspended') {
+            setError(`계정이 ${profile.status === 'inactive' ? '비활성화' : '정지'}되었습니다. 관리자에게 문의하세요.`)
+            setIsLoading(false)
+            return
+          }
+        }
+        
         if (isVercel) {
-          console.log(`🔄 [VERCEL-LOGIN-${requestId}] REDIRECTING TO ADMIN:`, {
+          console.log(`🔄 [VERCEL-AUTH-${requestId}] Initiating redirect:`, {
+            sessionId,
             from: window.location.pathname,
-            to: '/main',
-            cookiesAfterLogin: document.cookie,
-            cookieNames: document.cookie.split(';').map(c => c.split('=')[0]?.trim() || '')
+            to: redirectPath,
+            hasValidSession: !!session
           })
         }
         
         // 쿠키 설정 완료를 위한 대기 (Vercel 환경에서는 더 긴 대기)
         const waitTime = isVercel ? 2000 : 500 // Vercel: 2초, 로컬: 0.5초
-        setLoadingStep(`${waitTime / 1000}초 후 이동...`)
-        console.log(`⏰ [LOGIN-DEBUG] ${waitTime}ms 후 리다이렉트 시작...`)
+        console.log(`⏰ [AUTH-REDIRECT] Redirecting in ${waitTime}ms`, { sessionId, path: redirectPath })
         await new Promise(resolve => setTimeout(resolve, waitTime))
         
-        setLoadingStep('페이지 이동 중...')
-        console.log(`🔄 [LOGIN-DEBUG] 리다이렉트 실행 중...`)
+        console.log(`🔄 [AUTH-REDIRECT] Executing redirect`, { sessionId, path: redirectPath })
         
         // Next.js router navigation 대신 브라우저 네이티브 navigation 사용 (더 안전함)
         if (typeof window !== 'undefined') {
-          window.location.href = '/main'
+          window.location.href = redirectPath
         } else {
-          router.push('/main')
+          router.push(redirectPath)
           router.refresh()
         }
       } else {
         if (isVercel) {
-          console.error(`❌ [VERCEL-LOGIN-${requestId}] AUTH INCOMPLETE:`, {
+          console.error(`❌ [VERCEL-AUTH-${requestId}] Authentication incomplete:`, {
+            sessionId,
             hasUser: !!user,
             hasSession: !!session
           })
@@ -175,13 +202,16 @@ export function LoginForm() {
         setError('로그인 처리 중 문제가 발생했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
-      console.error('로그인 에러:', error)
+      console.error('🚨 [AUTH-ERROR] Login failed', { 
+        sessionId,
+        errorType: error instanceof Error ? error.name : 'Unknown'
+      })
       
       if (isVercel) {
-        console.error(`❌ [VERCEL-LOGIN-${requestId}] LOGIN ERROR:`, {
-          error: error instanceof Error ? error.message : String(error),
-          errorName: error instanceof Error ? error.name : 'Unknown',
-          stack: error instanceof Error ? error.stack?.substring(0, 200) : undefined
+        console.error(`❌ [VERCEL-AUTH-${requestId}] Authentication error:`, {
+          sessionId,
+          errorType: error instanceof Error ? error.name : 'Unknown',
+          hasMessage: !!(error instanceof Error && error.message)
         })
       }
       
@@ -240,7 +270,7 @@ export function LoginForm() {
             <Form {...form}>
               <form 
                 onSubmit={(e) => {
-                  console.log(`📝 [FORM-SUBMIT] Form submission triggered`)
+                  console.log(`📝 [AUTH-UI] Form submission initiated`)
                   form.handleSubmit(onSubmit)(e)
                 }} 
                 className="space-y-4"
@@ -297,13 +327,12 @@ export function LoginForm() {
                   className="w-full"
                   disabled={isLoading}
                   onClick={() => {
-                    // 로그인 버튼 클릭 즉시 로그 (로컬 환경에서도 출력)
-                    console.log(`🖱️ [LOGIN-CLICK] LOGIN BUTTON CLICKED:`, {
+                    // 🔒 보안 개선: 버튼 클릭 로그에서 민감정보 제거
+                    console.log(`🖱️ [AUTH-UI] Login button clicked:`, {
                       timestamp: new Date().toISOString(),
                       isLoading,
-                      hasErrors: !!Object.keys(form.formState.errors).length,
-                      errors: form.formState.errors,
-                      cookiesCount: document.cookie.split(';').length
+                      hasFormErrors: !!Object.keys(form.formState.errors).length,
+                      formValid: form.formState.isValid
                     })
                   }}
                 >

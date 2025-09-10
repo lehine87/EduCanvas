@@ -1,41 +1,21 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { queryClient } from '@/lib/react-query'
 
 interface QueryProviderProps {
   children: React.ReactNode
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000, // 1분
-            refetchOnWindowFocus: false,
-            retry: (failureCount, error) => {
-              // 권한 에러나 404는 재시도하지 않음
-              if (error && typeof error === 'object' && 'status' in error) {
-                const status = (error as any).status
-                if (status === 401 || status === 403 || status === 404) {
-                  return false
-                }
-              }
-              return failureCount < 2
-            },
-          },
-          mutations: {
-            retry: false,
-          },
-        },
-      })
-  )
-
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      {/* 개발 환경에서만 React Query DevTools 표시 */}
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
     </QueryClientProvider>
   )
 }

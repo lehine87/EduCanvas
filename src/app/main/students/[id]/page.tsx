@@ -12,12 +12,13 @@ import { authClient } from '@/lib/auth/authClient'
 export default function StudentDetailPage() {
   const params = useParams()
   // ✅ 개선: 지속된 데이터도 함께 사용하여 즉시 렌더링
-  const { profile, loading: authLoading, initialized, effectiveProfile } = useAuthStore()
+  const { profile, loading: authLoading, initialized, getEffectiveProfile } = useAuthStore()
   const { students, loading, actions } = useStudentsStore()
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   
   const studentId = params.id as string
   // ✅ 개선: 실제 프로필 또는 지속된 프로필에서 tenant_id 가져오기
+  const effectiveProfile = getEffectiveProfile()
   const tenantId = effectiveProfile?.tenant_id
   
   console.log('🏠 [DYNAMIC-ROUTE] 페이지 렌더링:', { 

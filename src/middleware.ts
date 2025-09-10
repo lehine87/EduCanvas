@@ -1,15 +1,12 @@
 /**
- * Enhanced Middleware with Navigation System v2.0
- * @description 제로베이스 리디렉션 시스템 기반 간소화된 미들웨어
- * @version v2.0 - NavigationController 통합
- * @since 2025-08-15
+ * Enhanced Middleware with Navigation System v3.0
+ * @description 온보딩 플로우 및 status 기반 리다이렉트 시스템
+ * @version v3.0 - 온보딩/승인 대기 플로우 추가
+ * @since 2025-09-10
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-// 1단계에서는 복잡한 의존성 제거
-// import { rateLimiter, getClientIP, createRateLimitResponse } from '@/lib/auth/rateLimiter'
-// import { navigationController } from '@/lib/navigation'
-// import type { NavigationContext } from '@/types/navigation.types'
+import { createClient } from '@/lib/supabase/middleware'
 
 /**
  * 미들웨어 제외 패턴들
@@ -102,7 +99,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 }
 
 /**
- * 간소화된 미들웨어 - 1단계: 보안 헤더만 적용
+ * 업계 표준 미들웨어 - 온보딩/승인 대기 플로우 포함
  */
 export async function middleware(request: NextRequest) {
   const currentPath = request.nextUrl.pathname
@@ -112,7 +109,7 @@ export async function middleware(request: NextRequest) {
   const debugMode = process.env.NAVIGATION_DEBUG === 'true'
   
   if (debugMode) {
-    console.log(`🛡️ [MIDDLEWARE-${requestId}] Simple Request:`, {
+    console.log(`🛡️ [MIDDLEWARE-${requestId}] Request:`, {
       method: request.method,
       path: currentPath
     })
@@ -123,9 +120,122 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(NextResponse.next())
   }
 
-  // 2. 보안 헤더만 적용하고 통과
+  // 2. 인증이 필요 없는 페이지들 (회원가입, 로그인, 콜백 등)
+  const publicPaths = ['/auth/login', '/auth/signup', '/auth/callback', '/auth/reset-password']
+  if (publicPaths.includes(currentPath)) {
+    return applySecurityHeaders(NextResponse.next())
+  }
+
+  // 3. 온보딩/승인 대기 페이지는 직접 접근 허용
+  const onboardingPaths = ['/onboarding', '/pending-approval']
+  if (onboardingPaths.includes(currentPath)) {
+    return applySecurityHeaders(NextResponse.next())
+  }
+
+  // 4. 인증 상태 및 프로필 확인 (보호된 라우트)
+  const protectedPaths = ['/main', '/admin', '/classes', '/students', '/settings']
+  const isProtectedPath = protectedPaths.some(path => currentPath.startsWith(path))
+  
+  if (isProtectedPath) {
+    try {
+      const { supabase, response } = createClient(request)
+      
+      // 사용자 세션 확인
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        if (debugMode) {
+          console.log(`🔒 [MIDDLEWARE-${requestId}] 인증 필요:`, currentPath)
+        }
+        // 로그인 페이지로 리다이렉트
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/auth/login'
+        redirectUrl.searchParams.set('next', currentPath)
+        return NextResponse.redirect(redirectUrl)
+      }
+
+      // 사용자 프로필 확인
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, status, tenant_id, role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile) {
+        if (debugMode) {
+          console.log(`❌ [MIDDLEWARE-${requestId}] 프로필 조회 실패:`, profileError)
+        }
+        // 프로필이 없으면 로그인 페이지로
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/auth/login'
+        return NextResponse.redirect(redirectUrl)
+      }
+
+      if (debugMode) {
+        console.log(`👤 [MIDDLEWARE-${requestId}] 사용자 상태:`, {
+          status: profile.status,
+          hasTenant: !!profile.tenant_id,
+          role: profile.role,
+          currentPath
+        })
+      }
+
+      // 5. Status 기반 리다이렉트 로직 (업계 표준)
+      
+      // 온보딩이 필요한 경우 (pending_approval + tenant_id 없음)
+      if (profile.status === 'pending_approval' && !profile.tenant_id) {
+        if (currentPath !== '/onboarding') {
+          if (debugMode) {
+            console.log(`🎯 [MIDDLEWARE-${requestId}] 온보딩 필요 → /onboarding 리다이렉트`)
+          }
+          const redirectUrl = request.nextUrl.clone()
+          redirectUrl.pathname = '/onboarding'
+          return NextResponse.redirect(redirectUrl)
+        }
+      }
+      
+      // 승인 대기 중인 경우 (pending_approval + tenant_id 있음)
+      else if (profile.status === 'pending_approval' && profile.tenant_id) {
+        if (currentPath !== '/pending-approval') {
+          if (debugMode) {
+            console.log(`⏳ [MIDDLEWARE-${requestId}] 승인 대기 → /pending-approval 리다이렉트`)
+          }
+          const redirectUrl = request.nextUrl.clone()
+          redirectUrl.pathname = '/pending-approval'
+          return NextResponse.redirect(redirectUrl)
+        }
+      }
+      
+      // 비활성/정지 상태
+      else if (profile.status === 'inactive' || profile.status === 'suspended') {
+        if (debugMode) {
+          console.log(`🚫 [MIDDLEWARE-${requestId}] 계정 ${profile.status} 상태`)
+        }
+        // 계정 상태 페이지로 리다이렉트 (추후 구현)
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/auth/login'
+        redirectUrl.searchParams.set('error', `account_${profile.status}`)
+        return NextResponse.redirect(redirectUrl)
+      }
+      
+      // 활성 사용자는 정상 진행
+      else if (profile.status === 'active') {
+        // 정상 진행
+        return applySecurityHeaders(response)
+      }
+
+    } catch (error) {
+      if (debugMode) {
+        console.error(`❌ [MIDDLEWARE-${requestId}] 오류:`, error)
+      }
+      // 오류 시 기본 응답
+      return applySecurityHeaders(NextResponse.next())
+    }
+  }
+
+  // 6. 기본 응답 (보안 헤더 적용)
   if (debugMode) {
-    console.log(`✅ [MIDDLEWARE-${requestId}] Security headers applied:`, currentPath)
+    console.log(`✅ [MIDDLEWARE-${requestId}] 기본 처리:`, currentPath)
   }
   
   return applySecurityHeaders(NextResponse.next())

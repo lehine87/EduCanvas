@@ -163,6 +163,56 @@ function parseQueryParams(searchParams: URLSearchParams): Record<string, any> {
  */
 async function validateAuthentication(req: NextRequest): Promise<any> {
   try {
+    // 쿠키 기반 인증 우선 시도
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+    
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (!error && user) {
+        // 쿠키 기반 인증 성공
+        const { createServiceRoleClient } = await import('@/lib/supabase/server')
+        const serviceClient = createServiceRoleClient()
+        
+        // tenant_memberships에서 사용자 정보 조회
+        const { data: membership, error: membershipError } = await serviceClient
+          .from('tenant_memberships')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .single()
+
+        if (membershipError || !membership) {
+          console.log('🔒 [AUTH] No active membership found for user:', user.id)
+          return null
+        }
+
+        // user_profiles에서 실제 profile ID 조회
+        const { data: profile, error: profileError } = await serviceClient
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.log('🔒 [AUTH] No user profile found for user:', user.id)
+          return null
+        }
+
+        return {
+          id: user.id,
+          profile_id: profile.id,
+          tenant_id: membership.tenant_id,
+          role: (membership.staff_info as {role?: string})?.role || 'viewer',
+          email: user.email,
+          membership
+        }
+      }
+    } catch (cookieError) {
+      console.log('🔒 [AUTH] Cookie-based auth failed, trying Authorization header')
+    }
+
+    // 쿠키 인증 실패 시 Authorization 헤더 시도
     const authHeader = req.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null
@@ -170,17 +220,24 @@ async function validateAuthentication(req: NextRequest): Promise<any> {
 
     const token = authHeader.substring(7)
     
-    // 실제 Supabase JWT 검증 구현
+    // 실제 Supabase JWT 검증 구현 (업계 표준 방식)
     if (token && token !== 'test-token') {
-      const { createServiceRoleClient } = await import('@/lib/supabase/server')
-      const supabase = createServiceRoleClient()
+      const { createClient } = await import('@supabase/supabase-js')
+      const userClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
       
       try {
-        const { data: { user }, error } = await supabase.auth.getUser(token)
+        const { data: { user }, error } = await userClient.auth.getUser(token)
         if (error || !user) {
           console.log('🔒 [AUTH] Invalid token:', error?.message)
           return null
         }
+
+        // Service role 클라이언트로 DB 쿼리 수행
+        const { createServiceRoleClient } = await import('@/lib/supabase/server')
+        const supabase = createServiceRoleClient()
 
         // tenant_memberships에서 사용자 정보 조회
         const { data: membership, error: membershipError } = await supabase
@@ -195,8 +252,21 @@ async function validateAuthentication(req: NextRequest): Promise<any> {
           return null
         }
 
+        // user_profiles에서 실제 profile ID 조회
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.log('🔒 [AUTH] No user profile found for user:', user.id)
+          return null
+        }
+
         return {
-          id: user.id,
+          id: user.id, // Supabase auth user ID
+          profile_id: profile.id, // user_profiles.id (for created_by references)
           tenant_id: membership.tenant_id,
           role: (membership.staff_info as {role?: string})?.role || 'viewer',
           email: user.email,
@@ -212,8 +282,9 @@ async function validateAuthentication(req: NextRequest): Promise<any> {
     if (token === 'test-token') {
       console.log('🔧 [DEV] Using test authentication (admin role)')
       return { 
-        id: '550e8400-e29b-41d4-a716-446655440000', 
-        tenant_id: '11111111-1111-1111-1111-111111111111',
+        id: 'f089e4d5-c4f5-4389-8814-42fd4fe5a607', 
+        profile_id: 'f089e4d5-c4f5-4389-8814-42fd4fe5a607', // 실제 존재하는 profile_id 사용
+        tenant_id: '5cddcc22-f2a8-434f-acbe-49be8018957d', // 실제 tenant_id도 맞춤
         role: 'admin',
         email: 'test@educanvas.com',
         isTestUser: true
