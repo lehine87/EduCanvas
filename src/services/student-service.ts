@@ -290,13 +290,10 @@ async function searchStudentsWithFilters(params: {
     limit
   })
 
-  // 동적 쿼리 빌더 (업계 표준 패턴)
+  // 업계 표준: 성능 최적화된 쿼리 빌더
   let query = supabase
     .from('students')
-    .select(include_enrollment ? 
-      `*, student_enrollments(*)` : 
-      '*'
-    )
+    .select('*') // enrollment 조인 제거로 성능 개선
     .eq('tenant_id', tenant_id)
 
   // 필터 적용
@@ -540,35 +537,50 @@ export async function getStudentByIdService(
   } = {}
 ): Promise<{ student: Student | null }> {
   try {
-    const { include_enrollment, include_attendance_stats, include_payment_history } = options
+    const queryStart = Date.now()
+    console.log('🔍 [StudentService] getStudentByIdService called:', { id, tenant_id })
 
-    let selectQuery = `
-      *
-      ${include_enrollment ? `,
-        enrollments:student_enrollments(*)
-      ` : ''}
-    `
-
-    const { data, error } = await supabase
+    // 업계 표준: 타임아웃을 포함한 안전한 DB 쿼리
+    const queryPromise = supabase
       .from('students')
-      .select(selectQuery)
+      .select('*')
       .eq('id', id)
       .eq('tenant_id', tenant_id)
       .single()
-    
-    const student = data
+
+    // 업계 표준: Promise.race를 통한 타임아웃 구현
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Database query timeout (5000ms)'))
+      }, 5000)
+    })
+
+    const { data, error } = await Promise.race([
+      queryPromise,
+      timeoutPromise
+    ]) as any
+
+    const queryTime = Date.now() - queryStart
+    console.log('🔍 [StudentService] DB query completed:', {
+      query_time_ms: queryTime,
+      data: !!data,
+      error: error?.code || null
+    })
 
     if (error) {
       if (error.code === 'PGRST116') {
+        console.log('🔍 [StudentService] Student not found')
         return { student: null }
       }
+      console.error('🔍 [StudentService] DB error:', error)
       throw new Error(`Failed to get student: ${error.message}`)
     }
 
-    return { student: student as unknown as Student | null }
+    console.log('🔍 [StudentService] Returning student data')
+    return { student: data as Student }
 
   } catch (error) {
-    console.error('Get student service error:', error)
+    console.error('🔍 [StudentService] Service error:', error)
     throw new Error(`Failed to get student: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }

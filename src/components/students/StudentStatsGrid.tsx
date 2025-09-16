@@ -7,7 +7,6 @@ import {
   UserGroupIcon,
   AcademicCapIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   CalendarDaysIcon
 } from '@heroicons/react/24/outline'
@@ -48,6 +47,10 @@ export default function StudentStatsGrid({
   
   // 통계 계산 - API 데이터 우선 사용, fallback으로 필터링된 데이터 사용
   const stats = useMemo(() => {
+    // students 안전성 체크를 먼저 수행
+    const safeStudents = students || []
+    const safeTotalStudents = totalStudents || 0
+
     if (statsData) {
       // API에서 가져온 전체 통계 데이터 사용
       return {
@@ -61,21 +64,21 @@ export default function StudentStatsGrid({
         gradeDistribution: {} // TODO: API에서 학년별 분포 데이터가 추가되면 사용
       }
     }
-    
+
     // Fallback: 필터링된 데이터로 계산 (기존 로직)
-    const activeStudents = students.filter(s => s.status === 'active').length
-    const inactiveStudents = students.filter(s => s.status === 'inactive').length
-    const graduatedStudents = students.filter(s => s.status === 'graduated').length
-    
+    const activeStudents = safeStudents.filter(s => s.status === 'active').length
+    const inactiveStudents = safeStudents.filter(s => s.status === 'inactive').length
+    const graduatedStudents = safeStudents.filter(s => s.status === 'graduated').length
+
     // 최근 등록 학생 (30일 이내)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const recentEnrollments = students.filter(s => 
+    const recentEnrollments = safeStudents.filter(s =>
       s.enrollment_date && new Date(s.enrollment_date) > thirtyDaysAgo
     ).length
 
     // 학년별 분포
-    const gradeDistribution = students.reduce((acc, student) => {
+    const gradeDistribution = safeStudents.reduce((acc, student) => {
       const grade = student.grade_level || '미상'
       acc[grade] = (acc[grade] || 0) + 1
       return acc
@@ -85,12 +88,12 @@ export default function StudentStatsGrid({
       .sort(([,a], [,b]) => b - a)[0]
 
     return {
-      total: totalStudents,
+      total: safeTotalStudents,
       active: activeStudents,
       inactive: inactiveStudents,
       graduated: graduatedStudents,
-      withdrawn: students.filter(s => s.status === 'withdrawn').length,
-      suspended: students.filter(s => s.status === 'suspended').length,
+      withdrawn: safeStudents.filter(s => s.status === 'withdrawn').length,
+      suspended: safeStudents.filter(s => s.status === 'suspended').length,
       recent: recentEnrollments,
       topGrade: topGrade ? `${topGrade[0]} (${topGrade[1]}명)` : '데이터 없음',
       gradeDistribution
@@ -337,42 +340,6 @@ export default function StudentStatsGrid({
         )
       })}
 
-      {/* 주의 필요 항목들 */}
-      {(stats.inactive > 0) && (
-        <div className="col-span-2 md:col-span-3 lg:col-span-6">
-          <div className="
-            relative overflow-hidden rounded-xl p-4
-            backdrop-blur-sm bg-orange-50/40 dark:bg-orange-950/40
-            border border-orange-200/30 dark:border-orange-800/30
-            shadow-xl dark:shadow-none
-          ">
-            {/* 배경 그라디언트 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5" />
-            
-            <div className="relative flex items-start space-x-3">
-              <div className="p-2 rounded-lg bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                <ExclamationTriangleIcon className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-orange-800 dark:text-orange-200 mb-2">
-                  주의 필요 항목
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {stats.inactive > 0 && (
-                    <div className="
-                      px-2 py-1 rounded-md text-xs font-medium
-                      bg-orange-500/20 text-orange-800 dark:text-orange-200
-                      border border-orange-300/30 dark:border-orange-700/30
-                    ">
-                      휴학생 {stats.inactive}명 관리 필요
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { 
-  Home, 
-  GraduationCap, 
-  Users, 
-  User, 
-  BookOpen, 
-  Calendar, 
-  BarChart3 
+import {
+  Home,
+  GraduationCap,
+  Users,
+  User,
+  BookOpen,
+  Calendar,
+  BarChart3,
+  ClipboardCheck
 } from 'lucide-react'
 import type { TabItem, UserRole, NavigationStore, SubTabCategory } from '@/types/navigation'
 import { useSearchStore } from './searchStore'
@@ -68,6 +69,33 @@ const ALL_TABS: TabItem[] = [
         items: [
           { id: 'grades', label: '성적 관리', href: '/main/students/grades', description: '학생 성적 입력 및 조회' },
           { id: 'attendance', label: '출결 관리', href: '/main/students/attendance', description: '출석 현황 및 관리' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'attendance',
+    label: '출결관리',
+    icon: ClipboardCheck,
+    href: '/main/attendance',
+    searchContext: 'attendance',
+    requiredRoles: [], // 모든 사용자 접근 가능
+    description: '학생 출석 및 결석 관리',
+    subtabs: [
+      {
+        id: 'attendance-check',
+        label: '출결 체크',
+        items: [
+          { id: 'check', label: '출석체크', href: '/main/attendance', description: '실시간 학생 출석 체크' },
+          { id: 'history', label: '출결 이력', href: '/main/attendance/history', description: '출석 기록 조회' }
+        ]
+      },
+      {
+        id: 'attendance-reports',
+        label: '출결 통계',
+        items: [
+          { id: 'stats', label: '출석 통계', href: '/main/attendance/stats', description: '출석률 및 통계 분석' },
+          { id: 'reports', label: '출결 리포트', href: '/main/attendance/reports', description: '출결 현황 리포트' }
         ]
       }
     ]

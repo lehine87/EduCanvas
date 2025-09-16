@@ -8,17 +8,14 @@ import { z } from 'zod'
 import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
 import { Loader2 } from 'lucide-react'
 import { TenantSearchModal } from './TenantSearchModal'
-import { createClient } from '@/lib/supabase/client'
-import type { Tenant } from '@/types'
+import { useOnboarding } from '@/hooks/useAuth'
+import type { Tenant } from '@/lib/api-client'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile } from '@/types/auth.types'
 
 const onboardingSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
   phone: z.string().min(10, '올바른 전화번호를 입력해주세요'),
-  position: z.enum(['instructor', 'staff', 'admin'], {
-    message: '직책을 선택해주세요',
-  }),
   specialization: z.string().optional(),
   bio: z.string().optional(),
   emergency_contact: z.string().optional(),
@@ -35,11 +32,12 @@ interface OnboardingFormProps {
 
 export function OnboardingForm({ user }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [showTenantSearch, setShowTenantSearch] = useState(false)
   const router = useRouter()
+
+  // API Client 패턴 사용
+  const onboardingMutation = useOnboarding()
 
   const {
     register,
@@ -55,7 +53,6 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
     mode: 'onChange'
   })
 
-  const position = watch('position')
 
   const handleNextStep = () => {
     if (currentStep === 1 && isValid) {
@@ -99,83 +96,29 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
 
   const onSubmit = async (data: OnboardingFormData) => {
     if (!selectedTenant) {
-      setError('소속 학원을 선택해주세요.')
+      // 개별 에러 상태 설정은 useOnboarding에서 토스트로 처리됨
       return
     }
 
-    setIsLoading(true)
-    setError(null)
-
     try {
-      console.log('🚀 온보딩 데이터 제출:', { ...data, tenant: selectedTenant })
-
-      // 현재 사용자 확인
-      const supabase = createClient()
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError || !currentUser) {
-        console.error('❌ 사용자 세션 확인 실패:', userError?.message)
-        setError('로그인 세션이 만료되었습니다. 다시 로그인해주세요.')
-        return
+      const onboardingData = {
+        ...data,
+        tenant_id: selectedTenant.id,
       }
 
-      console.log('🔄 온보딩 API 호출 시작:', {
-        userId: currentUser.id,
-        tenant: selectedTenant.name,
-        position: data.position
-      })
+      console.log('🚀 온보딩 데이터 제출:', { ...data, tenant: selectedTenant.name })
 
-      // 현재 사용자 및 세션 확인
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError || !user) {
-        console.error('❌ 사용자 인증 실패:', authError?.message)
-        setError('로그인이 필요합니다. 다시 로그인해주세요.')
-        return
-      }
+      // API Client 패턴으로 온보딩 호출
+      await onboardingMutation.mutateAsync(onboardingData)
 
-      // 세션 토큰 가져오기
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session?.access_token) {
-        console.error('❌ 세션 토큰 가져오기 실패:', sessionError?.message)
-        setError('인증 토큰을 가져올 수 없습니다. 다시 로그인해주세요.')
-        return
-      }
+      console.log('✅ 온보딩 완료 - 승인 대기 페이지로 이동')
 
-      console.log('🔑 토큰 확인 완료, API 호출 시작')
-
-      // 온보딩 API 호출 (Authorization 헤더 방식)
-      const response = await fetch('/api/auth/onboarding', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          ...data,
-          tenant_id: selectedTenant.id,
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        console.error('❌ 온보딩 API 오류:', result.error)
-        setError(result.error || '온보딩 처리 중 오류가 발생했습니다.')
-        return
-      }
-
-      console.log('✅ 온보딩 완료:', result.message)
-      
       // 성공 시 승인 대기 페이지로 이동
       router.push('/pending-approval')
 
     } catch (error) {
       console.error('온보딩 실패:', error)
-      setError('온보딩 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsLoading(false)
+      // 에러 처리는 useOnboarding 훅에서 토스트로 처리됨
     }
   }
 
@@ -189,9 +132,9 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {error && (
+            {!selectedTenant && currentStep === 2 && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                {error}
+                소속 학원을 선택해주세요.
               </div>
             )}
 
@@ -205,7 +148,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     {...register('name')}
                     // error will be shown below
                     placeholder="홍길동"
-                    disabled={isLoading}
+                    disabled={onboardingMutation.isPending}
                     required
                   />
                 </div>
@@ -217,64 +160,21 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     {...register('phone')}
                     // error will be shown below
                     placeholder="010-1234-5678"
-                    disabled={isLoading}
+                    disabled={onboardingMutation.isPending}
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    직책 *
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="instructor"
-                        {...register('position')}
-                        className="mr-2"
-                        disabled={isLoading}
-                      />
-                      <span>강사</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="staff"
-                        {...register('position')}
-                        className="mr-2"
-                        disabled={isLoading}
-                      />
-                      <span>스태프</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="tenant_admin"
-                        {...register('position')}
-                        className="mr-2"
-                        disabled={isLoading}
-                      />
-                      <span>관리자</span>
-                    </label>
-                  </div>
-                  {errors.position && (
-                    <p className="mt-1 text-sm text-red-600">{errors.position.message}</p>
-                  )}
-                </div>
 
-                {position === 'instructor' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">전문분야</label>
-                    <Input
-                      type="text"
-                      {...register('specialization')}
-                      // error will be shown below
-                      placeholder="영어회화, 수학, 과학 등"
-                      disabled={isLoading}
-                    />
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">전문분야 (선택사항)</label>
+                  <Input
+                    type="text"
+                    {...register('specialization')}
+                    placeholder="영어회화, 수학, 과학 등 (해당되는 경우에만)"
+                    disabled={onboardingMutation.isPending}
+                  />
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -285,7 +185,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="간단한 자기소개를 작성해주세요"
-                    disabled={isLoading}
+                    disabled={onboardingMutation.isPending}
                   />
                 </div>
 
@@ -296,7 +196,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     {...register('emergency_contact')}
                     // error will be shown below
                     placeholder="가족 연락처 등"
-                    disabled={isLoading}
+                    disabled={onboardingMutation.isPending}
                   />
                 </div>
 
@@ -304,7 +204,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                   type="button"
                   onClick={handleNextStep}
                   className="w-full"
-                  disabled={!isValid || isLoading}
+                  disabled={!isValid || onboardingMutation.isPending}
                 >
                   다음 단계
                 </Button>
@@ -360,7 +260,7 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                     variant="outline"
                     onClick={handlePrevStep}
                     className="flex-1"
-                    disabled={isLoading}
+                    disabled={onboardingMutation.isPending}
                   >
                     이전
                   </Button>
@@ -368,9 +268,9 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={!selectedTenant || isLoading}
+                    disabled={!selectedTenant || onboardingMutation.isPending}
                   >
-                    {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {onboardingMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     가입 신청 완료
                   </Button>
                 </div>
@@ -387,7 +287,6 @@ export function OnboardingForm({ user }: OnboardingFormProps) {
         onSelect={(tenant) => {
           setSelectedTenant(tenant)
           setShowTenantSearch(false)
-          setError(null)
         }}
       />
     </>

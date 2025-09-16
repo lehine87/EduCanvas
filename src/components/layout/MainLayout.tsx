@@ -30,17 +30,14 @@ export function MainLayout({ children, className }: MainLayoutProps) {
 
   return (
     <SearchProvider>
-      <div className={`flex h-screen bg-background ${className || ''}`}>      
-        {/* 메인 영역 */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* 헤더 + 탭 네비게이션 */}
-          <Header />
-          
-          {/* 페이지 콘텐츠 */}
-          <main className="flex-1 overflow-hidden">
-            {children}
-          </main>
-        </div>
+      <div className={`h-screen bg-background overflow-hidden ${className || ''}`} style={{ position: 'fixed', width: '100%', height: '100%' }}>
+        {/* 헤더 + 탭 네비게이션 - 고정 */}
+        <Header />
+
+        {/* 페이지 콘텐츠 - 헤더 아래 */}
+        <main className="h-[calc(100vh-4rem)] overflow-hidden">
+          {children}
+        </main>
       </div>
     </SearchProvider>
   )

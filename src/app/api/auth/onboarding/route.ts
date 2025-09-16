@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     const {
       name,
       phone,
-      position,
       specialization,
       bio,
       emergency_contact,
@@ -15,9 +14,15 @@ export async function POST(request: NextRequest) {
     } = await request.json()
     
     // 필수 필드 검증
-    if (!name || !phone || !position || !tenant_id) {
+    if (!name || !phone || !tenant_id) {
       return NextResponse.json(
-        { error: '이름, 전화번호, 직책, 테넌트는 필수 입력 사항입니다.' },
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '이름, 전화번호, 테넌트는 필수 입력 사항입니다.'
+          }
+        },
         { status: 400 }
       )
     }
@@ -30,7 +35,13 @@ export async function POST(request: NextRequest) {
     
     if (!token) {
       return NextResponse.json(
-        { error: '인증 토큰이 필요합니다.' },
+        {
+          success: false,
+          error: {
+            code: 'AUTHENTICATION_ERROR',
+            message: '인증 토큰이 필요합니다.'
+          }
+        },
         { status: 401 }
       )
     }
@@ -51,7 +62,13 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       console.error('❌ 토큰 검증 실패:', authError?.message)
       return NextResponse.json(
-        { error: '유효하지 않은 인증 토큰입니다.' },
+        {
+          success: false,
+          error: {
+            code: 'AUTHENTICATION_ERROR',
+            message: '유효하지 않은 인증 토큰입니다.'
+          }
+        },
         { status: 401 }
       )
     }
@@ -60,7 +77,6 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       name,
-      position,
       tenant_id
     })
 
@@ -75,7 +91,13 @@ export async function POST(request: NextRequest) {
     if (tenantError || !tenantData) {
       console.error('❌ 테넌트 조회 실패:', tenantError)
       return NextResponse.json(
-        { error: '선택된 학원을 찾을 수 없습니다.' },
+        {
+          success: false,
+          error: {
+            code: 'TENANT_NOT_FOUND',
+            message: '선택된 학원을 찾을 수 없습니다.'
+          }
+        },
         { status: 400 }
       )
     }
@@ -93,7 +115,7 @@ export async function POST(request: NextRequest) {
     const profileData: ProfileUpdateData = {
       name,
       phone,
-      role: position as string, // position을 role로 매핑
+      role: null, // 직책은 승인 과정에서 설정
       tenant_id,
       status: 'pending_approval' as Database['public']['Enums']['user_status'], // 승인 대기 상태로 설정
       updated_at: new Date().toISOString()
@@ -121,56 +143,59 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('❌ 프로필 업데이트 실패:', updateError)
       return NextResponse.json(
-        { error: '프로필 업데이트 중 오류가 발생했습니다.' },
+        {
+          success: false,
+          error: {
+            code: 'DATABASE_ERROR',
+            message: '프로필 업데이트 중 오류가 발생했습니다.',
+            details: [updateError.message]
+          }
+        },
         { status: 500 }
       )
     }
 
-    // 강사인 경우 tenant_memberships에 job_function과 추가 정보 업데이트
-    if (position === 'instructor') {
-      // tenant_memberships 테이블에 강사 정보 업데이트
-      const { data: membership } = await supabaseServiceRole
+    // 추가 정보는 tenant_memberships에 저장 (직책과 무관하게)
+    const { data: membership } = await supabaseServiceRole
+      .from('tenant_memberships')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('tenant_id', tenant_id)
+      .single()
+
+    if (membership) {
+      const { error: updateError } = await supabaseServiceRole
         .from('tenant_memberships')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('tenant_id', tenant_id)
-        .single()
+        .update({
+          specialization: specialization || null,
+          bio: bio || null,
+          emergency_contact: emergency_contact || null
+        })
+        .eq('id', membership.id)
 
-      if (membership) {
-        const { error: updateError } = await supabaseServiceRole
-          .from('tenant_memberships')
-          .update({
-            job_function: 'instructor',
-            hire_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
-            specialization: specialization || null,
-            bio: bio || null,
-            emergency_contact: emergency_contact || null
-          })
-          .eq('id', membership.id)
-
-        if (updateError) {
-          console.warn('⚠️ 강사 정보 업데이트 실패 (계속 진행):', updateError)
-        } else {
-          console.log('✅ 강사 정보 업데이트 완료')
-        }
+      if (updateError) {
+        console.warn('⚠️ 개인 정보 업데이트 실패 (계속 진행):', updateError)
       } else {
-        console.warn('⚠️ tenant_memberships 레코드를 찾을 수 없음')
+        console.log('✅ 개인 정보 업데이트 완료')
       }
+    } else {
+      console.warn('⚠️ tenant_memberships 레코드를 찾을 수 없음')
     }
 
     console.log('✅ 온보딩 완료:', {
       userId: user.id,
       tenant: tenantData.name,
-      role: position,
       status: 'pending_approval'
     })
 
     return NextResponse.json({
       success: true,
-      message: '온보딩이 완료되었습니다. 관리자 승인을 기다려주세요.',
-      profile: {
-        ...updatedProfile,
-        tenants: tenantData
+      data: {
+        message: '온보딩이 완료되었습니다. 관리자 승인을 기다려주세요.',
+        profile: {
+          ...updatedProfile,
+          tenants: tenantData
+        }
       }
     })
 
@@ -185,7 +210,13 @@ export async function POST(request: NextRequest) {
       : '내부 서버 오류가 발생했습니다.';
     
     return NextResponse.json(
-      { error: errorMessage },
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: errorMessage
+        }
+      },
       { status: 500 }
     )
   }

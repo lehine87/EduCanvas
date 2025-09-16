@@ -271,7 +271,7 @@ export function StudentRegistrationForm({
                   step === currentStep
                     ? 'bg-primary text-primary-foreground'
                     : step < currentStep
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-green-500 text-text-100'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >

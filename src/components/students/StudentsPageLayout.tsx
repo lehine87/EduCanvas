@@ -1,10 +1,14 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import StudentSearchSidebar from './StudentSearchSidebar'
 import StudentDetailMain from './StudentDetailMain'
 import StudentOverviewDashboard from './StudentOverviewDashboard'
+import RealtimeIndicator from '@/components/staff/RealtimeIndicator'
+import CachePerformanceMonitor, { CacheMonitorToggle } from '@/components/ui/CachePerformanceMonitor'
+import { useStudentPageRealtime } from '@/hooks/useStudentRealtime'
 import type { Student } from '@/types/student.types'
 
 interface StudentsPageLayoutProps {
@@ -13,17 +17,30 @@ interface StudentsPageLayoutProps {
 }
 
 export default function StudentsPageLayout({ className, initialSelectedStudent }: StudentsPageLayoutProps) {
+  const pathname = usePathname()
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(initialSelectedStudent || null)
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [showDetailSheet, setShowDetailSheet] = useState(false)
+  const [showCacheMonitor, setShowCacheMonitor] = useState(false)
 
-  // initialSelectedStudent가 변경될 때 내부 상태 업데이트
+  // 실시간 동기화 Hook
+  const { isConnected } = useStudentPageRealtime()
+
+  // URL 변화에 따른 상태 관리: /main/students 경로에서는 항상 메인 창 표시
   useEffect(() => {
-    if (initialSelectedStudent) {
+    if (pathname === '/main/students') {
+      console.log('🏠 StudentsPageLayout: 메인 경로로 이동 - 선택된 학생 초기화')
+      setSelectedStudent(null)
+    }
+  }, [pathname])
+
+  // initialSelectedStudent가 변경될 때 내부 상태 업데이트 (상세 페이지에서만)
+  useEffect(() => {
+    if (initialSelectedStudent && pathname !== '/main/students') {
       console.log('🔄 StudentsPageLayout: initialSelectedStudent 업데이트', initialSelectedStudent.name)
       setSelectedStudent(initialSelectedStudent)
     }
-  }, [initialSelectedStudent])
+  }, [initialSelectedStudent, pathname])
 
   const handleStudentSelect = useCallback((student: Student) => {
     setSelectedStudent(student)
@@ -59,9 +76,13 @@ export default function StudentsPageLayout({ className, initialSelectedStudent }
   }, [])
 
   return (
-    <div className={`flex h-full ${className || ''}`}>
-      {/* 사이드바 - 고정 너비 384px */}
-      <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className={`flex h-full p-4 gap-4 bg-gray-50 dark:bg-gray-950 overflow-hidden ${className || ''}`}>
+      {/* 플로팅 사이드바 */}
+      <div className="relative">
+        {/* 실시간 동기화 인디케이터 */}
+        <div className="absolute top-4 right-4 z-10">
+          <RealtimeIndicator isConnected={isConnected} showText={false} />
+        </div>
         <StudentSearchSidebar
           selectedStudent={selectedStudent}
           onStudentSelect={handleStudentSelect}
@@ -80,7 +101,7 @@ export default function StudentsPageLayout({ className, initialSelectedStudent }
       </div>
 
       {/* 메인 영역 */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
+      <div className={`flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950 no-scrollbar transition-all duration-300 ${(showCreateSheet || showDetailSheet) ? 'blur-sm' : ''}`}>
         {selectedStudent ? (
           <StudentDetailMain
             selectedStudent={selectedStudent}
@@ -95,22 +116,22 @@ export default function StudentsPageLayout({ className, initialSelectedStudent }
         )}
       </div>
 
-      {/* 사이드시트용 오버레이 - 사이드시트가 열릴 때 메인 영역 dim 처리 */}
-      <AnimatePresence>
-        {(showCreateSheet || showDetailSheet) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-20"
-            style={{ left: '384px' }} // 사이드바 너비만큼 왼쪽 오프셋
-            onClick={() => {
-              setShowCreateSheet(false)
-              setShowDetailSheet(false)
-            }}
-          />
-        )}
-      </AnimatePresence>
+
+      {/* 캐시 성능 모니터 */}
+      <CachePerformanceMonitor
+        isVisible={showCacheMonitor}
+        onToggle={() => setShowCacheMonitor(!showCacheMonitor)}
+        queryKeyPrefix="students"
+        displayName="학생"
+        position="bottom-right"
+      />
+
+      {/* 캐시 모니터 토글 버튼 */}
+      <CacheMonitorToggle
+        onToggle={() => setShowCacheMonitor(!showCacheMonitor)}
+        isVisible={showCacheMonitor}
+        position="bottom-right"
+      />
     </div>
   )
 }

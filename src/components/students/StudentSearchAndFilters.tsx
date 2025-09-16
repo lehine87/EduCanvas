@@ -91,92 +91,95 @@ export default function StudentSearchAndFilters({
   totalResults = 0,
   className = '',
 }: StudentSearchAndFiltersProps) {
-  const [localSearch, setLocalSearch] = useState(activeFilters.search || '')
+  // activeFilters가 undefined일 경우를 대비한 안전한 처리
+  const safeActiveFilters = activeFilters || {}
+
+  const [localSearch, setLocalSearch] = useState(safeActiveFilters.search || '')
   const [dateFrom, setDateFrom] = useState<Date | undefined>(
-    activeFilters.enrollment_date_from ? new Date(activeFilters.enrollment_date_from) : undefined
+    safeActiveFilters.enrollment_date_from ? new Date(safeActiveFilters.enrollment_date_from) : undefined
   )
   const [dateTo, setDateTo] = useState<Date | undefined>(
-    activeFilters.enrollment_date_to ? new Date(activeFilters.enrollment_date_to) : undefined
+    safeActiveFilters.enrollment_date_to ? new Date(safeActiveFilters.enrollment_date_to) : undefined
   )
   const [attendanceRange, setAttendanceRange] = useState<[number, number]>([
-    activeFilters.attendance_rate_min || 0,
-    activeFilters.attendance_rate_max || 100
+    safeActiveFilters.attendance_rate_min || 0,
+    safeActiveFilters.attendance_rate_max || 100
   ])
 
   const debouncedSearch = useDebounce(localSearch, 300)
 
   // 검색어 디바운싱 적용
   useEffect(() => {
-    if (debouncedSearch !== activeFilters.search) {
+    if (debouncedSearch !== safeActiveFilters.search) {
       const newFilters = {
-        ...activeFilters,
+        ...safeActiveFilters,
         search: debouncedSearch || undefined
       }
       onFiltersChange(newFilters)
     }
-  }, [debouncedSearch, activeFilters.search])
+  }, [debouncedSearch, safeActiveFilters.search, onFiltersChange])
 
   // 학년 필터 토글
   const handleGradeToggle = useCallback((grade: string) => {
-    const currentGrades = activeFilters.grade || []
+    const currentGrades = safeActiveFilters.grade || []
     const newGrades = currentGrades.includes(grade)
       ? currentGrades.filter(g => g !== grade)
       : [...currentGrades, grade]
 
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       grade: newGrades.length > 0 ? newGrades : undefined
     })
-  }, [activeFilters, onFiltersChange])
+  }, [safeActiveFilters, onFiltersChange])
 
   // 상태 필터 토글
   const handleStatusToggle = useCallback((status: string) => {
-    const currentStatuses = activeFilters.status || []
+    const currentStatuses = safeActiveFilters.status || []
     const typedStatus = status as StudentStatus // STATUS_OPTIONS에서 검증된 값이므로 안전
     const newStatuses = currentStatuses.includes(typedStatus)
       ? currentStatuses.filter(s => s !== typedStatus)
       : [...currentStatuses, typedStatus]
 
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       status: newStatuses.length > 0 ? newStatuses : undefined
     })
-  }, [activeFilters, onFiltersChange])
+  }, [safeActiveFilters, onFiltersChange])
 
   // 날짜 범위 적용
   const handleDateRangeApply = useCallback(() => {
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       enrollment_date_from: dateFrom ? dateFrom.toISOString() : undefined,
       enrollment_date_to: dateTo ? dateTo.toISOString() : undefined
     })
-  }, [dateFrom, dateTo, activeFilters, onFiltersChange])
+  }, [dateFrom, dateTo, safeActiveFilters, onFiltersChange])
 
   // 출석률 범위 적용
   const handleAttendanceRangeApply = useCallback(() => {
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       attendance_rate_min: attendanceRange[0] > 0 ? attendanceRange[0] : undefined,
       attendance_rate_max: attendanceRange[1] < 100 ? attendanceRange[1] : undefined
     })
-  }, [attendanceRange, activeFilters, onFiltersChange])
+  }, [attendanceRange, safeActiveFilters, onFiltersChange])
 
   // 미납 필터 토글
   const handleOverdueToggle = useCallback((checked: boolean) => {
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       has_overdue_payment: checked ? true : undefined
     })
-  }, [activeFilters, onFiltersChange])
+  }, [safeActiveFilters, onFiltersChange])
 
   // 정렬 변경
   const handleSortChange = useCallback((field: string, order: 'asc' | 'desc') => {
     onFiltersChange({
-      ...activeFilters,
+      ...safeActiveFilters,
       sort_field: field as any, // 타입 단언 (실제로는 SORT_OPTIONS에서 검증됨)
       sort_order: order
     })
-  }, [activeFilters, onFiltersChange])
+  }, [safeActiveFilters, onFiltersChange])
 
   // 모든 필터 초기화
   const clearAllFilters = useCallback(() => {
@@ -189,36 +192,36 @@ export default function StudentSearchAndFilters({
 
   // 활성 필터 카운트
   const activeFilterCount = [
-    activeFilters.search,
-    activeFilters.grade?.length,
-    activeFilters.status?.length,
-    activeFilters.enrollment_date_from,
-    activeFilters.has_overdue_payment,
-    (activeFilters.attendance_rate_min !== undefined && activeFilters.attendance_rate_min > 0) ||
-    (activeFilters.attendance_rate_max !== undefined && activeFilters.attendance_rate_max < 100)
+    safeActiveFilters.search,
+    safeActiveFilters.grade?.length,
+    safeActiveFilters.status?.length,
+    safeActiveFilters.enrollment_date_from,
+    safeActiveFilters.has_overdue_payment,
+    (safeActiveFilters.attendance_rate_min !== undefined && safeActiveFilters.attendance_rate_min > 0) ||
+    (safeActiveFilters.attendance_rate_max !== undefined && safeActiveFilters.attendance_rate_max < 100)
   ].filter(Boolean).length
 
   // 활성 필터 태그 렌더링
   const renderActiveFilterTags = () => {
     const tags = []
 
-    if (activeFilters.search) {
+    if (safeActiveFilters.search) {
       tags.push(
         <Badge key="search" variant="secondary" className="flex items-center gap-1">
-          검색: {activeFilters.search}
+          검색: {safeActiveFilters.search}
           <XMarkIcon 
             className="h-3 w-3 cursor-pointer" 
             onClick={() => {
               setLocalSearch('')
-              onFiltersChange({ ...activeFilters, search: undefined })
+              onFiltersChange({ ...safeActiveFilters, search: undefined })
             }}
           />
         </Badge>
       )
     }
 
-    if (activeFilters.grade?.length) {
-      activeFilters.grade.forEach(grade => {
+    if (safeActiveFilters.grade?.length) {
+      safeActiveFilters.grade.forEach(grade => {
         const gradeLabel = GRADE_OPTIONS.find(g => g.value === grade)?.label || grade
         tags.push(
           <Badge key={`grade-${grade}`} variant="outline" className="flex items-center gap-1">
@@ -233,8 +236,8 @@ export default function StudentSearchAndFilters({
       })
     }
 
-    if (activeFilters.status?.length) {
-      activeFilters.status.forEach(status => {
+    if (safeActiveFilters.status?.length) {
+      safeActiveFilters.status.forEach(status => {
         const statusLabel = STATUS_OPTIONS.find(s => s.value === status)?.label || status
         tags.push(
           <Badge key={`status-${status}`} variant="outline" className="flex items-center gap-1">
@@ -249,9 +252,9 @@ export default function StudentSearchAndFilters({
       })
     }
 
-    if (activeFilters.enrollment_date_from || activeFilters.enrollment_date_to) {
-      const fromStr = activeFilters.enrollment_date_from ? format(new Date(activeFilters.enrollment_date_from), 'MM/dd', { locale: ko }) : '시작'
-      const toStr = activeFilters.enrollment_date_to ? format(new Date(activeFilters.enrollment_date_to), 'MM/dd', { locale: ko }) : '끝'
+    if (safeActiveFilters.enrollment_date_from || safeActiveFilters.enrollment_date_to) {
+      const fromStr = safeActiveFilters.enrollment_date_from ? format(new Date(safeActiveFilters.enrollment_date_from), 'MM/dd', { locale: ko }) : '시작'
+      const toStr = safeActiveFilters.enrollment_date_to ? format(new Date(safeActiveFilters.enrollment_date_to), 'MM/dd', { locale: ko }) : '끝'
       tags.push(
         <Badge key="date-range" variant="outline" className="flex items-center gap-1">
           <CalendarIcon className="h-3 w-3" />
@@ -262,7 +265,7 @@ export default function StudentSearchAndFilters({
               setDateFrom(undefined)
               setDateTo(undefined)
               onFiltersChange({
-                ...activeFilters,
+                ...safeActiveFilters,
                 enrollment_date_from: undefined,
                 enrollment_date_to: undefined
               })
@@ -272,7 +275,7 @@ export default function StudentSearchAndFilters({
       )
     }
 
-    if (activeFilters.has_overdue_payment) {
+    if (safeActiveFilters.has_overdue_payment) {
       tags.push(
         <Badge key="overdue" variant="destructive" className="flex items-center gap-1">
           <CurrencyDollarIcon className="h-3 w-3" />
@@ -285,10 +288,10 @@ export default function StudentSearchAndFilters({
       )
     }
 
-    if ((activeFilters.attendance_rate_min !== undefined && activeFilters.attendance_rate_min > 0) ||
-        (activeFilters.attendance_rate_max !== undefined && activeFilters.attendance_rate_max < 100)) {
-      const min = activeFilters.attendance_rate_min || 0
-      const max = activeFilters.attendance_rate_max || 100
+    if ((safeActiveFilters.attendance_rate_min !== undefined && safeActiveFilters.attendance_rate_min > 0) ||
+        (safeActiveFilters.attendance_rate_max !== undefined && safeActiveFilters.attendance_rate_max < 100)) {
+      const min = safeActiveFilters.attendance_rate_min || 0
+      const max = safeActiveFilters.attendance_rate_max || 100
       tags.push(
         <Badge key="attendance" variant="outline" className="flex items-center gap-1">
           <ChartBarIcon className="h-3 w-3" />
@@ -298,7 +301,7 @@ export default function StudentSearchAndFilters({
             onClick={() => {
               setAttendanceRange([0, 100])
               onFiltersChange({
-                ...activeFilters,
+                ...safeActiveFilters,
                 attendance_rate_min: undefined,
                 attendance_rate_max: undefined
               })
@@ -346,9 +349,9 @@ export default function StudentSearchAndFilters({
               <Button variant="outline" size="sm" className="relative">
                 <AcademicCapIcon className="h-4 w-4 mr-2" />
                 학년
-                {activeFilters.grade?.length && (
+                {safeActiveFilters.grade?.length && (
                   <Badge className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
-                    {activeFilters.grade.length}
+                    {safeActiveFilters.grade.length}
                   </Badge>
                 )}
               </Button>
@@ -359,7 +362,7 @@ export default function StudentSearchAndFilters({
               {GRADE_OPTIONS.map((grade) => (
                 <DropdownMenuCheckboxItem
                   key={grade.value}
-                  checked={activeFilters.grade?.includes(grade.value) || false}
+                  checked={safeActiveFilters.grade?.includes(grade.value) || false}
                   onCheckedChange={() => handleGradeToggle(grade.value)}
                 >
                   {grade.label}
@@ -374,9 +377,9 @@ export default function StudentSearchAndFilters({
               <Button variant="outline" size="sm" className="relative">
                 <UserGroupIcon className="h-4 w-4 mr-2" />
                 상태
-                {activeFilters.status?.length && (
+                {safeActiveFilters.status?.length && (
                   <Badge className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
-                    {activeFilters.status.length}
+                    {safeActiveFilters.status.length}
                   </Badge>
                 )}
               </Button>
@@ -387,7 +390,7 @@ export default function StudentSearchAndFilters({
               {STATUS_OPTIONS.map((status) => (
                 <DropdownMenuCheckboxItem
                   key={status.value}
-                  checked={activeFilters.status?.includes(status.value as StudentStatus) || false}
+                  checked={safeActiveFilters.status?.includes(status.value as StudentStatus) || false}
                   onCheckedChange={() => handleStatusToggle(status.value)}
                 >
                   {status.label}
@@ -402,7 +405,7 @@ export default function StudentSearchAndFilters({
               <Button variant="outline" size="sm" className="relative">
                 <CalendarIcon className="h-4 w-4 mr-2" />
                 등록일
-                {(activeFilters.enrollment_date_from || activeFilters.enrollment_date_to) && (
+                {(safeActiveFilters.enrollment_date_from || safeActiveFilters.enrollment_date_to) && (
                   <Badge className="ml-2 h-2 w-2 rounded-full p-0 bg-blue-500" />
                 )}
               </Button>
@@ -485,7 +488,7 @@ export default function StudentSearchAndFilters({
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="overdue"
-                    checked={activeFilters.has_overdue_payment || false}
+                    checked={safeActiveFilters.has_overdue_payment || false}
                     onCheckedChange={handleOverdueToggle}
                   />
                   <Label htmlFor="overdue" className="text-sm">미납자만 보기</Label>
@@ -498,8 +501,8 @@ export default function StudentSearchAndFilters({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                정렬: {SORT_OPTIONS.find(s => s.value === activeFilters.sort_field)?.label || '이름'}
-                {activeFilters.sort_order === 'desc' ? ' ↓' : ' ↑'}
+                정렬: {SORT_OPTIONS.find(s => s.value === safeActiveFilters.sort_field)?.label || '이름'}
+                {safeActiveFilters.sort_order === 'desc' ? ' ↓' : ' ↑'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -508,13 +511,13 @@ export default function StudentSearchAndFilters({
               {SORT_OPTIONS.map((sort) => (
                 <div key={sort.value} className="flex">
                   <DropdownMenuCheckboxItem
-                    checked={activeFilters.sort_field === sort.value && activeFilters.sort_order === 'asc'}
+                    checked={safeActiveFilters.sort_field === sort.value && safeActiveFilters.sort_order === 'asc'}
                     onCheckedChange={() => handleSortChange(sort.value, 'asc')}
                   >
                     {sort.label} ↑
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={activeFilters.sort_field === sort.value && activeFilters.sort_order === 'desc'}
+                    checked={safeActiveFilters.sort_field === sort.value && safeActiveFilters.sort_order === 'desc'}
                     onCheckedChange={() => handleSortChange(sort.value, 'desc')}
                   >
                     {sort.label} ↓

@@ -71,8 +71,11 @@ export async function POST(request: NextRequest) {
     }))
 
     const response = {
-      results,
-      count: results.length
+      success: true,
+      data: {
+        results,
+        count: results.length
+      }
     }
 
     return NextResponse.json(response, { status: 200 })

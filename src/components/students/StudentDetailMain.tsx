@@ -19,16 +19,20 @@ import {
   UserIcon,
   AcademicCapIcon
 } from '@heroicons/react/24/outline'
+import StudentClassList from './StudentClassList'
+import AddClassToStudentModal from './AddClassToStudentModal'
 import type { Student } from '@/types/student.types'
 
 interface StudentDetailMainProps {
   selectedStudent: Student | null
   onStudentUpdate: (student: Student) => void
   onEditStudent: () => void
+  tenantId: string
 }
 
-export default function StudentDetailMain({ selectedStudent, onStudentUpdate, onEditStudent }: StudentDetailMainProps) {
+export default function StudentDetailMain({ selectedStudent, onStudentUpdate, onEditStudent, tenantId }: StudentDetailMainProps) {
   const [activeTab, setActiveTab] = useState('basic')
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false)
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -69,9 +73,9 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
-      {/* 학생 헤더 */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+    <div className={`flex flex-col min-h-0 flex-1 overflow-hidden`}>
+      <div className="flex-1 p-6 space-y-6 overflow-y-auto no-scrollbar">
+        {/* 학생 헤더 */}
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-4">
             <Avatar className="h-16 w-16">
@@ -80,7 +84,7 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
                 {selectedStudent.name.substring(0, 1)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div>
               <div className="flex items-center space-x-3 mb-2">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -90,7 +94,7 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
                   {getStatusText(selectedStudent.status || 'active')}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                 {selectedStudent.student_number && (
                   <span>학번: {selectedStudent.student_number}</span>
@@ -104,14 +108,14 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </div>
           </div>
-          
-          {/* 퀵액션 버튼들 (원생등록/상세 버튼 제외) */}
+
+          {/* 퀵액션 버튼들 */}
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={onEditStudent}>
               <PencilIcon className="h-4 w-4 mr-2" />
               편집
             </Button>
-            
+
             {selectedStudent.status === 'active' ? (
               <Button variant="outline" size="sm" className="text-orange-600 hover:text-orange-700">
                 <PauseIcon className="h-4 w-4 mr-2" />
@@ -125,15 +129,14 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
             ) : null}
           </div>
         </div>
-      </div>
 
-      {/* 탭 시스템 */}
-      <div className="flex-1">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="border-b border-gray-200 dark:border-gray-700 px-6">
+        {/* 탭 시스템 */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 p-1 text-gray-500 dark:text-gray-400">
               <TabsTrigger value="basic" className="px-3 py-1">기본</TabsTrigger>
               <TabsTrigger value="class" className="px-3 py-1">반</TabsTrigger>
+              <TabsTrigger value="classes" className="px-3 py-1">수강 클래스</TabsTrigger>
               <TabsTrigger value="payment" className="px-3 py-1">수납</TabsTrigger>
               <TabsTrigger value="attendance" className="px-3 py-1">출결</TabsTrigger>
               <TabsTrigger value="consultation" className="px-3 py-1">상담</TabsTrigger>
@@ -142,9 +145,9 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
             </TabsList>
           </div>
 
-          <div className="flex-1 p-6">
-            <TabsContent value="basic" className="h-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+          <div className="flex-1 pt-6 min-h-0 overflow-y-auto no-scrollbar">
+            <TabsContent value="basic" className="mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* 기본 정보 카드 */}
                 <Card>
                   <CardHeader>
@@ -295,8 +298,8 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="class" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="class" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">반 정보</p>
@@ -305,8 +308,16 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="payment" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="classes" className="mt-0">
+              <StudentClassList
+                studentData={selectedStudent}
+                tenantId={tenantId}
+                onAddClass={() => setIsAddClassModalOpen(true)}
+              />
+            </TabsContent>
+
+            <TabsContent value="payment" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">수납 정보</p>
@@ -315,8 +326,8 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="attendance" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="attendance" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">출결 정보</p>
@@ -325,8 +336,8 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="consultation" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="consultation" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">상담 정보</p>
@@ -335,8 +346,8 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="homework" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="homework" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">과제 정보</p>
@@ -345,8 +356,8 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
               </div>
             </TabsContent>
 
-            <TabsContent value="etc" className="h-full">
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <TabsContent value="etc" className="mt-0">
+              <div className="flex items-center justify-center h-96 text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <AcademicCapIcon className="h-12 w-12 mx-auto mb-3" />
                   <p className="text-lg font-medium">기타 정보</p>
@@ -357,6 +368,16 @@ export default function StudentDetailMain({ selectedStudent, onStudentUpdate, on
           </div>
         </Tabs>
       </div>
+
+      {/* 클래스 등록 모달 */}
+      {selectedStudent && (
+        <AddClassToStudentModal
+          isOpen={isAddClassModalOpen}
+          onClose={() => setIsAddClassModalOpen(false)}
+          studentData={selectedStudent}
+          tenantId={tenantId}
+        />
+      )}
     </div>
   )
 }

@@ -121,8 +121,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. 인증이 필요 없는 페이지들 (회원가입, 로그인, 콜백 등)
-  const publicPaths = ['/auth/login', '/auth/signup', '/auth/callback', '/auth/reset-password']
+  const publicPaths = [
+    '/', // 루트 페이지 추가 (성능 최적화)
+    '/auth/login',
+    '/auth/signup',
+    '/auth/callback',
+    '/auth/reset-password'
+  ]
   if (publicPaths.includes(currentPath)) {
+    if (debugMode) {
+      console.log(`🚀 [MIDDLEWARE-${requestId}] 퍼블릭 경로 빠른 처리:`, currentPath)
+    }
     return applySecurityHeaders(NextResponse.next())
   }
 
@@ -154,12 +163,21 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
       }
 
-      // 사용자 프로필 확인
-      const { data: profile, error: profileError } = await supabase
+      // 업계 표준: 타임아웃이 있는 프로필 조회 (성능 최적화)
+      const profilePromise = supabase
         .from('user_profiles')
         .select('id, status, tenant_id, role')
         .eq('id', user.id)
         .single()
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile query timeout')), 3000)
+      })
+
+      const { data: profile, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any
 
       if (profileError || !profile) {
         if (debugMode) {

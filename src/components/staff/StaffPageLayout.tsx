@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import StaffSearchSidebar from './StaffSearchSidebar'
 import StaffDetailMain from './StaffDetailMain'
 import StaffOverviewDashboard from './StaffOverviewDashboard'
+import RealtimeIndicator from './RealtimeIndicator'
+import CachePerformanceMonitor, { CacheMonitorToggle } from './CachePerformanceMonitor'
+import { useStaffRealtime } from '@/hooks/useStaffRealtime'
 import type { Instructor } from '@/types/staff.types'
 
 interface InstructorsPageLayoutProps {
@@ -16,6 +19,10 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(initialSelectedInstructor || null)
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [showDetailSheet, setShowDetailSheet] = useState(false)
+  const [showCacheMonitor, setShowCacheMonitor] = useState(false)
+
+  // 실시간 동기화 Hook
+  const { isConnected } = useStaffRealtime()
 
   // initialSelectedInstructor가 변경될 때 내부 상태 업데이트
   useEffect(() => {
@@ -59,9 +66,13 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
   }, [])
 
   return (
-    <div className={`flex h-full ${className || ''}`}>
-      {/* 사이드바 - 고정 너비 384px */}
-      <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className={`flex h-full p-4 gap-4 bg-gray-50 dark:bg-gray-950 overflow-hidden ${className || ''}`}>
+      {/* 플로팅 사이드바 */}
+      <div className="relative">
+        {/* 실시간 동기화 인디케이터 */}
+        <div className="absolute top-4 right-4 z-10">
+          <RealtimeIndicator isConnected={isConnected} showText={false} />
+        </div>
         <StaffSearchSidebar
           selectedInstructor={selectedInstructor}
           onInstructorSelect={handleInstructorSelect}
@@ -80,7 +91,7 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
       </div>
 
       {/* 메인 영역 */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950 no-scrollbar">
         {selectedInstructor ? (
           <StaffDetailMain
             selectedInstructor={selectedInstructor}
@@ -95,14 +106,14 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
         )}
       </div>
 
-      {/* 사이드시트용 오버레이 - 사이드시트가 열릴 때 메인 영역 dim 처리 */}
+      {/* 사이드시트용 자연스러운 블러 오버레이 */}
       <AnimatePresence>
         {(showCreateSheet || showDetailSheet) && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-20"
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(2px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            className="fixed inset-0 bg-white/10 dark:bg-black/10 z-20"
             style={{ left: '384px' }} // 사이드바 너비만큼 왼쪽 오프셋
             onClick={() => {
               setShowCreateSheet(false)
@@ -111,6 +122,17 @@ export default function InstructorsPageLayout({ className, initialSelectedInstru
           />
         )}
       </AnimatePresence>
+
+      {/* 캐시 성능 모니터 (개발 환경) */}
+      <CachePerformanceMonitor 
+        isVisible={showCacheMonitor}
+        onToggle={() => setShowCacheMonitor(!showCacheMonitor)}
+      />
+      
+      <CacheMonitorToggle
+        isVisible={showCacheMonitor}
+        onToggle={() => setShowCacheMonitor(!showCacheMonitor)}
+      />
     </div>
   )
 }

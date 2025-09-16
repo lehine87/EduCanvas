@@ -373,7 +373,7 @@ export function isSystemAdmin(profile: UserProfile): boolean {
  * 테넌트 관리자인지 확인
  */
 export function isTenantAdmin(profile: UserProfile): boolean {
-  return hasRole(profile) && hasTenantId(profile) && profile.role === 'admin'
+  return hasRole(profile) && hasTenantId(profile) && profile.role === 'tenant_admin'
 }
 
 /**

@@ -17,8 +17,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useCreateStudent } from '@/hooks/mutations/useStudentMutations'
 import { 
   UserPlusIcon, 
   UserIcon,
@@ -33,7 +33,6 @@ import { Loader2 } from 'lucide-react'
 import type { Student, StudentStatus } from '@/types/student.types'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
-import { createStudent } from '@/lib/api/students.api'
 import { validateStudentData } from '@/lib/validation/student-validation'
 
 /**
@@ -97,8 +96,8 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
   className
 }) => {
   // 상태 관리
-  const { actions: studentActions } = useStudentsStore()
   const { profile: userProfile } = useAuthStore()
+  const createStudentMutation = useCreateStudent()
 
   // 로컬 상태
   const [loading, setLoading] = useState(false)
@@ -215,20 +214,18 @@ export const CreateStudentSheet = memo<CreateStudentSheetProps>(({
         studentData.student_number = formData.student_number
       }
       
-      // 실제 API 호출
-      const result = await createStudent(studentData, tenantId)
-      
+      // API Client 패턴 사용
+      const result = await createStudentMutation.mutateAsync(studentData)
+
       console.log('🎉 학생 생성 성공:', result)
-      
-      toast.success(`${validation.normalizedData.name} 학생이 등록되었습니다`)
+
       onSuccess?.(result.student)
       onOpenChange(false)
     } catch (error) {
       console.error('💥 학생 생성 실패:', error)
-      
+
       const errorMessage = error instanceof Error ? error.message : '학생 등록에 실패했습니다'
       setError(errorMessage)
-      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

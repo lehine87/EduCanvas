@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useCreateStudent } from '@/hooks/mutations/useStudentMutations'
 import { 
   UserPlusIcon, 
   UserIcon,
@@ -24,7 +24,6 @@ import {
 } from '@heroicons/react/24/outline'
 import { Loader2, X } from 'lucide-react'
 import type { Student, StudentStatus } from '@/types/student.types'
-import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 /**
@@ -101,8 +100,8 @@ export const CreateStudentSideSheet = memo<CreateStudentSideSheetProps>(({
   className
 }) => {
   // 상태 관리
-  const { actions: studentActions } = useStudentsStore()
   const { profile: userProfile } = useAuthStore()
+  const createStudentMutation = useCreateStudent()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<StudentFormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormData, string>>>({})
@@ -148,56 +147,35 @@ export const CreateStudentSideSheet = memo<CreateStudentSideSheetProps>(({
   // 제출 핸들러
   const handleSubmit = useCallback(async () => {
     if (!validateForm()) {
-      toast.error('필수 정보를 확인해주세요')
       return
     }
 
     if (!userProfile?.tenant_id) {
-      toast.error('학원 정보를 확인할 수 없습니다')
       return
     }
 
     setIsLoading(true)
 
     try {
-      const newStudent = await studentActions.createStudent({
+      const result = await createStudentMutation.mutateAsync({
         ...formData,
         student_number: formData.student_number || `S${Date.now()}`,
         status: formData.status
-      }, userProfile.tenant_id)
+      })
 
-      toast.success(`${formData.name} 학생이 등록되었습니다`)
-      onSuccess?.(newStudent)
+      onSuccess?.(result.student)
       onOpenChange(false)
+      setFormData(initialFormData)
+      setErrors({})
     } catch (error) {
       console.error('학생 등록 실패:', error)
-      toast.error('학생 등록에 실패했습니다')
     } finally {
       setIsLoading(false)
     }
-  }, [formData, userProfile, studentActions, onSuccess, onOpenChange, validateForm])
+  }, [formData, userProfile, createStudentMutation, onSuccess, onOpenChange, validateForm])
 
   return (
     <>
-      {/* 메인 영역 오버레이 */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bg-black/30 z-30"
-            style={{ 
-              left: `${sidebarWidth}px`, // 사이드바 바로 다음부터
-              top: '65px',
-              right: 0,
-              bottom: 0
-            }}
-            onClick={() => onOpenChange(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Sheet 본체 - 사이드바 오른쪽에서 나타남 */}
       <AnimatePresence>
@@ -214,21 +192,25 @@ export const CreateStudentSideSheet = memo<CreateStudentSideSheetProps>(({
             }}
             className={cn(
               "fixed w-[400px] origin-left",
-              "bg-white dark:bg-neutral-950",
-              "border-r border-neutral-200 dark:border-neutral-800",
-              "shadow-xl",
+              "backdrop-blur-md bg-white/80 dark:bg-neutral-950/80",
+              "border border-white/20 dark:border-neutral-700/30",
+              "shadow-2xl dark:shadow-none",
+              "rounded-2xl overflow-hidden",
               className
             )}
-            style={{ 
-              left: `${sidebarWidth}px`,
-              top: '65px', // 헤더 아래부터 시작
-              bottom: 0,
+            style={{
+              left: `${sidebarWidth + 32}px`, // 사이드바에서 32px 떨어진 위치
+              top: '80px', // 사이드바와 동일한 top 위치
+              bottom: '16px', // 사이드바와 동일한 bottom 마진
               zIndex: 30
             }}
           >
-            <div className="flex flex-col h-full">
-              {/* 헤더 - 더 컴팩트하게 */}
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
+            {/* 글래스 효과 강화를 위한 오버레이 */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+            <div className="relative flex flex-col h-full">
+              {/* 헤더 - glassmorphism 스타일 */}
+              <div className="px-6 py-4 border-b border-white/10 dark:border-neutral-800/50 bg-gradient-to-b from-white/10 to-transparent dark:from-black/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 rounded-lg bg-educanvas-100 dark:bg-educanvas-900/30">

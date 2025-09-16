@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_records: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string | null
+          date: string
+          id: string
+          membership_id: string
+          notes: string | null
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          date: string
+          id?: string
+          membership_id: string
+          notes?: string | null
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          membership_id?: string
+          notes?: string | null
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendances: {
         Row: {
           actual_hours: number | null
@@ -325,6 +386,81 @@ export type Database = {
           },
         ]
       }
+      batch_operations: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          errors: Json | null
+          estimated_duration: unknown | null
+          failed_items: number
+          id: string
+          operation_data: Json
+          operation_type: string
+          processed_items: number
+          results: Json | null
+          started_at: string | null
+          status: string
+          successful_items: number
+          tenant_id: string
+          total_items: number
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          errors?: Json | null
+          estimated_duration?: unknown | null
+          failed_items?: number
+          id?: string
+          operation_data?: Json
+          operation_type: string
+          processed_items?: number
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          successful_items?: number
+          tenant_id: string
+          total_items?: number
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          errors?: Json | null
+          estimated_duration?: unknown | null
+          failed_items?: number
+          id?: string
+          operation_data?: Json
+          operation_type?: string
+          processed_items?: number
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          successful_items?: number
+          tenant_id?: string
+          total_items?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_operations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_operations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_classroom_schedules: {
         Row: {
           class_id: string | null
@@ -513,11 +649,11 @@ export type Database = {
             foreignKeyName: "classes_instructor_id_fkey"
             columns: ["instructor_id"]
             isOneToOne: false
-            referencedRelation: "tenant_memberships"
+            referencedRelation: "staff_search_view"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "classes_new_instructor_id_fkey"
+            foreignKeyName: "classes_instructor_id_fkey"
             columns: ["instructor_id"]
             isOneToOne: false
             referencedRelation: "tenant_memberships"
@@ -796,6 +932,58 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructor_salary_policies: {
+        Row: {
+          created_at: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean | null
+          membership_id: string
+          policy_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean | null
+          membership_id: string
+          policy_id: string
+        }
+        Update: {
+          created_at?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean | null
+          membership_id?: string
+          policy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_salary_policies_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_salary_policies_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_salary_policies_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "salary_policies"
             referencedColumns: ["id"]
           },
         ]
@@ -1168,6 +1356,125 @@ export type Database = {
           },
         ]
       }
+      salary_calculations: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          base_salary: number | null
+          bonus_amount: number | null
+          calculated_at: string | null
+          calculated_by: string | null
+          calculation_details: Json | null
+          calculation_month: string
+          commission_salary: number | null
+          deduction_amount: number | null
+          final_salary: number | null
+          id: string
+          membership_id: string
+          minimum_guaranteed: number | null
+          status: string | null
+          tenant_id: string
+          total_calculated: number | null
+          total_hours: number | null
+          total_revenue: number | null
+          total_students: number | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_salary?: number | null
+          bonus_amount?: number | null
+          calculated_at?: string | null
+          calculated_by?: string | null
+          calculation_details?: Json | null
+          calculation_month: string
+          commission_salary?: number | null
+          deduction_amount?: number | null
+          final_salary?: number | null
+          id?: string
+          membership_id: string
+          minimum_guaranteed?: number | null
+          status?: string | null
+          tenant_id: string
+          total_calculated?: number | null
+          total_hours?: number | null
+          total_revenue?: number | null
+          total_students?: number | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_salary?: number | null
+          bonus_amount?: number | null
+          calculated_at?: string | null
+          calculated_by?: string | null
+          calculation_details?: Json | null
+          calculation_month?: string
+          commission_salary?: number | null
+          deduction_amount?: number | null
+          final_salary?: number | null
+          id?: string
+          membership_id?: string
+          minimum_guaranteed?: number | null
+          status?: string | null
+          tenant_id?: string
+          total_calculated?: number | null
+          total_hours?: number | null
+          total_revenue?: number | null
+          total_students?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_calculations_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_calculated_by_fkey"
+            columns: ["calculated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_calculated_by_fkey"
+            columns: ["calculated_by"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_calculations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salary_policies: {
         Row: {
           base_amount: number | null
@@ -1227,6 +1534,113 @@ export type Database = {
           },
           {
             foreignKeyName: "salary_policies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salary_tiers: {
+        Row: {
+          commission_rate: number
+          id: string
+          max_amount: number | null
+          min_amount: number
+          policy_id: string
+          tier_order: number
+        }
+        Insert: {
+          commission_rate: number
+          id?: string
+          max_amount?: number | null
+          min_amount: number
+          policy_id: string
+          tier_order: number
+        }
+        Update: {
+          commission_rate?: number
+          id?: string
+          max_amount?: number | null
+          min_amount?: number
+          policy_id?: string
+          tier_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_tiers_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "salary_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_evaluations: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          evaluation_date: string
+          evaluator_id: string
+          id: string
+          membership_id: string
+          rating: number | null
+          tenant_id: string
+          visibility: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          evaluation_date: string
+          evaluator_id: string
+          id?: string
+          membership_id: string
+          rating?: number | null
+          tenant_id: string
+          visibility?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          evaluation_date?: string
+          evaluator_id?: string
+          id?: string
+          membership_id?: string
+          rating?: number | null
+          tenant_id?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_evaluations_evaluator_id_fkey"
+            columns: ["evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_evaluations_evaluator_id_fkey"
+            columns: ["evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_evaluations_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "staff_search_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_evaluations_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_evaluations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2766,8 +3180,86 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_search_view: {
+        Row: {
+          accepted_at: string | null
+          bank_account: string | null
+          bio: string | null
+          created_at: string | null
+          department: string | null
+          display_name: string | null
+          emergency_contact: string | null
+          employment_type: string | null
+          hire_date: string | null
+          id: string | null
+          invited_at: string | null
+          invited_by: string | null
+          is_primary_contact: boolean | null
+          job_function: string | null
+          last_accessed_at: string | null
+          permissions_override: Json | null
+          qualification: string | null
+          role_id: string | null
+          role_name: string | null
+          role_permissions: Json | null
+          search_text: string | null
+          specialization: string | null
+          staff_info: Json | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          user_avatar_url: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+          user_phone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_memberships_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_memberships_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_memberships_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_memberships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      batch_delete_students: {
+        Args: {
+          p_created_by?: string
+          p_permanent?: boolean
+          p_student_ids: string[]
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      batch_update_students: {
+        Args: { p_created_by?: string; p_tenant_id: string; p_updates: Json }
+        Returns: Json
+      }
       can_access_class_textbooks: {
         Args:
           | { class_id: string; user_tenant_id: string }
@@ -2794,6 +3286,40 @@ export type Database = {
             }
         Returns: boolean
       }
+      get_batch_operation_status: {
+        Args: { p_batch_id?: string; p_limit?: number; p_tenant_id: string }
+        Returns: {
+          completed_at: string
+          created_at: string
+          errors: Json
+          estimated_remaining: unknown
+          failed_items: number
+          id: string
+          operation_type: string
+          processed_items: number
+          progress_percentage: number
+          results: Json
+          started_at: string
+          status: string
+          successful_items: number
+          total_items: number
+        }[]
+      }
+      get_instructor_monthly_metrics: {
+        Args: {
+          p_include_attendance?: boolean
+          p_include_class_details?: boolean
+          p_include_performance?: boolean
+          p_instructor_id: string
+          p_month: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      get_student_dashboard_stats: {
+        Args: { p_include_detailed?: boolean; p_tenant_id: string }
+        Returns: Json
+      }
       get_user_tenant_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2801,6 +3327,126 @@ export type Database = {
       is_developer_email: {
         Args: { email_to_check: string }
         Returns: boolean
+      }
+      move_student_between_classes: {
+        Args: {
+          p_from_class_id: string
+          p_moved_by: string
+          p_student_id: string
+          p_tenant_id: string
+          p_to_class_id: string
+        }
+        Returns: boolean
+      }
+      search_classes_fts: {
+        Args: { max_results?: number; search_term: string; tenant_uuid: string }
+        Returns: {
+          course: string
+          created_at: string
+          description: string
+          grade: string
+          id: string
+          instructor_id: string
+          is_active: boolean
+          name: string
+          search_rank: number
+          subject: string
+        }[]
+      }
+      search_classes_simple: {
+        Args: { p_limit?: number; p_tenant_id: string }
+        Returns: {
+          classroom_id: string
+          color: string
+          course: string
+          created_at: string
+          created_by: string
+          custom_fields: Json
+          default_classroom_id: string
+          description: string
+          end_date: string
+          grade: string
+          id: string
+          instructor_id: string
+          is_active: boolean
+          level: string
+          main_textbook: string
+          max_students: number
+          min_students: number
+          name: string
+          schedule_config: Json
+          start_date: string
+          subject: string
+          supplementary_textbook: string
+          tenant_id: string
+          updated_at: string
+        }[]
+      }
+      search_staff_advanced: {
+        Args: {
+          p_departments?: string[]
+          p_employment_types?: string[]
+          p_hire_date_from?: string
+          p_hire_date_to?: string
+          p_limit?: number
+          p_offset?: number
+          p_search_term?: string
+          p_sort_field?: string
+          p_sort_order?: string
+          p_statuses?: string[]
+          p_tenant_id: string
+        }
+        Returns: {
+          department: string
+          employment_type: string
+          hire_date: string
+          id: string
+          job_function: string
+          last_accessed_at: string
+          role_id: string
+          search_rank: number
+          specialization: string
+          staff_info: Json
+          status: string
+          tenant_id: string
+          total_count: number
+          user_email: string
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
+      }
+      search_students_advanced: {
+        Args: {
+          p_enrollment_date_from?: string
+          p_enrollment_date_to?: string
+          p_grade_levels?: string[]
+          p_limit?: number
+          p_offset?: number
+          p_school_name?: string
+          p_search_term?: string
+          p_sort_field?: string
+          p_sort_order?: string
+          p_statuses?: string[]
+          p_tenant_id: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          enrollment_date: string
+          grade_level: string
+          id: string
+          name: string
+          parent_name_1: string
+          parent_phone_1: string
+          phone: string
+          school_name: string
+          search_rank: number
+          status: string
+          student_number: string
+          total_count: number
+          updated_at: string
+        }[]
       }
       search_students_autocomplete: {
         Args: { max_results?: number; prefix: string; tenant_uuid: string }
@@ -2812,8 +3458,20 @@ export type Database = {
           phone: string
         }[]
       }
+      search_students_autocomplete_advanced: {
+        Args: { p_max_results?: number; p_prefix: string; p_tenant_id: string }
+        Returns: {
+          id: string
+          match_rank: number
+          match_type: string
+          name: string
+          parent_name_1: string
+          phone: string
+          student_number: string
+        }[]
+      }
       search_students_fts: {
-        Args: { max_results: number; search_term: string; tenant_uuid: string }
+        Args: { max_results?: number; search_term: string; tenant_uuid: string }
         Returns: {
           grade_level: string
           id: string
@@ -2823,6 +3481,7 @@ export type Database = {
           phone: string
           search_rank: number
           status: string
+          student_number: string
         }[]
       }
       update_video_progress: {

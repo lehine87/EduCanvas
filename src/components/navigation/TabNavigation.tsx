@@ -61,7 +61,7 @@ export function TabNavigation({ className }: TabNavigationProps) {
         'flex items-center justify-center',
         className
       )}>
-        <span className="text-sm text-white/70">
+        <span className="text-sm text-text-200">
           접근 가능한 메뉴가 없습니다.
         </span>
       </div>

@@ -92,7 +92,7 @@ export function SidebarItem({
 
       {/* Collapsed 상태에서 툴팁용 */}
       {collapsed && item.badge !== undefined && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs">
+        <span className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-text-100 text-xs">
           {typeof item.badge === 'number' && item.badge > 9 ? '9+' : item.badge}
         </span>
       )}

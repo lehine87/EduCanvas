@@ -1,6 +1,7 @@
 'use client'
 
 import React, { memo, useCallback, useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Sheet,
   SheetContent,
@@ -290,417 +291,460 @@ const CreateStaffSideSheet = memo<CreateStaffSideSheetProps>(({
   }, [formData, handleClose])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[700px] sm:max-w-[700px] px-8">
-        <SheetHeader className="px-0 pb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
-              <UserPlusIcon className="w-5 h-5 text-brand-600" />
-            </div>
-            <div>
-              <SheetTitle>새 강사 등록</SheetTitle>
-              <SheetDescription>
-                새로운 강사의 정보를 입력해주세요
-              </SheetDescription>
-            </div>
-          </div>
-        </SheetHeader>
+    <>
+      {/* 메인 영역 오버레이 */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bg-black/30 z-30"
+            style={{ 
+              left: `${sidebarWidth}px`, // 사이드바 바로 다음부터
+              top: '65px',
+              right: 0,
+              bottom: 0
+            }}
+            onClick={() => onOpenChange(false)}
+          />
+        )}
+      </AnimatePresence>
 
-        <ScrollArea className="flex-1 px-0">
-          <div className="space-y-6">
-            {/* 에러 표시 */}
-            {error && (
-              <div className="bg-error-50 border border-error-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-error-700">
-                  <ExclamationTriangleIcon className="w-5 h-5" />
-                  <span className="font-medium">{error}</span>
-                </div>
-              </div>
+      {/* Sheet 본체 - 사이드바 오른쪽에서 나타남 */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            exit={{ scaleX: 0, opacity: 0 }}
+            transition={{ 
+              type: 'spring', 
+              damping: 25, 
+              stiffness: 200,
+              duration: 0.3
+            }}
+            className={cn(
+              "fixed w-[700px] origin-left",
+              "bg-white dark:bg-neutral-950",
+              "border-r border-neutral-200 dark:border-neutral-800",
+              "shadow-xl",
+              className
             )}
-
-            {/* 기본 정보 섹션 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
-                <UserIcon className="w-4 h-4" />
-                기본 정보
-              </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                      강사 이름 <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="강사 이름을 입력하세요"
-                      className={cn(
-                        validationErrors.name && 'border-red-300 focus:border-red-500'
-                      )}
-                    />
-                    {validationErrors.name && (
-                      <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>
-                    )}
+            style={{ 
+              left: `${sidebarWidth}px`,
+              top: '65px', // 헤더 아래부터 시작
+              bottom: 0,
+              zIndex: 30
+            }}
+          >
+            <div className="flex flex-col h-full">
+              {/* 헤더 */}
+              <div className="px-8 py-6 border-b border-neutral-200 dark:border-neutral-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+                      <UserPlusIcon className="w-5 h-5 text-brand-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                        새 강사 등록
+                      </h2>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        새로운 강사의 정보를 입력해주세요
+                      </p>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="employee_id" className="text-sm font-medium text-gray-700">
-                      사번 <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="employee_id"
-                      value={formData.employee_id || ''}
-                      onChange={(e) => handleInputChange('employee_id', e.target.value)}
-                      placeholder="사번을 입력하세요"
-                      className={cn(
-                        validationErrors.employee_id && 'border-red-300 focus:border-red-500'
-                      )}
-                    />
-                    {validationErrors.employee_id && (
-                      <p className="text-xs text-red-600 mt-1">{validationErrors.employee_id}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      이메일 <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="instructor@example.com"
-                      className={cn(
-                        validationErrors.email && 'border-red-300 focus:border-red-500'
-                      )}
-                    />
-                    {validationErrors.email && (
-                      <p className="text-xs text-red-600 mt-1">{validationErrors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                      연락처
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone || ''}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="010-1234-5678"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* 근무 정보 섹션 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
-                <CalendarDaysIcon className="w-4 h-4" />
-                근무 정보
-              </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="department" className="text-sm font-medium text-gray-700">
-                      부서 <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="department"
-                      value={formData.department}
-                      onChange={(e) => handleInputChange('department', e.target.value)}
-                      placeholder="교무부"
-                      className={cn(
-                        validationErrors.department && 'border-red-300 focus:border-red-500'
-                      )}
-                    />
-                    {validationErrors.department && (
-                      <p className="text-xs text-red-600 mt-1">{validationErrors.department}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="position" className="text-sm font-medium text-gray-700">
-                      직위
-                    </Label>
-                    <Input
-                      id="position"
-                      value={formData.position || ''}
-                      onChange={(e) => handleInputChange('position', e.target.value)}
-                      placeholder="수석강사"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="employment_type" className="text-sm font-medium text-gray-700">
-                      고용형태
-                    </Label>
-                    <Select 
-                      value={formData.employment_type} 
-                      onValueChange={(value) => handleInputChange('employment_type', value as any)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="정규직">
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-green-100 text-green-800">정규직</Badge>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="계약직">
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-blue-100 text-blue-800">계약직</Badge>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="파트타임">
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-orange-100 text-orange-800">파트타임</Badge>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="hire_date" className="text-sm font-medium text-gray-700">
-                      입사일
-                    </Label>
-                    <Input
-                      id="hire_date"
-                      type="date"
-                      value={formData.hire_date || ''}
-                      onChange={(e) => handleInputChange('hire_date', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">
-                    재직 상태
-                  </Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value) => handleInputChange('status', value as 'active' | 'inactive' | 'pending')}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onOpenChange(false)}
+                    className="h-8 w-8"
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-green-100 text-green-800">재직</Badge>
+                    <XMarkIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* 폼 콘텐츠 */}
+              <ScrollArea className="flex-1 px-8">
+                <div className="space-y-6 py-6">
+                  {/* 에러 표시 */}
+                  {error && (
+                    <div className="bg-error-50 border border-error-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-error-700">
+                        <ExclamationTriangleIcon className="w-5 h-5" />
+                        <span className="font-medium">{error}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 기본 정보 섹션 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      <UserIcon className="w-4 h-4" />
+                      기본 정보
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                            강사 이름 <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            placeholder="강사 이름을 입력하세요"
+                            className={cn(
+                              validationErrors.name && 'border-red-300 focus:border-red-500'
+                            )}
+                          />
+                          {validationErrors.name && (
+                            <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>
+                          )}
                         </div>
-                      </SelectItem>
-                      <SelectItem value="inactive">
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-gray-100 text-gray-800">퇴직</Badge>
+                        
+                        <div>
+                          <Label htmlFor="employee_id" className="text-sm font-medium text-gray-700">
+                            사번 <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="employee_id"
+                            value={formData.employee_id || ''}
+                            onChange={(e) => handleInputChange('employee_id', e.target.value)}
+                            placeholder="사번을 입력하세요"
+                            className={cn(
+                              validationErrors.employee_id && 'border-red-300 focus:border-red-500'
+                            )}
+                          />
+                          {validationErrors.employee_id && (
+                            <p className="text-xs text-red-600 mt-1">{validationErrors.employee_id}</p>
+                          )}
                         </div>
-                      </SelectItem>
-                      <SelectItem value="pending">
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-yellow-100 text-yellow-800">대기</Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                            이메일 <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            placeholder="instructor@example.com"
+                            className={cn(
+                              validationErrors.email && 'border-red-300 focus:border-red-500'
+                            )}
+                          />
+                          {validationErrors.email && (
+                            <p className="text-xs text-red-600 mt-1">{validationErrors.email}</p>
+                          )}
                         </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                        <div>
+                          <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                            연락처
+                          </Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone || ''}
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            placeholder="010-1234-5678"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* 근무 정보 섹션 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      <CalendarDaysIcon className="w-4 h-4" />
+                      근무 정보
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="department" className="text-sm font-medium text-gray-700">
+                            부서 <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="department"
+                            value={formData.department}
+                            onChange={(e) => handleInputChange('department', e.target.value)}
+                            placeholder="교무부"
+                            className={cn(
+                              validationErrors.department && 'border-red-300 focus:border-red-500'
+                            )}
+                          />
+                          {validationErrors.department && (
+                            <p className="text-xs text-red-600 mt-1">{validationErrors.department}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="position" className="text-sm font-medium text-gray-700">
+                            직위
+                          </Label>
+                          <Input
+                            id="position"
+                            value={formData.position || ''}
+                            onChange={(e) => handleInputChange('position', e.target.value)}
+                            placeholder="수석강사"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="employment_type" className="text-sm font-medium text-gray-700">
+                            고용형태
+                          </Label>
+                          <Select 
+                            value={formData.employment_type} 
+                            onValueChange={(value) => handleInputChange('employment_type', value as any)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="정규직">정규직</SelectItem>
+                              <SelectItem value="계약직">계약직</SelectItem>
+                              <SelectItem value="파트타임">파트타임</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="hire_date" className="text-sm font-medium text-gray-700">
+                            입사일
+                          </Label>
+                          <Input
+                            id="hire_date"
+                            type="date"
+                            value={formData.hire_date || ''}
+                            onChange={(e) => handleInputChange('hire_date', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+                          재직 상태
+                        </Label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value) => handleInputChange('status', value as 'active' | 'inactive' | 'pending')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">재직</SelectItem>
+                            <SelectItem value="inactive">퇴직</SelectItem>
+                            <SelectItem value="pending">대기</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* 강의 정보 섹션 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">
+                      강의 정보
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="teaching_level" className="text-sm font-medium text-gray-700">
+                            강의 레벨
+                          </Label>
+                          <Select 
+                            value={formData.teaching_level || ''} 
+                            onValueChange={(value) => handleInputChange('teaching_level', value || undefined)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="레벨 선택" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="초급">초급</SelectItem>
+                              <SelectItem value="중급">중급</SelectItem>
+                              <SelectItem value="고급">고급</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="max_classes_per_week" className="text-sm font-medium text-gray-700">
+                            주간 최대 수업 수
+                          </Label>
+                          <Input
+                            id="max_classes_per_week"
+                            type="number"
+                            min="0"
+                            max="50"
+                            value={formData.max_classes_per_week || ''}
+                            onChange={(e) => handleInputChange('max_classes_per_week', parseInt(e.target.value) || undefined)}
+                            placeholder="20"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="subjects" className="text-sm font-medium text-gray-700">
+                          담당 과목
+                        </Label>
+                        <Input
+                          id="subjects"
+                          value={formData.subjects || ''}
+                          onChange={(e) => handleInputChange('subjects', e.target.value)}
+                          placeholder="수학, 영어, 과학 (쉼표로 구분)"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="certifications" className="text-sm font-medium text-gray-700">
+                          자격증
+                        </Label>
+                        <Input
+                          id="certifications"
+                          value={formData.certifications || ''}
+                          onChange={(e) => handleInputChange('certifications', e.target.value)}
+                          placeholder="교원자격증, TESOL (쉼표로 구분)"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="specialties" className="text-sm font-medium text-gray-700">
+                          전문 분야
+                        </Label>
+                        <Input
+                          id="specialties"
+                          value={formData.specialties || ''}
+                          onChange={(e) => handleInputChange('specialties', e.target.value)}
+                          placeholder="입시수학, 영어회화 (쉼표로 구분)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* 비상연락처 섹션 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      <PhoneIcon className="w-4 h-4" />
+                      비상연락처
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="emergency_contact_name" className="text-sm font-medium text-gray-700">
+                            이름
+                          </Label>
+                          <Input
+                            id="emergency_contact_name"
+                            value={formData.emergency_contact_name || ''}
+                            onChange={(e) => handleInputChange('emergency_contact_name', e.target.value)}
+                            placeholder="김영희"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="emergency_contact_phone" className="text-sm font-medium text-gray-700">
+                            연락처
+                          </Label>
+                          <Input
+                            id="emergency_contact_phone"
+                            value={formData.emergency_contact_phone || ''}
+                            onChange={(e) => handleInputChange('emergency_contact_phone', e.target.value)}
+                            placeholder="010-9876-5432"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="emergency_contact_relationship" className="text-sm font-medium text-gray-700">
+                            관계
+                          </Label>
+                          <Input
+                            id="emergency_contact_relationship"
+                            value={formData.emergency_contact_relationship || ''}
+                            onChange={(e) => handleInputChange('emergency_contact_relationship', e.target.value)}
+                            placeholder="배우자"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* 기타 정보 섹션 */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">
+                      기타 정보
+                    </h3>
+                    <div>
+                      <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
+                        특이사항
+                      </Label>
+                      <Textarea
+                        id="notes"
+                        value={formData.notes || ''}
+                        onChange={(e) => handleInputChange('notes', e.target.value)}
+                        placeholder="특이사항이나 추가 메모를 입력하세요"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+
+              {/* 푸터 */}
+              <div className="px-8 py-6 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                    disabled={loading}
+                    className="flex-1"
+                  >
+                    <XMarkIcon className="w-4 h-4 mr-1" />
+                    취소
+                  </Button>
+                  <Button 
+                    onClick={handleSubmit}
+                    disabled={loading || !formData.name.trim()}
+                    className="flex-1"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                        등록 중...
+                      </>
+                    ) : (
+                      <>
+                        <CheckIcon className="w-4 h-4 mr-1" />
+                        강사 등록
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
-
-            <Separator />
-
-            {/* 강의 정보 섹션 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4">
-                강의 정보
-              </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="teaching_level" className="text-sm font-medium text-gray-700">
-                      강의 레벨
-                    </Label>
-                    <Select 
-                      value={formData.teaching_level || ''} 
-                      onValueChange={(value) => handleInputChange('teaching_level', value || undefined)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="레벨 선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="초급">초급</SelectItem>
-                        <SelectItem value="중급">중급</SelectItem>
-                        <SelectItem value="고급">고급</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="max_classes_per_week" className="text-sm font-medium text-gray-700">
-                      주간 최대 수업 수
-                    </Label>
-                    <Input
-                      id="max_classes_per_week"
-                      type="number"
-                      min="0"
-                      max="50"
-                      value={formData.max_classes_per_week || ''}
-                      onChange={(e) => handleInputChange('max_classes_per_week', parseInt(e.target.value) || undefined)}
-                      placeholder="20"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="subjects" className="text-sm font-medium text-gray-700">
-                    담당 과목
-                  </Label>
-                  <Input
-                    id="subjects"
-                    value={formData.subjects || ''}
-                    onChange={(e) => handleInputChange('subjects', e.target.value)}
-                    placeholder="수학, 영어, 과학 (쉼표로 구분)"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="certifications" className="text-sm font-medium text-gray-700">
-                    자격증
-                  </Label>
-                  <Input
-                    id="certifications"
-                    value={formData.certifications || ''}
-                    onChange={(e) => handleInputChange('certifications', e.target.value)}
-                    placeholder="교원자격증, TESOL (쉼표로 구분)"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="specialties" className="text-sm font-medium text-gray-700">
-                    전문 분야
-                  </Label>
-                  <Input
-                    id="specialties"
-                    value={formData.specialties || ''}
-                    onChange={(e) => handleInputChange('specialties', e.target.value)}
-                    placeholder="입시수학, 영어회화 (쉼표로 구분)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* 비상연락처 섹션 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
-                <PhoneIcon className="w-4 h-4" />
-                비상연락처
-              </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="emergency_contact_name" className="text-sm font-medium text-gray-700">
-                      이름
-                    </Label>
-                    <Input
-                      id="emergency_contact_name"
-                      value={formData.emergency_contact_name || ''}
-                      onChange={(e) => handleInputChange('emergency_contact_name', e.target.value)}
-                      placeholder="김영희"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="emergency_contact_phone" className="text-sm font-medium text-gray-700">
-                      연락처
-                    </Label>
-                    <Input
-                      id="emergency_contact_phone"
-                      value={formData.emergency_contact_phone || ''}
-                      onChange={(e) => handleInputChange('emergency_contact_phone', e.target.value)}
-                      placeholder="010-9876-5432"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="emergency_contact_relationship" className="text-sm font-medium text-gray-700">
-                      관계
-                    </Label>
-                    <Input
-                      id="emergency_contact_relationship"
-                      value={formData.emergency_contact_relationship || ''}
-                      onChange={(e) => handleInputChange('emergency_contact_relationship', e.target.value)}
-                      placeholder="배우자"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* 기타 정보 섹션 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4">
-                기타 정보
-              </h3>
-              <div>
-                <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-                  특이사항
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes || ''}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder="특이사항이나 추가 메모를 입력하세요"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
-
-        <SheetFooter className="flex gap-3 pt-6">
-          <Button 
-            variant="outline" 
-            onClick={handleCancel}
-            disabled={loading}
-            className="flex-1"
-          >
-            <XMarkIcon className="w-4 h-4 mr-1" />
-            취소
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={loading || !formData.name.trim()}
-            className="flex-1"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                등록 중...
-              </>
-            ) : (
-              <>
-                <CheckIcon className="w-4 h-4 mr-1" />
-                강사 등록
-              </>
-            )}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 })
 

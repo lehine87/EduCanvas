@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useStudentsStore } from '@/store/studentsStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useUpdateStudent, useDeleteStudent } from '@/hooks/mutations/useStudentMutations'
+import { useStudent } from '@/hooks/queries/useStudents'
 import { 
   UserIcon,
   PencilIcon,
@@ -90,8 +91,12 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
   onDeleteSuccess
 }) => {
   // 상태 관리
-  const { selectedStudent, actions: studentActions, loading } = useStudentsStore()
   const { profile: userProfile } = useAuthStore()
+  const { data: studentData, isLoading: loading } = useStudent(studentId || '', { enabled: !!studentId })
+  const updateStudentMutation = useUpdateStudent()
+  const deleteStudentMutation = useDeleteStudent()
+
+  const selectedStudent = studentData?.student
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<StudentFormData>({
@@ -113,12 +118,7 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
   })
   const [errors, setErrors] = useState<Partial<Record<keyof StudentFormData, string>>>({})
 
-  // 학생 정보 로드
-  useEffect(() => {
-    if (open && studentId && userProfile?.tenant_id) {
-      studentActions.fetchStudent(studentId, userProfile.tenant_id)
-    }
-  }, [open, studentId, userProfile?.tenant_id, studentActions])
+  // API Client 패턴으로 자동 로딩됨
 
   // 학생 정보로 폼 데이터 초기화
   useEffect(() => {
@@ -206,10 +206,11 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
       }
 
       // API 호출 및 업데이트된 학생 데이터 받기
-      const updatedStudent = await studentActions.updateStudent(selectedStudent.id, updateData, userProfile.tenant_id)
+      const result = await updateStudentMutation.mutateAsync({ id: selectedStudent.id, data: updateData })
+      const updatedStudent = result.student
 
       toast.success('학생 정보가 수정되었습니다')
-      
+
       // 수정된 학생 데이터를 콜백으로 전달
       onUpdateSuccess?.(updatedStudent)
     } catch (error) {
@@ -218,7 +219,7 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
     } finally {
       setIsSaving(false)
     }
-  }, [formData, selectedStudent, userProfile, studentActions, validateForm, onUpdateSuccess])
+  }, [formData, selectedStudent, userProfile, updateStudentMutation, validateForm, onUpdateSuccess])
 
 
 
@@ -228,25 +229,6 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
 
   return (
     <>
-      {/* 메인 영역 오버레이 */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bg-black/30 z-30"
-            style={{ 
-              left: `${sidebarWidth}px`,
-              top: '65px',
-              right: 0,
-              bottom: 0
-            }}
-            onClick={() => onOpenChange(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Sheet 본체 - 사이드바 오른쪽에서 나타남 */}
       <AnimatePresence>
@@ -263,21 +245,25 @@ export const StudentDetailSideSheet = memo<StudentDetailSideSheetProps>(({
             }}
             className={cn(
               "fixed w-[400px] origin-left",
-              "bg-white dark:bg-neutral-950",
-              "border-r border-neutral-200 dark:border-neutral-800",
-              "shadow-xl",
+              "backdrop-blur-md bg-white/80 dark:bg-neutral-950/80",
+              "border border-white/20 dark:border-neutral-700/30",
+              "shadow-2xl dark:shadow-none",
+              "rounded-2xl overflow-hidden",
               className
             )}
-            style={{ 
-              left: `${sidebarWidth}px`,
-              top: '65px',
-              bottom: 0,
+            style={{
+              left: `${sidebarWidth + 32}px`, // 사이드바에서 32px 떨어진 위치
+              top: '80px', // 사이드바와 동일한 top 위치
+              bottom: '16px', // 사이드바와 동일한 bottom 마진
               zIndex: 30
             }}
           >
-            <div className="flex flex-col h-full">
-              {/* 헤더 */}
-              <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
+            {/* 글래스 효과 강화를 위한 오버레이 */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+            <div className="relative flex flex-col h-full">
+              {/* 헤더 - glassmorphism 스타일 */}
+              <div className="px-6 py-4 border-b border-white/10 dark:border-neutral-800/50 bg-gradient-to-b from-white/10 to-transparent dark:from-black/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 rounded-lg bg-educanvas-100 dark:bg-educanvas-900/30">

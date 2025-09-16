@@ -13,10 +13,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
 
+  // 개발 서버 성능 최적화 (안정화)
+  reactStrictMode: false,
+
   // Turbopack 설정 (안정화된 버전)
   ...(process.env.NODE_ENV === 'development' && {
     turbopack: {
-      // Turbopack 최적화 설정
       resolveAlias: {
         '@': './src',
       },

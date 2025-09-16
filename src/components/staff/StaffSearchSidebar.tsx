@@ -9,13 +9,15 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { FloatingSidebar, FloatingSidebarHeader, FloatingSidebarContent, FloatingSidebarFooter } from '@/components/ui/floating-sidebar'
 import { StaffDetailSideSheet } from './StaffDetailSideSheet'
-import CreateStaffSideSheet from './CreateStaffSideSheet'
+import SelectPendingStaffSheet from './SelectPendingStaffSheet'
 import StaffQuickAccessPanel from './StaffQuickAccessPanel'
+import VirtualizedStaffList from './VirtualizedStaffList'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useDebounce } from '@/hooks/useDebounce'
-import { useInstructorsWithFilters, useInstructorSearch } from '@/hooks/queries'
-import { useCreateInstructor, useUpdateInstructor, useDeleteInstructor } from '@/hooks/mutations/useStaffMutations'
+import { useStaffs, useStaffSearch } from '@/hooks/queries/useStaffs'
+import { useCreateStaff, useUpdateStaff, useDeleteStaff } from '@/hooks/mutations/useStaffMutations'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -61,6 +63,7 @@ export default function StaffSearchSidebar({
   
   const [basicSearchTerm, setBasicSearchTerm] = useState('')
   const [selectedSearchIndex, setSelectedSearchIndex] = useState(-1)
+  const [listHeight, setListHeight] = useState(400) // 기본 높이
   
   const debouncedBasicSearch = useDebounce(basicSearchTerm, 300)
   const tenantId = profile?.tenant_id
@@ -70,21 +73,40 @@ export default function StaffSearchSidebar({
     data: instructorsData, 
     isLoading: loading, 
     refetch: refetchInstructors 
-  } = useInstructorsWithFilters()
+  } = useStaffs()
   
   const { 
     data: searchData, 
     isLoading: searchLoading 
-  } = useInstructorSearch(debouncedBasicSearch, true)
+  } = useStaffSearch({
+    tenantId: tenantId || '',
+    search: debouncedBasicSearch,
+    enabled: debouncedBasicSearch.length >= 2 && !!tenantId
+  })
 
   // Mutations
-  const createInstructorMutation = useCreateInstructor()
-  const updateInstructorMutation = useUpdateInstructor()
-  const deleteInstructorMutation = useDeleteInstructor()
+  const createStaffMutation = useCreateStaff()
+  const updateStaffMutation = useUpdateStaff()
+  const deleteStaffMutation = useDeleteStaff()
 
   const instructors = instructorsData?.instructors || []
   const searchResults = searchData?.instructors || []
   
+  // 클라이언트 사이드에서만 동적 높이 계산
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const calculateHeight = () => {
+        const windowHeight = window.innerHeight
+        const dynamicHeight = Math.max(200, windowHeight - 580)
+        setListHeight(dynamicHeight)
+      }
+      
+      calculateHeight()
+      window.addEventListener('resize', calculateHeight)
+      return () => window.removeEventListener('resize', calculateHeight)
+    }
+  }, [])
+
   // pendingInstructorId가 있을 때 해당 강사 자동 선택
   useEffect(() => {
     if (pendingInstructorId && instructors.length > 0) {
@@ -176,9 +198,14 @@ export default function StaffSearchSidebar({
 
   return (
     <>
-      <div className="h-full flex flex-col bg-white dark:bg-gray-800">
-        {/* 기본 검색 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <FloatingSidebar
+        width="md"
+        blur="md"
+        transparency={85}
+        floating={true}
+      >
+        {/* 헤더 영역 - 기본 검색 */}
+        <FloatingSidebarHeader>
           <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -195,7 +222,7 @@ export default function StaffSearchSidebar({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto no-scrollbar"
                 >
                   {displayInstructors.slice(0, 8).map((instructor, index) => (
                     <button
@@ -225,10 +252,12 @@ export default function StaffSearchSidebar({
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </FloatingSidebarHeader>
 
-        {/* 선택된 강사 기본 정보 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        {/* 콘텐츠 영역 */}
+        <FloatingSidebarContent>
+          {/* 선택된 강사 기본 정보 */}
+          <div className="py-4">
           {selectedInstructor ? (
             <Card>
               <CardContent className="p-4">
@@ -284,11 +313,11 @@ export default function StaffSearchSidebar({
               </div>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* 액션 버튼들 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 gap-2">
+          {/* 액션 버튼들 */}
+          <div className="py-4">
+            <div className="grid grid-cols-2 gap-2">
             <Button onClick={onCreateInstructor} variant="outline" size="sm">
               <PlusIcon className="h-4 w-4 mr-2" />
               강사등록
@@ -302,30 +331,47 @@ export default function StaffSearchSidebar({
               <PencilIcon className="h-4 w-4 mr-2" />
               강사상세
             </Button>
+            </div>
           </div>
-        </div>
 
-        {/* 빠른 액세스 패널 */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <StaffQuickAccessPanel 
-            selectedInstructor={selectedInstructor}
-            onInstructorSelect={onInstructorSelect}
-            className="h-full"
-          />
-        </div>
-      </div>
+          {/* 직원 목록 */}
+          <div className="flex-1 py-4 overflow-hidden">
+            <div className="h-full flex flex-col">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                직원 목록 ({displayInstructors.length}명)
+              </h3>
+
+              {/* 가상화된 직원 목록 */}
+              <div className="flex-1">
+                <VirtualizedStaffList
+                  instructors={displayInstructors}
+                  onSelect={handleBasicSearchSelect}
+                  selectedInstructor={selectedInstructor}
+                  height={listHeight}
+                  itemHeight={76}
+                  searchTerm={isSearchMode ? debouncedBasicSearch : undefined}
+                  selectedSearchIndex={selectedSearchIndex}
+                />
+              </div>
+
+              {/* 성능 정보 (개발 환경) */}
+              {process.env.NODE_ENV === 'development' && displayInstructors.length > 100 && (
+                <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-600 dark:text-green-400">
+                  ⚡ 가상화 적용: {displayInstructors.length}개 항목 최적화됨
+                </div>
+              )}
+            </div>
+          </div>
+        </FloatingSidebarContent>
+      </FloatingSidebar>
 
       {/* 사이드시트들 - 사이드바 우측에서 슬라이딩 */}
-      <CreateStaffSideSheet
+      <SelectPendingStaffSheet
         open={showCreateSheet}
         onOpenChange={onCloseCreateSheet}
-        onSuccess={(newInstructor) => {
+        onSuccess={() => {
           // 부모 컴포넌트의 콜백 호출
           onCreateSuccess()
-          // 새로 생성된 강사 선택
-          if (newInstructor) {
-            onInstructorSelect(newInstructor)
-          }
         }}
         sidebarWidth={384} // 사이드바 너비 전달
       />

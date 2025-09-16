@@ -193,24 +193,32 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
 
   // Handle result selection
   const handleSelectResult = useCallback((result: SearchResult) => {
+    console.log('🔍 Spotlight: Selecting result:', result)
     onClose()
-    
+
     // ✅ 업계 표준: Next.js 클라이언트 사이드 라우팅 사용 (깜빡거림 없음)
     setTimeout(() => {
+      let targetUrl = ''
       switch (result.type) {
         case 'student':
-          router.push(`/main/students/${result.id}`)
+          targetUrl = `/main/students/${result.id}`
           break
         case 'class':
-          router.push(`/main/classes?selected=${result.id}`)
+          targetUrl = `/main/classes?selected=${result.id}`
           break
         case 'staff':
-          router.push(`/main/staff?selected=${result.id}`)
+          targetUrl = `/main/staff?selected=${result.id}`
           break
         case 'schedule':
-          router.push(`/main/schedule?selected=${result.id}`)
+          targetUrl = `/main/schedule?selected=${result.id}`
           break
+        default:
+          console.warn('🔍 Spotlight: Unknown result type:', result.type)
+          return
       }
+
+      console.log('🔍 Spotlight: Navigating to:', targetUrl)
+      router.push(targetUrl)
     }, 100)
   }, [onClose, router])
 

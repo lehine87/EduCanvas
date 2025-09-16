@@ -44,28 +44,79 @@ export async function GET(request: NextRequest) {
       `)
       .eq('tenant_id', tenantId)
     
-    // 상태별 필터링
+    let data, error;
+
+    // pending 사용자는 user_profiles에서 직접 조회
     if (status === 'pending') {
-      query = query.eq('status', 'pending')
-    } else if (status === 'active') {
-      query = query.eq('status', 'active')
-    } else if (status === 'inactive') {
-      query = query.eq('status', 'inactive')
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('user_profiles')
+        .select(`
+          id,
+          email,
+          name,
+          phone,
+          status,
+          role,
+          created_at
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('status', 'pending_approval')
+        .order('created_at', { ascending: false })
+
+      if (pendingError) {
+        console.error('❌ pending 사용자 조회 실패:', pendingError)
+        return NextResponse.json(
+          { error: `pending 사용자 조회 실패: ${pendingError.message}` },
+          { status: 500 }
+        )
+      }
+
+      // pending 사용자를 tenant_memberships 형식으로 변환
+      data = pendingData?.map(user => ({
+        id: null, // membership_id가 없으므로 null
+        user_id: user.id,
+        tenant_id: tenantId,
+        status: 'pending',
+        job_function: user.role === 'instructor' ? 'instructor' : 'general',
+        hire_date: null,
+        specialization: null,
+        bio: null,
+        created_at: user.created_at,
+        user_profiles: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          created_at: user.created_at
+        },
+        tenant_roles: null
+      })) || []
+
+      error = null
+    } else {
+      // 기존 로직: tenant_memberships에서 조회
+      if (status === 'active') {
+        query = query.eq('status', 'active')
+      } else if (status === 'inactive') {
+        query = query.eq('status', 'inactive')
+      }
+      // status === 'all'인 경우 모든 상태 포함
+      
+      // 직능별 필터링
+      if (jobFunction && jobFunction !== 'all') {
+        query = query.eq('job_function', jobFunction)
+      }
+      
+      // 직급별 필터링
+      if (roleName) {
+        // tenant_roles와 조인하여 role_name으로 필터링
+        query = query.eq('tenant_roles.name', roleName)
+      }
+      
+      const result = await query.order('created_at', { ascending: false })
+      data = result.data
+      error = result.error
     }
-    // status === 'all'인 경우 모든 상태 포함
-    
-    // 직능별 필터링
-    if (jobFunction && jobFunction !== 'all') {
-      query = query.eq('job_function', jobFunction)
-    }
-    
-    // 직급별 필터링
-    if (roleName) {
-      // tenant_roles와 조인하여 role_name으로 필터링
-      query = query.eq('tenant_roles.name', roleName)
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('❌ 회원 목록 조회 실패:', error)

@@ -1,0 +1,155 @@
+/**
+ * EduCanvas 10토큰 시멘틱 컬러 시스템
+ * 모든 색상이 이 10개 토큰으로 통합 관리됩니다
+ * @version 2.0
+ * @date 2025-01-11
+ */
+
+/* ===============================================
+   라이트 모드 (기본값)
+   =============================================== */
+:root {
+  /* Primary 브랜드 색상 (3단계) */
+  --primary-100: #d4eaf7; /* 연한 브랜드, 배경/호버 */
+  --primary-200: #b6ccd8; /* 중간 브랜드, 보조 요소 */
+  --primary-300: #3b3c3d; /* 진한 브랜드, 강조/액션 */
+
+  /* Accent 강조 색상 (2단계) */
+  --accent-100: #71c4ef; /* 보조 강조, 정보/링크 */
+  --accent-200: #00668c; /* 진한 강조, 중요 액션 */
+
+  /* Text 텍스트 색상 (2단계) */
+  --text-100: #1d1c1c; /* 메인 텍스트 */
+  --text-200: #313d44; /* 보조 텍스트 */
+
+  /* Background 배경 색상 (3단계) */
+  --bg-100: #fffefb; /* 메인 배경 (따뜻한 화이트) */
+  --bg-200: #f5f4f1; /* 카드/패널 배경 */
+  --bg-300: #cccbc8; /* 구분선/테두리 */
+
+  /* ===============================================
+     shadcn/ui 호환성 매핑 (레거시 지원)
+     =============================================== */
+  --background: var(--bg-100);
+  --foreground: var(--text-100);
+  --border: var(--bg-300);
+  --input: var(--bg-300);
+  --ring: var(--accent-100);
+  --primary: var(--primary-300);
+  --primary-foreground: var(--text-100);
+  --secondary: var(--bg-200);
+  --secondary-foreground: var(--text-100);
+  --muted: var(--bg-200);
+  --muted-foreground: var(--text-200);
+  --accent: var(--accent-100);
+  --accent-foreground: var(--text-100);
+  --destructive: var(--primary-300);
+  --destructive-foreground: var(--text-100);
+  --card: var(--bg-100);
+  --card-foreground: var(--text-100);
+  --popover: var(--bg-100);
+  --popover-foreground: var(--text-100);
+  --radius: 0.5rem;
+}
+
+/* ===============================================
+   다크 모드 (사용자 지정 색상)
+   =============================================== */
+.dark {
+  /* Primary 브랜드 색상 (3단계) */
+  --primary-100: #1F3A5F; /* 진한 네이비, 배경/호버 */
+  --primary-200: #4d648d; /* 중간 블루그레이, 보조 요소 */
+  --primary-300: #acc2ef; /* 밝은 블루, 강조/액션 */
+
+  /* Accent 강조 색상 (2단계) */
+  --accent-100: #3D5A80; /* 진한 블루, 정보/링크 */
+  --accent-200: #cee8ff; /* 매우 밝은 블루, 중요 액션 */
+
+  /* Text 텍스트 색상 (2단계) */
+  --text-100: #FFFFFF; /* 순백 메인 텍스트 */
+  --text-200: #e0e0e0; /* 밝은 회색 보조 텍스트 */
+
+  /* Background 배경 색상 (3단계) */
+  --bg-100: #0F1C2E; /* 진한 네이비 메인 배경 */
+  --bg-200: #1f2b3e; /* 조금 밝은 네이비 카드/패널 */
+  --bg-300: #374357; /* 중간 블루그레이 구분선/테두리 */
+}
+
+/* ===============================================
+   글로벌 베이스 스타일 (Tailwind base 이후 적용됨)
+   =============================================== */
+
+/* ===============================================
+   유틸리티 클래스 (10토큰 기반) - globals.css에서 관리
+   =============================================== */
+
+/* ===============================================
+   반응형 디자인
+   =============================================== */
+@media (max-width: 768px) {
+  .container-theme {
+    padding: 0 0.75rem;
+  }
+
+  /* 모바일에서 간격 조정 */
+  .card-theme {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+}
+
+/* ===============================================
+   프린트 스타일 (접근성)
+   =============================================== */
+@media print {
+  :root {
+    --text-100: #000000;
+    --text-200: #666666;
+    --bg-100: #ffffff;
+    --bg-200: #f5f5f5;
+    --bg-300: #e0e0e0;
+  }
+
+  .theme-transition {
+    transition: none;
+  }
+
+  .glass-effect {
+    backdrop-filter: none;
+    background-opacity: 1;
+  }
+}
+
+/* ===============================================
+   고대비 모드 지원 (접근성)
+   =============================================== */
+@media (prefers-contrast: high) {
+  :root {
+    --text-100: #000000;
+    --text-200: #333333;
+    --bg-100: #ffffff;
+    --bg-300: #000000;
+  }
+
+  .dark {
+    --text-100: #ffffff;
+    --text-200: #cccccc;
+    --bg-100: #000000;
+    --bg-300: #ffffff;
+  }
+}
+
+/* ===============================================
+   움직임 감소 설정 (접근성)
+   =============================================== */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition {
+    transition: none;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

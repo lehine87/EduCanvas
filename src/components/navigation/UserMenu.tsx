@@ -101,32 +101,32 @@ export function UserMenu({ className }: UserMenuProps) {
           {/* 사용자 아바타 */}
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || '사용자'} />
-            <AvatarFallback className="bg-white/20 text-white text-sm font-medium">
+            <AvatarFallback className="bg-white/20 text-text-100 text-sm font-medium">
               {profile?.name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
 
           {/* 사용자 정보 (데스크톱에서만 표시) */}
           <div className="hidden md:flex flex-col items-start min-w-0">
-            <span className="text-sm font-medium text-white truncate">
+            <span className="text-sm font-medium text-text-100 truncate">
               {profile?.name || profile?.email?.split('@')[0] || '사용자'}
             </span>
             <div className="flex items-center gap-1">
               <Badge 
                 className={cn(
                   getRoleColor(profile?.role || ''),
-                  'text-white text-xs px-1.5 py-0 h-4'
+                  'text-text-100 text-xs px-1.5 py-0 h-4'
                 )}
               >
                 {getRoleLabel(profile?.role || '')}
               </Badge>
               {process.env.NODE_ENV === 'development' && (
-                <span className="text-xs text-white/50">•</span>
+                <span className="text-xs text-text-200">•</span>
               )}
             </div>
           </div>
 
-          <ChevronDown className="h-4 w-4 text-white/70" />
+          <ChevronDown className="h-4 w-4 text-text-200" />
         </Button>
       </DropdownMenuTrigger>
 
@@ -150,7 +150,7 @@ export function UserMenu({ className }: UserMenuProps) {
               <Badge 
                 className={cn(
                   getRoleColor(profile?.role || ''),
-                  'text-white text-xs px-2 py-0 h-4 w-fit mt-1'
+                  'text-text-100 text-xs px-2 py-0 h-4 w-fit mt-1'
                 )}
               >
                 {getRoleLabel(profile?.role || '')}

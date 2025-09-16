@@ -223,6 +223,32 @@ export class ExecutionTimer {
 }
 
 /**
+ * Cursor 생성 유틸리티 (Pagination용)
+ */
+export function generateCursor(item: { created_at?: string | Date; id?: string }): string {
+  if (item.created_at) {
+    const timestamp = typeof item.created_at === 'string' 
+      ? item.created_at 
+      : item.created_at.toISOString()
+    return Buffer.from(`${timestamp}:${item.id || ''}`).toString('base64')
+  }
+  return Buffer.from(item.id || '').toString('base64')
+}
+
+/**
+ * Cursor 파싱 유틸리티
+ */
+export function parseCursor(cursor: string): { timestamp?: string; id?: string } {
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8')
+    const [timestamp, id] = decoded.split(':')
+    return { timestamp, id }
+  } catch (error) {
+    throw new Error('Invalid cursor format')
+  }
+}
+
+/**
  * API 응답 헤더 설정 (보안 + 성능)
  */
 export function setStandardHeaders(response: NextResponse): NextResponse {

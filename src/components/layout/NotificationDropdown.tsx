@@ -117,7 +117,7 @@ export function NotificationDropdown({
         
         {/* 알림 배지 */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs font-medium">
+          <span className="absolute top-1 right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-text-100 text-xs font-medium">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

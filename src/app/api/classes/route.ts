@@ -1,334 +1,234 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { createServiceRoleClient } from '@/lib/supabase/server'
-
-// 클래스 조회 파라미터 스키마
-const getClassesSchema = z.object({
-  tenantId: z.string().optional().nullable(),
-  includeStudents: z.boolean().default(false),
-  status: z.enum(['active', 'inactive', 'all']).default('all'),
-  grade: z.string().optional().nullable(),
-  course: z.string().optional().nullable(),
-  limit: z.number().min(1).max(1000).default(100),
-  offset: z.number().min(0).default(0)
-})
-
-// 클래스 생성 스키마
-const createClassSchema = z.object({
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
-  name: z.string().min(1, '클래스 이름은 필수입니다'),
-  grade: z.string().optional(),
-  course: z.string().optional(),
-  subject: z.string().optional(),
-  instructor_id: z.string().uuid().optional().or(z.literal('')),
-  classroom_id: z.string().uuid().optional().or(z.literal('')),
-  max_students: z.number().int().min(1).optional(),
-  min_students: z.number().int().min(1).optional(),
-  color: z.string().optional(),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-  main_textbook: z.string().max(200).optional(),
-  supplementary_textbook: z.string().max(200).optional(),
-  description: z.string().optional(),
-  is_active: z.boolean().default(true)
-})
-
-type GetClassesParams = z.infer<typeof getClassesSchema>
-type CreateClassData = z.infer<typeof createClassSchema>
+import { 
+  ClassSearchSchema, 
+  ClassCreateSchema,
+  type ClassSearchRequest,
+  type ClassCreateRequest 
+} from '@/schemas/class-search'
+import { 
+  searchClassService, 
+  createClassService 
+} from '@/services/class-service'
+import { 
+  createPaginatedResponse,
+  createSuccessResponse,
+  createServerErrorResponse,
+  createValidationErrorResponse,
+  ExecutionTimer
+} from '@/lib/api-response'
+import { withApiHandler } from '@/lib/api/utils'
 
 /**
- * 클래스 목록 조회 (학생 정보 포함 옵션)
- * GET /api/classes?tenantId=xxx&includeStudents=true&status=active&grade=중1&course=수학
+ * 클래스 목록 조회 (업계 표준 구현)
+ * GET /api/classes?search=수학&status=active&grade=중1&cursor=xxx&limit=20
  */
 export async function GET(request: NextRequest) {
-  try {
-    console.log('🔍 클래스 API 호출됨')
-    
-    // Supabase 클라이언트 생성
-    const supabase = createServiceRoleClient()
-
-    // URL 파라미터 파싱
-    const { searchParams } = new URL(request.url)
-    const rawParams = {
-      tenantId: searchParams.get('tenantId'),
-      includeStudents: searchParams.get('includeStudents') === 'true',
-      status: searchParams.get('status') || 'all',
-      grade: searchParams.get('grade'),
-      course: searchParams.get('course'),
-      limit: parseInt(searchParams.get('limit') || '100'),
-      offset: parseInt(searchParams.get('offset') || '0')
-    }
-
-    console.log('🔍 클래스 조회 파라미터:', rawParams)
-
-    // 파라미터 처리 (검증 생략)
-    const params = {
-      tenantId: rawParams.tenantId,
-      includeStudents: rawParams.includeStudents,
-      status: rawParams.status as 'active' | 'inactive' | 'all',
-      grade: rawParams.grade,
-      course: rawParams.course,
-      limit: rawParams.limit,
-      offset: rawParams.offset
-    }
-
-    // 기본 쿼리 구성 - user_profiles와 tenant_memberships를 통해 강사 정보 조회
-    let selectFields = `
-      *,
-      instructor:instructor_id (
-        id,
-        email,
-        name
-      )
-    `
-
-    let query = supabase
-      .from('classes')
-      .select(selectFields)
-    
-    // 테넌트 필터링
-    if (params.tenantId) {
-      query = query.eq('tenant_id', params.tenantId)
-    }
-
-    // 상태 필터링 (is_active 컬럼 사용)
-    if (params.status !== 'all') {
-      const isActive = params.status === 'active'
-      query = query.eq('is_active', isActive)
-    }
-
-    // 학년 필터링
-    if (params.grade) {
-      query = query.eq('grade', params.grade)
-    }
-
-    // 과정 필터링
-    if (params.course) {
-      query = query.eq('course', params.course)
-    }
-
-    console.log('🔍 실행할 쿼리 생성됨')
-
-    const { data: classes, error } = await query
-      .order('name', { ascending: true })
-      .limit(params.limit)
-      .range(params.offset, params.offset + params.limit - 1) as {
-        data: Array<{id: string; [key: string]: unknown}> | null;
-        error: Error | null;
-      }
-
-    console.log('📊 쿼리 결과:', { classes: classes?.length, error })
-
-    if (error) {
-      console.error('❌ 클래스 목록 조회 실패:', error)
-      throw new Error(`클래스 목록 조회 실패: ${error.message}`)
-    }
-
-    // 모든 클래스의 학생 수를 한 번에 조회 (더 효율적)
-    const classIds = (classes || []).filter((cls): cls is NonNullable<typeof cls> => cls !== null)
-      .map(cls => cls.id).filter((id): id is string => id !== null)
-    let studentCounts: Record<string, number> = {}
-    
-    if (classIds.length > 0) {
-      console.log('📊 학생 수 조회 시작:', { classIds })
+  return withApiHandler(
+    request,
+    async ({ request, userProfile, supabase }) => {
+      const timer = new ExecutionTimer()
       
-      // student_enrollments 테이블에서 클래스별 학생 수 집계
-      const { data: enrollmentCounts, error: countError } = await supabase
-        .from('student_enrollments')
-        .select('class_id')
-        .in('class_id', classIds)
-        .eq('status', 'active')
-      
-      console.log('📊 수강신청 조회 결과:', { 
-        enrollmentCounts: enrollmentCounts?.length, 
-        error: countError,
-        data: enrollmentCounts 
-      })
-      
-      if (countError) {
-        console.error('❌ 학생 수 조회 실패:', countError)
-      } else if (enrollmentCounts) {
-        // 클래스별로 학생 수 집계
-        enrollmentCounts.forEach(enrollment => {
-          if (enrollment.class_id) {
-            studentCounts[enrollment.class_id] = (studentCounts[enrollment.class_id] || 0) + 1
-          }
+      try {
+        // URL 파라미터 파싱 및 검증
+        const { searchParams } = new URL(request.url)
+        const rawParams: ClassSearchRequest = {
+          cursor: searchParams.get('cursor') || undefined,
+          limit: parseInt(searchParams.get('limit') || '20'),
+          search: searchParams.get('search') || undefined,
+          status: (searchParams.get('status') as 'active' | 'inactive' | 'all') || 'all',
+          grade: searchParams.get('grade') || undefined,
+          course: searchParams.get('course') || undefined,
+          subject: searchParams.get('subject') || undefined,
+          instructor_id: searchParams.get('instructor_id') || undefined,
+          classroom_id: searchParams.get('classroom_id') || undefined,
+          sort_field: (searchParams.get('sort_field') as 'name' | 'created_at' | 'student_count' | 'grade') || 'name',
+          sort_order: (searchParams.get('sort_order') as 'asc' | 'desc') || 'asc',
+          include_students: searchParams.get('include_students') === 'true',
+          include_instructor: searchParams.get('include_instructor') !== 'false',
+          include_schedules: searchParams.get('include_schedules') === 'true'
+        }
+
+        // userProfile null 체크
+        if (!userProfile) {
+          return createValidationErrorResponse(
+            [{ field: 'auth', message: '인증 정보가 없습니다.', code: 'required' }]
+          )
+        }
+
+        // tenant_id null 체크
+        if (!userProfile.tenant_id) {
+          return createValidationErrorResponse(
+            [{ field: 'tenant_id', message: '테넌트 정보가 없습니다.', code: 'required' }]
+          )
+        }
+
+        // Zod 스키마 검증
+        const parseResult = ClassSearchSchema.safeParse({
+          ...rawParams,
+          tenant_id: userProfile.tenant_id
         })
-        console.log('📊 최종 학생 수 집계:', studentCounts)
-      }
-    }
-    
-    // 클래스 정보에 학생 수 추가
-    const classesWithStats = (classes || [])
-      .filter((cls): cls is NonNullable<typeof cls> => cls !== null && cls !== undefined)
-      .map(cls => {
-        const id = cls.id;
-        if (!id) return cls;
-        return Object.assign({}, cls, {
-          student_count: studentCounts[id] || 0
+
+        if (!parseResult.success) {
+          return createValidationErrorResponse(
+            parseResult.error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+              code: issue.code
+            }))
+          )
+        }
+
+        const validatedParams = parseResult.data
+
+        console.log('🔍 [API] 클래스 검색 시작:', {
+          search: validatedParams.search,
+          status: validatedParams.status,
+          tenant_id: validatedParams.tenant_id
         })
-      })
 
-    const result = {
-      classes: classesWithStats,
-      total: classes?.length || 0
+        // Service Layer 호출
+        const result = await searchClassService(validatedParams)
+
+        // 필터 적용 정보 수집
+        const filtersApplied: string[] = []
+        if (validatedParams.search) filtersApplied.push('search')
+        if (validatedParams.status !== 'all') filtersApplied.push('status')
+        if (validatedParams.grade) filtersApplied.push('grade')
+        if (validatedParams.course) filtersApplied.push('course')
+        if (validatedParams.subject) filtersApplied.push('subject')
+        if (validatedParams.instructor_id) filtersApplied.push('instructor')
+        if (validatedParams.classroom_id) filtersApplied.push('classroom')
+
+        console.log('✅ [API] 클래스 검색 완료:', {
+          count: result.items.length,
+          has_more: result.has_more,
+          execution_time: timer.getExecutionTime()
+        })
+
+        // StandardApiResponse 형식으로 응답 반환 (업계 표준)
+        return createSuccessResponse(
+          {
+            items: result.items,
+            pagination: {
+              cursor: result.next_cursor,
+              has_more: result.has_more,
+              total_count: result.total_count,
+              per_page: validatedParams.limit
+            },
+            metadata: {
+              filters_applied: filtersApplied,
+              sort_applied: `${validatedParams.sort_field}:${validatedParams.sort_order}`,
+              search_query: validatedParams.search,
+              execution_time_ms: timer.getExecutionTime()
+            }
+          },
+          '클래스 목록 조회 성공'
+        )
+
+      } catch (error) {
+        console.error('❌ [API] 클래스 검색 에러:', error)
+        return createServerErrorResponse(
+          '클래스 목록 조회 실패',
+          error instanceof Error ? error : new Error(String(error))
+        )
+      }
+    },
+    { 
+      requireAuth: true,
+      validateTenant: true 
     }
-
-    console.log('✅ 처리 완료:', { 
-      count: classes?.length || 0,
-      totalStudents: Object.values(studentCounts).reduce((sum, count) => sum + count, 0),
-      includeStudents: params.includeStudents
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: result
-    })
-
-  } catch (error) {
-    console.error('🚨 클래스 API 에러:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : '알 수 없는 오류' 
-      }, 
-      { status: 500 }
-    )
-  }
+  )
 }
 
 /**
- * 새 클래스 생성
+ * 새 클래스 생성 (업계 표준 구현)
  * POST /api/classes
  */
 export async function POST(request: NextRequest) {
-  try {
-    console.log('🎯 클래스 생성 API 시작')
+  return withApiHandler(
+    request,
+    async ({ request, userProfile }) => {
+      try {
+        // 요청 본문 파싱
+        const body: unknown = await request.json()
+        
+        console.log('🎯 [API] 클래스 생성 시작:', body)
 
-    // Supabase 클라이언트 생성
-    const supabase = createServiceRoleClient()
-
-    // 입력 검증
-    const body: unknown = await request.json()
-    
-    // Zod 스키마로 검증
-    console.log('🔍 클래스 생성 입력 데이터:', body)
-    const parseResult = createClassSchema.safeParse(body)
-    if (!parseResult.success) {
-      console.error('❌ Zod 검증 실패:', parseResult.error.issues)
-      return NextResponse.json({
-        error: '입력 데이터가 올바르지 않습니다.',
-        details: parseResult.error.issues
-      }, { status: 400 })
-    }
-
-    const classData: CreateClassData = parseResult.data
-
-    // 빈 문자열과 undefined를 null로 변환
-    const cleanedData = {
-      ...classData,
-      instructor_id: (classData.instructor_id === '' || classData.instructor_id === undefined) ? null : classData.instructor_id,
-      classroom_id: (classData.classroom_id === '' || classData.classroom_id === undefined) ? null : classData.classroom_id,
-      start_date: (classData.start_date === '' || classData.start_date === undefined) ? null : classData.start_date,
-      end_date: (classData.end_date === '' || classData.end_date === undefined) ? null : classData.end_date,
-      color: (classData.color === '' || classData.color === undefined) ? null : classData.color,
-      description: (classData.description === '' || classData.description === undefined) ? null : classData.description,
-      main_textbook: (classData.main_textbook === '' || classData.main_textbook === undefined) ? null : classData.main_textbook,
-      supplementary_textbook: (classData.supplementary_textbook === '' || classData.supplementary_textbook === undefined) ? null : classData.supplementary_textbook,
-      grade: (classData.grade === '' || classData.grade === undefined) ? null : classData.grade,
-      course: (classData.course === '' || classData.course === undefined) ? null : classData.course,
-      subject: (classData.subject === '' || classData.subject === undefined) ? null : classData.subject
-    }
-
-    console.log('📝 클래스 생성 데이터:', cleanedData)
-
-    // 클래스명 중복 확인 (같은 테넌트 내)
-    const { data: existingClass } = await supabase
-      .from('classes')
-      .select('id')
-      .eq('tenant_id', cleanedData.tenantId)
-      .eq('name', cleanedData.name)
-      .single()
-
-    if (existingClass) {
-      return NextResponse.json({
-        error: '이미 존재하는 클래스명입니다.'
-      }, { status: 409 })
-    }
-
-    // 강사 존재 확인 (instructor_id가 제공된 경우)
-    if (cleanedData.instructor_id) {
-      const { data: membership, error: membershipError } = await supabase
-        .from('tenant_memberships')
-        .select(`
-          id,
-          status,
-          user_profiles!tenant_memberships_user_id_fkey (
-            id,
-            name
+        // userProfile null 체크
+        if (!userProfile) {
+          return createValidationErrorResponse(
+            [{ field: 'auth', message: '인증 정보가 없습니다.', code: 'required' }]
           )
-        `)
-        .eq('user_id', cleanedData.instructor_id)
-        .eq('tenant_id', cleanedData.tenantId)
-        .eq('job_function', 'instructor')
-        .eq('status', 'active')
-        .single()
+        }
 
-      if (!membership || membershipError) {
-        console.error('❌ 강사 검증 실패:', membershipError)
-        return NextResponse.json({
-          error: '유효하지 않은 강사입니다.'
-        }, { status: 400 })
-      }
+        // tenant_id null 체크
+        if (!userProfile.tenant_id) {
+          return createValidationErrorResponse(
+            [{ field: 'tenant_id', message: '테넌트 정보가 없습니다.', code: 'required' }]
+          )
+        }
 
-      console.log('✅ 강사 검증 완료:', membership.user_profiles?.name)
-    }
+        // Zod 스키마 검증
+        const parseResult = ClassCreateSchema.safeParse({
+          ...body as ClassCreateRequest,
+          tenant_id: userProfile.tenant_id
+        })
 
-    // 클래스 생성 - tenantId를 tenant_id로 매핑
-    const { tenantId, ...restClassData } = cleanedData
-    const { data: newClass, error } = await supabase
-      .from('classes')
-      .insert({
-        ...restClassData,
-        tenant_id: tenantId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select(`
-        *,
-        instructor:instructor_id (
-          id,
-          email
+        if (!parseResult.success) {
+          return createValidationErrorResponse(
+            parseResult.error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+              code: issue.code
+            })),
+            '클래스 생성 데이터가 올바르지 않습니다'
+          )
+        }
+
+        const validatedData = parseResult.data
+
+        // Service Layer 호출
+        const result = await createClassService(validatedData, userProfile.id)
+
+        if (!result.success) {
+          if (result.error?.includes('이미 존재하는')) {
+            return createValidationErrorResponse(
+              [{ field: 'name', message: result.error }],
+              result.error
+            )
+          }
+          
+          if (result.error?.includes('유효하지 않은 강사')) {
+            return createValidationErrorResponse(
+              [{ field: 'instructor_id', message: result.error }],
+              result.error
+            )
+          }
+
+          return createServerErrorResponse(
+            result.error || '클래스 생성 실패'
+          )
+        }
+
+        console.log('✅ [API] 클래스 생성 성공:', result.class?.id)
+
+        return createSuccessResponse(
+          { class: result.class },
+          '클래스가 성공적으로 생성되었습니다',
+          201
         )
-      `)
-      .single()
 
-    if (error) {
-      console.error('❌ 클래스 생성 실패:', error)
-      return NextResponse.json({
-        error: `클래스 생성 실패: ${error.message}`
-      }, { status: 500 })
+      } catch (error) {
+        console.error('❌ [API] 클래스 생성 에러:', error)
+        return createServerErrorResponse(
+          '클래스 생성 실패',
+          error instanceof Error ? error : new Error(String(error))
+        )
+      }
+    },
+    { 
+      requireAuth: true,
+      validateTenant: true 
     }
-
-    console.log('✅ 클래스 생성 성공:', newClass.id)
-
-    return NextResponse.json({
-      success: true,
-      message: '클래스가 성공적으로 생성되었습니다.',
-      data: { class: newClass }
-    }, { status: 201 })
-
-  } catch (error) {
-    console.error('💥 클래스 생성 API 오류:', error)
-    
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : typeof error === 'string' 
-      ? error 
-      : '클래스 생성 중 알 수 없는 오류가 발생했습니다.'
-    
-    return NextResponse.json({
-      error: errorMessage
-    }, { status: 500 })
-  }
+  )
 }

@@ -42,12 +42,6 @@ export default function MainLayoutWrapper({ children }: MainLayoutWrapperProps) 
         }}
       />
       
-      {/* 개발 환경 디버깅 표시 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm">
-          🔧 최적화된 MainLayout 사용 중
-        </div>
-      )}
     </>
   )
 }

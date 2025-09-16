@@ -35,8 +35,11 @@ export async function POST(request: NextRequest) {
     const exists = !!data
     console.log(`${exists ? '❌' : '✅'} 이메일 중복 검사 결과:`, { email, exists })
 
-    const response: CheckEmailResponse = {
-      exists
+    const response = {
+      success: true,
+      data: {
+        exists
+      }
     }
 
     return NextResponse.json(response, { status: 200 })

@@ -43,49 +43,48 @@ export function Header({
   return (
     <header className={cn(
       'sticky top-0 z-30',
-      'bg-educanvas-500 border-b border-educanvas-600 shadow-sm',
+      'bg-gray-50 dark:bg-gray-950',
       className
     )}>
       <div className="flex items-center justify-between h-16 px-6">
-        {/* 학원 브랜딩 */}
-        <div className="flex items-center gap-3">
+        {/* 학원 브랜딩 - 왼쪽 고정 */}
+        <div className="flex items-center gap-3 min-w-[200px]">
           <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-white/20 text-white text-sm font-bold">
+            <AvatarFallback className="bg-educanvas-500 text-white text-sm font-bold">
               {/* ✅ 개선: 지속된 데이터 우선 사용 */}
-              {profile?.tenants?.name?.charAt(0) || 
-               ('tenantName' in (effectiveProfile || {}) ? (effectiveProfile as any).tenantName?.charAt(0) : '') || 
+              {profile?.tenants?.name?.charAt(0) ||
+               ('tenantName' in (effectiveProfile || {}) ? (effectiveProfile as any).tenantName?.charAt(0) : '') ||
                effectiveProfile?.tenant_id?.slice(0, 1)?.toUpperCase() || 'A'}
             </AvatarFallback>
           </Avatar>
-          <h1 className="text-lg font-bold text-white">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {/* ✅ 개선: 실제 데이터 우선, 로딩 중에는 기본값 표시 */}
             {profile?.tenants?.name || (effectiveProfile ? (('tenantName' in effectiveProfile ? (effectiveProfile as any).tenantName : '') || '학원명') : '학원명')}
           </h1>
         </div>
-        
-        {/* 구분선 */}
-        <div className="h-6 w-px bg-white/30 mx-6" />
-        
-        {/* 탭 네비게이션 */}
-        <div className="flex-1">
-          <TabNavigation />
+
+        {/* 중앙 탭 네비게이션 - 라운드 버튼 스타일 */}
+        <div className="flex-1 flex justify-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-200/50 dark:bg-gray-800/50 rounded-full backdrop-blur-sm">
+            <TabNavigation />
+          </div>
         </div>
-        
-        {/* 사용자 메뉴 */}
-        <div className="flex items-center gap-4 ml-6">
+
+        {/* 오른쪽 사용자 메뉴 영역 */}
+        <div className="flex items-center gap-3 min-w-[200px] justify-end">
           {/* 키보드 단축키 힌트 (개발 환경에서만) */}
           {process.env.NODE_ENV === 'development' && (
-            <div className="hidden lg:block px-2 py-1 bg-white/20 rounded text-xs text-white/70">
+            <div className="hidden lg:block px-3 py-1.5 bg-gray-200/50 dark:bg-gray-800/50 rounded-full text-xs text-gray-600 dark:text-gray-400 backdrop-blur-sm">
               Ctrl+1~{visibleTabs.length}
             </div>
           )}
-          
-          {/* 다크모드 토글 버튼 */}
+
+          {/* 다크모드 토글 버튼 - 라운드 스타일 */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200 group"
+            className="p-2 rounded-full bg-gray-200/50 dark:bg-gray-800/50 hover:bg-gray-300/50 dark:hover:bg-gray-700/50 transition-all duration-200 group backdrop-blur-sm"
             title={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
           >
             <motion.div
@@ -94,13 +93,13 @@ export function Header({
               transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
               {theme === 'dark' ? (
-                <SunIcon className="w-5 h-5 text-white group-hover:text-yellow-200" />
+                <SunIcon className="w-5 h-5 text-gray-400 group-hover:text-yellow-400" />
               ) : (
-                <MoonIcon className="w-5 h-5 text-white group-hover:text-blue-200" />
+                <MoonIcon className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
               )}
             </motion.div>
           </motion.button>
-          
+
           {/* 현업 SaaS 스타일 사용자 메뉴 */}
           <UserMenu />
         </div>

@@ -1,31 +1,30 @@
 /**
- * @file useInstructors.ts
- * @description 강사 목록 조회를 위한 React Query Hook
- * @module T-V2-012
+ * @file useStaffs.ts (구 useInstructors.ts)
+ * @description 직원 목록 조회를 위한 React Query Hook
+ * @module T-V2-012 - API Client 표준화 적용
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { fetchInstructors, type FetchInstructorsParams } from '@/lib/api/staff.api'
+import { apiClient, queryKeys } from '@/lib/api-client'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { Instructor, InstructorFilters } from '@/types/staff.types'
 
-// Query Keys
-export const instructorKeys = {
-  all: ['instructors'] as const,
-  lists: () => [...instructorKeys.all, 'list'] as const,
-  list: (filters: InstructorFilters) => [...instructorKeys.lists(), filters] as const,
-  details: () => [...instructorKeys.all, 'detail'] as const,
-  detail: (id: string) => [...instructorKeys.details(), id] as const,
-}
-
 /**
- * 강사 목록 조회 Hook
+ * 직원 목록 조회 Hook
  */
-interface UseInstructorsOptions extends Omit<FetchInstructorsParams, 'tenantId'> {
+interface UseStaffsOptions {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  employment_type?: string
+  department?: string
+  sort_by?: string
+  sort_order?: string
   enabled?: boolean
 }
 
-export function useInstructors(options: UseInstructorsOptions = {}) {
+export function useStaffs(options: UseStaffsOptions = {}) {
   const { profile } = useAuthStore()
   const tenantId = profile?.tenant_id
 
@@ -41,79 +40,115 @@ export function useInstructors(options: UseInstructorsOptions = {}) {
     enabled = true,
   } = options
 
-  const filters: InstructorFilters = {
-    search,
-    status: status as any,
-    employment_type: employment_type as any,
-    department,
-    sort_field: sort_by as any,
-    sort_order: sort_order as any,
+  const filters = {
+    tenantId,
+    page,
     limit,
+    search,
+    status,
+    employment_type,
+    department,
+    sort_by,
+    sort_order
   }
 
   return useQuery({
-    queryKey: instructorKeys.list(filters),
-    queryFn: ({ signal }) => {
+    queryKey: [...queryKeys.staff(), 'list', filters],
+    queryFn: () => {
       if (!tenantId) throw new Error('No tenant ID found')
-      
-      return fetchInstructors({
-        tenantId,
+
+      const params: Record<string, string | number> = {
         page,
         limit,
-        search,
-        status,
-        employment_type,
-        department,
         sort_by,
-        sort_order,
-        signal,
-      })
+        sort_order
+      }
+
+      if (search) params.search = search
+      if (status) params.status = status
+      if (employment_type) params.employment_type = employment_type
+      if (department) params.department = department
+
+      return apiClient.get<{ instructors: Instructor[], pagination: any }>('/api/staff', { params })
     },
     enabled: enabled && !!tenantId,
     staleTime: 5 * 60 * 1000, // 5분
     gcTime: 10 * 60 * 1000, // 10분 (구 cacheTime)
-    retry: (failureCount, error: any) => {
-      // 인증 오류는 재시도하지 않음
-      if (error?.status === 401 || error?.status === 403) {
-        return false
-      }
-      return failureCount < 3
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
 
 /**
- * 활성 강사 목록 조회 Hook (간편 버전)
+ * 활성 직원 목록 조회 Hook (간편 버전)
  */
-export function useActiveInstructors() {
-  return useInstructors({
+export function useActiveStaffs() {
+  return useStaffs({
     status: 'active',
-    limit: 100, // 대부분의 강사를 가져옴
+    limit: 100,
   })
 }
 
 /**
- * 부서별 강사 목록 조회 Hook
+ * 부서별 직원 목록 조회 Hook
  */
-export function useInstructorsByDepartment(department: string) {
-  return useInstructors({
+export function useStaffsByDepartment(department: string) {
+  return useStaffs({
     department,
     status: 'active',
   })
 }
 
 /**
- * 필터링된 강사 목록 조회 Hook (검색 사이드바용)
+ * 단일 직원 조회 Hook
  */
-export function useInstructorsWithFilters(filters: InstructorFilters = {}) {
-  return useInstructors({
-    search: filters.search,
-    status: filters.status,
-    employment_type: filters.employment_type,
-    department: filters.department,
-    sort_by: filters.sort_field || 'name',
-    sort_order: filters.sort_order || 'asc',
-    limit: filters.limit || 100, // 사이드바에서는 많은 수의 강사를 보여줌
+export function useStaff(staffId: string, { enabled = true }: { enabled?: boolean } = {}) {
+  const { profile } = useAuthStore()
+  const tenantId = profile?.tenant_id
+
+  return useQuery({
+    queryKey: queryKeys.staffMember(staffId),
+    queryFn: () => {
+      if (!tenantId) throw new Error('No tenant ID found')
+      return apiClient.get<{ instructor: Instructor }>(`/api/staff/${staffId}`)
+    },
+    enabled: enabled && !!tenantId && !!staffId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 }
+
+/**
+ * 직원 검색 Hook (검색 전용)
+ */
+export function useStaffSearch({
+  tenantId,
+  search,
+  limit = 20,
+  enabled = true
+}: {
+  tenantId: string
+  search?: string
+  limit?: number
+  enabled?: boolean
+}) {
+  const filters = { tenantId, search, limit }
+
+  return useQuery({
+    queryKey: [...queryKeys.staff(), 'search', filters],
+    queryFn: () => {
+      const params: Record<string, string | number> = {
+        q: search || '',
+        limit
+      }
+
+      return apiClient.get<{ instructors: Instructor[] }>('/api/staff/search', { params })
+    },
+    enabled: enabled && !!tenantId && !!search && search.length >= 2,
+    staleTime: 2 * 60 * 1000, // 검색은 짧은 캐시
+    gcTime: 5 * 60 * 1000,
+  })
+}
+
+// 호환성을 위한 별칭
+export const useInstructors = useStaffs
+export const useActiveInstructors = useActiveStaffs
+export const useInstructorsByDepartment = useStaffsByDepartment

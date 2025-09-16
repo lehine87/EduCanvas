@@ -43,22 +43,21 @@ export function TabItem({ tab, isActive, onClick, shortcutIndex }: TabItemProps)
       <button
         onClick={handleClick}
         className={cn(
-          // 기본 스타일
-          'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md',
+          // 기본 스타일 - 라운드 버튼 스타일 적용
+          'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full',
           'transition-all duration-200 ease-in-out relative',
-          'focus:outline-none focus:ring-2 focus:ring-educanvas-500 focus:ring-offset-2',
-          
+          'focus:outline-none focus:ring-2 focus:ring-educanvas-500/50 focus:ring-offset-2 focus:ring-offset-transparent',
+
           // 활성 상태 스타일
           isActive ? [
-            'bg-white/20',
-            'text-white',
-            'border border-white/30',
-            'shadow-sm'
+            'bg-educanvas-500',
+            'text-educanvas-contrast',
+            'shadow-md'
           ] : [
             // 비활성 상태 스타일
-            'text-white/80',
-            'hover:text-white',
-            'hover:bg-white/10'
+            'text-gray-600 dark:text-gray-400',
+            'hover:text-gray-900 dark:hover:text-gray-100',
+            'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
           ]
         )}
         aria-label={tab.description || tab.label}
@@ -66,9 +65,9 @@ export function TabItem({ tab, isActive, onClick, shortcutIndex }: TabItemProps)
       >
         <Icon className={cn(
           'h-4 w-4 flex-shrink-0',
-          isActive 
-            ? 'text-white'
-            : 'text-white/70'
+          isActive
+            ? 'text-educanvas-contrast'
+            : 'text-gray-500 dark:text-gray-400'
         )} />
         
         <span className="truncate whitespace-nowrap">
@@ -91,7 +90,7 @@ export function TabItem({ tab, isActive, onClick, shortcutIndex }: TabItemProps)
         {/* 서브메뉴 인디케이터 */}
         {hasSubTabs && (
           <svg 
-            className="ml-1 h-3 w-3 text-white/60" 
+            className="ml-1 h-3 w-3 text-text-200" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"

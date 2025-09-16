@@ -130,14 +130,14 @@ export default function StaffSearchAndFilters({
           <div className="space-y-2">
             <Label>재직 상태</Label>
             <Select 
-              value={localFilters.status || ''} 
-              onValueChange={(value) => updateFilter('status', value || undefined)}
+              value={localFilters.status || 'all'} 
+              onValueChange={(value) => updateFilter('status', value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="상태 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">전체</SelectItem>
+                <SelectItem value="all">전체</SelectItem>
                 <SelectItem value="active">재직</SelectItem>
                 <SelectItem value="inactive">퇴직</SelectItem>
                 <SelectItem value="pending">대기</SelectItem>
@@ -148,14 +148,14 @@ export default function StaffSearchAndFilters({
           <div className="space-y-2">
             <Label>고용 형태</Label>
             <Select 
-              value={localFilters.employment_type || ''} 
-              onValueChange={(value) => updateFilter('employment_type', value || undefined)}
+              value={localFilters.employment_type || 'all'} 
+              onValueChange={(value) => updateFilter('employment_type', value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="고용형태 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">전체</SelectItem>
+                <SelectItem value="all">전체</SelectItem>
                 <SelectItem value="정규직">정규직</SelectItem>
                 <SelectItem value="계약직">계약직</SelectItem>
                 <SelectItem value="파트타임">파트타임</SelectItem>
@@ -166,14 +166,14 @@ export default function StaffSearchAndFilters({
           <div className="space-y-2">
             <Label>강의 레벨</Label>
             <Select 
-              value={localFilters.teaching_level || ''} 
-              onValueChange={(value) => updateFilter('teaching_level', value || undefined)}
+              value={localFilters.teaching_level || 'all'} 
+              onValueChange={(value) => updateFilter('teaching_level', value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="레벨 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">전체</SelectItem>
+                <SelectItem value="all">전체</SelectItem>
                 <SelectItem value="초급">초급</SelectItem>
                 <SelectItem value="중급">중급</SelectItem>
                 <SelectItem value="고급">고급</SelectItem>

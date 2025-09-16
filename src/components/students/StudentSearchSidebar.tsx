@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { FloatingSidebar, FloatingSidebarHeader, FloatingSidebarContent, FloatingSidebarFooter } from '@/components/ui/floating-sidebar'
 import { StudentDetailSideSheet } from './StudentDetailSideSheet'
 import { CreateStudentSideSheet } from './CreateStudentSideSheet'
 import QuickAccessPanel from './QuickAccessPanel'
@@ -72,10 +73,15 @@ export default function StudentSearchSidebar({
     refetch: refetchStudents 
   } = useStudents()
   
-  const { 
-    data: searchData, 
-    isLoading: searchLoading 
-  } = useStudentSearch(debouncedBasicSearch)
+  const {
+    data: searchData,
+    isLoading: searchLoading
+  } = useStudentSearch({
+    tenantId: profile?.tenant_id || '',
+    search: debouncedBasicSearch,
+    limit: 20,
+    enabled: debouncedBasicSearch.length >= 2 && !!profile?.tenant_id
+  })
 
   // Mutations
   const createStudentMutation = useCreateStudent()
@@ -83,7 +89,7 @@ export default function StudentSearchSidebar({
   const deleteStudentMutation = useDeleteStudent()
 
   const students = studentsData?.items || []
-  const searchResults = searchData?.items || []
+  const searchResults = searchData?.students || []
   
   // pendingStudentId가 있을 때 해당 학생 자동 선택
   useEffect(() => {
@@ -169,9 +175,14 @@ export default function StudentSearchSidebar({
 
   return (
     <>
-      <div className="h-full flex flex-col bg-white dark:bg-gray-800">
-        {/* 기본 검색 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <FloatingSidebar
+        width="md"
+        blur="md"
+        transparency={85}
+        floating={true}
+      >
+        {/* 헤더 영역 - 기본 검색 */}
+        <FloatingSidebarHeader>
           <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -188,7 +199,7 @@ export default function StudentSearchSidebar({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto no-scrollbar"
                 >
                   {displayStudents.slice(0, 8).map((student, index) => (
                     <button
@@ -218,10 +229,12 @@ export default function StudentSearchSidebar({
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </FloatingSidebarHeader>
 
-        {/* 선택된 학생 기본 정보 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        {/* 콘텐츠 영역 */}
+        <FloatingSidebarContent>
+          {/* 선택된 학생 기본 정보 */}
+          <div className="py-4">
           {selectedStudent ? (
             <Card>
               <CardContent className="p-4">
@@ -277,10 +290,10 @@ export default function StudentSearchSidebar({
               </div>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* 액션 버튼들 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          {/* 액션 버튼들 */}
+          <div className="py-4">
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={onCreateStudent} variant="outline" size="sm">
               <PlusIcon className="h-4 w-4 mr-2" />
@@ -296,17 +309,18 @@ export default function StudentSearchSidebar({
               원생상세
             </Button>
           </div>
-        </div>
+          </div>
 
-        {/* 빠른 액세스 패널 */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <QuickAccessPanel 
-            selectedStudent={selectedStudent}
-            onStudentSelect={onStudentSelect}
-            className="h-full"
-          />
-        </div>
-      </div>
+          {/* 빠른 액세스 패널 */}
+          <div className="flex-1 py-4 overflow-hidden">
+            <QuickAccessPanel
+              selectedStudent={selectedStudent}
+              onStudentSelect={onStudentSelect}
+              className="h-full"
+            />
+          </div>
+        </FloatingSidebarContent>
+      </FloatingSidebar>
 
       {/* 사이드시트들 - 사이드바 우측에서 슬라이딩 */}
       <CreateStudentSideSheet

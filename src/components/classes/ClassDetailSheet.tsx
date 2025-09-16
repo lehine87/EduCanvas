@@ -539,7 +539,7 @@ export function ClassDetailSheet({
                         <SelectContent>
                           <SelectItem value="none">강사 미배정</SelectItem>
                           {loadingInstructors ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="loading" disabled>
                               <div className="flex items-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 강사 목록 로딩 중...

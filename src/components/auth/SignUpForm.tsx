@@ -12,8 +12,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { authClient } from '@/lib/auth/authClient'
 import { signUpSchema, type SignUpFormData } from '@/lib/auth/authValidation'
+import { useEmailCheckMutation, useSignUpMutation } from '@/hooks/useAuth'
 
 export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,6 +29,10 @@ export function SignUpForm() {
     message: null
   })
   const router = useRouter()
+
+  // API Client 패턴 사용
+  const emailCheckMutation = useEmailCheckMutation()
+  const signUpMutation = useSignUpMutation()
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -60,14 +64,8 @@ export function SignUpForm() {
     })
 
     try {
-      // user_profiles 테이블에서 이메일 중복 검사
-      const response = await fetch('/api/auth/check-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-
-      const result = await response.json()
+      // API Client 패턴으로 이메일 중복 검사
+      const result = await emailCheckMutation.mutateAsync({ email })
 
       if (result.exists) {
         setEmailCheckResult({
@@ -106,61 +104,20 @@ export function SignUpForm() {
     console.log('📝 회원가입 폼 데이터:', {
       email: data.email,
       full_name: data.full_name,
-      tenant_slug: data.tenant_slug,
       passwordLength: data.password?.length
     })
 
-    setIsLoading(true)
-    setError(null)
-
     try {
-      console.log('🚀 authClient.signUp 호출 시작...')
-      
-      await authClient.signUp({
+      await signUpMutation.mutateAsync({
         email: data.email,
         password: data.password,
         full_name: data.full_name
       })
-      
-      console.log('✅ 회원가입 성공!')
+
       setSuccess(true)
     } catch (error) {
-      console.error('🚨 회원가입 에러 상세:', error)
-      
-      // 타입 가드를 사용한 안전한 에러 처리
-      const errorName = error instanceof Error ? error.name : '';
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-      const errorStatus = (error as {status?: number}).status;
-      
-      console.error('🚨 회원가입 에러 상세:', {
-        name: errorName,
-        message: errorMessage,
-        status: errorStatus,
-        details: error
-      })
-      
-      // 네트워크 오류 체크
-      if (errorName === 'AuthRetryableFetchError' || errorMessage.includes('Failed to fetch')) {
-        setError('네트워크 연결을 확인해주세요. 잠시 후 다시 시도해보세요.')
-        return
-      }
-      
-      // authClient에서 이미 사용자 친화적 메시지로 변환되어 전달됨
-      
-      // 추가 에러 타입 처리
-      if (errorMessage.includes('이미 등록된 이메일')) {
-        setError('💡 ' + errorMessage + ' 혹시 비밀번호를 잊으셨나요?')
-      } else if (errorMessage.includes('비밀번호')) {
-        setError('🔐 ' + errorMessage)
-      } else if (errorMessage.includes('이메일')) {
-        setError('📧 ' + errorMessage)
-      } else if (errorMessage.includes('프로필 생성')) {
-        setError('👤 ' + errorMessage + ' 잠시 후 다시 시도해주세요.')
-      } else {
-        setError('❌ ' + errorMessage)
-      }
-    } finally {
-      setIsLoading(false)
+      // 에러 처리는 useSignUpMutation에서 toast로 처리됨
+      console.error('🚨 회원가입 실패:', error)
     }
   }
 
@@ -350,13 +307,13 @@ export function SignUpForm() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading || emailCheckResult.isAvailable === false}
+                  disabled={signUpMutation.isPending || emailCheckResult.isAvailable === false}
                 >
-                  {isLoading && (
+                  {signUpMutation.isPending && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                   )}
-                  {emailCheckResult.isAvailable === false 
-                    ? '이미 사용 중인 이메일입니다' 
+                  {emailCheckResult.isAvailable === false
+                    ? '이미 사용 중인 이메일입니다'
                     : '회원가입'
                   }
                 </Button>

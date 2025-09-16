@@ -14,7 +14,14 @@ import {
 const approveMemberSchema = z.object({
   userId: z.string().uuid('유효한 사용자 ID가 아닙니다'),
   action: z.enum(['approve', 'reject']),
-  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다')
+  tenantId: z.string().uuid('유효한 테넌트 ID가 아닙니다'),
+  staffInfo: z.object({
+    employee_id: z.string().min(1),
+    department: z.string().min(1),
+    position: z.string().min(1),
+    role: z.enum(['instructor', 'staff', 'admin']),
+    employment_type: z.enum(['정규직', '계약직', '파트타임'])
+  }).optional()
 })
 
 type ApproveMemberRequest = z.infer<typeof approveMemberSchema>
@@ -40,7 +47,7 @@ export async function POST(request: NextRequest) {
         return validationResult
       }
 
-      const { userId, action, tenantId }: ApproveMemberRequest = validationResult
+      const { userId, action, tenantId, staffInfo }: ApproveMemberRequest = validationResult
 
       // 3. 테넌트 권한 검증
       if (!validateTenantAccess(userProfile!, tenantId)) {
@@ -50,22 +57,64 @@ export async function POST(request: NextRequest) {
       console.log(`👤 사용자 ${userId} ${action === 'approve' ? '승인' : '거부'} 처리 중...`)
 
       if (action === 'approve') {
-        // 승인: status를 'active'로 변경
-        const { error } = await supabase
+        // 승인 시 직원 정보가 필요함
+        if (!staffInfo) {
+          throw new Error('승인 시 직원 정보가 필요합니다.')
+        }
+
+        console.log('📝 직원 정보 설정:', staffInfo)
+
+        // 1. user_profiles에서 status를 'active'로 변경하고 role 설정
+        const { error: profileError } = await supabase
           .from('user_profiles')
           .update({ 
             status: 'active',
+            role: staffInfo.role,
             updated_at: new Date().toISOString()
           })
           .eq('id', userId)
-          .eq('tenant_id', tenantId) // 보안: 같은 테넌트만 수정 가능
+          .eq('tenant_id', tenantId)
         
-        if (error) {
-          console.error('❌ 회원 승인 실패:', error)
-          throw new Error(`회원 승인 실패: ${error.message}`)
+        if (profileError) {
+          console.error('❌ 회원 승인 실패:', profileError)
+          throw new Error(`회원 승인 실패: ${profileError.message}`)
         }
-        
-        console.log('✅ 회원 승인 성공')
+
+        // 2. tenant_memberships에 직원 정보 업데이트
+        const staffInfoData = {
+          employee_id: staffInfo.employee_id,
+          employment_type: staffInfo.employment_type,
+          department: staffInfo.department,
+          position: staffInfo.position,
+          // 강사인 경우 instructor_info 초기화
+          ...(staffInfo.role === 'instructor' && {
+            instructor_info: {
+              teaching_level: null,
+              subjects: [],
+              certifications: [],
+              specialties: [],
+              max_classes_per_week: null
+            }
+          })
+        }
+
+        const { error: membershipError } = await supabase
+          .from('tenant_memberships')
+          .update({
+            job_function: staffInfo.role === 'instructor' ? 'instructor' : 'general',
+            staff_info: staffInfoData,
+            hire_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+            status: 'active'
+          })
+          .eq('user_id', userId)
+          .eq('tenant_id', tenantId)
+
+        if (membershipError) {
+          console.error('❌ 직원 정보 업데이트 실패:', membershipError)
+          throw new Error(`직원 정보 업데이트 실패: ${membershipError.message}`)
+        }
+
+        console.log('✅ 회원 승인 및 직원 정보 설정 성공')
         
       } else if (action === 'reject') {
         // 거부: user_profiles에서 삭제하고 auth.users도 삭제

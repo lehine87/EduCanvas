@@ -61,6 +61,8 @@ export interface DataTableProps<TData, TValue> {
   pageSizeOptions?: number[]
   enableColumnResizing?: boolean
   columnResizeMode?: ColumnResizeMode
+  loading?: boolean
+  noDataMessage?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -79,6 +81,8 @@ export function DataTable<TData, TValue>({
   pageSizeOptions = [5, 10, 20, 50],
   enableColumnResizing = false,
   columnResizeMode = "onChange",
+  loading = false,
+  noDataMessage = "결과가 없습니다.",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -306,74 +310,91 @@ export function DataTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border overflow-hidden">
-        <div className={enableColumnResizing ? "overflow-x-auto" : ""}>
-          <Table 
+      <div className="rounded-md border flex flex-col overflow-hidden">
+        {/* 고정 헤더 */}
+        <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-900 border-b">
+          <Table className="min-w-full">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header, index) => {
+                    const nextHeader = headerGroup.headers[index + 1]
+                    const canResize = enableColumnResizing &&
+                      nextHeader &&
+                      header.column.getCanResize() &&
+                      nextHeader.column.getCanResize()
+
+                    const customSize = columnSizes[header.id]
+                    const columnWidth = enableColumnResizing ?
+                      (customSize ? `${customSize}px` : `${header.getSize()}px`) :
+                      undefined
+
+                    // 고정 크기 컬럼과 액션 컬럼 바로 앞 컬럼은 세로선 제거
+                    const isSelectColumn = selectable && header.id === 'select'
+                    const isActionColumn = actionColumn && header.id === 'actions'
+                    const isFixedColumn = isSelectColumn || isActionColumn
+                    const isLastColumn = index === headerGroup.headers.length - 1
+                    const nextIsActionColumn = nextHeader && nextHeader.id === 'actions' && actionColumn
+
+                    const shouldRemoveBorder = isFixedColumn || isLastColumn || nextIsActionColumn
+
+                    const borderClass = shouldRemoveBorder ?
+                      "relative overflow-hidden" :
+                      "border-r border-gray-200 relative overflow-hidden"
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={borderClass}
+                        style={{ width: columnWidth }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        {canResize && (
+                          <div
+                            onMouseDown={createResizeHandler(header.id, nextHeader.id)}
+                            className="absolute top-0 right-0 h-full w-3 cursor-col-resize select-none touch-none flex items-center justify-center"
+                            style={{ right: '-6px' }}
+                          >
+                            <div
+                              className="w-[2px] h-full bg-gray-300 opacity-0 hover:opacity-100 hover:bg-blue-500 transition-all"
+                            />
+                          </div>
+                        )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+          </Table>
+        </div>
+
+        {/* 스크롤 가능한 테이블 본체 */}
+        <div className="flex-1 overflow-y-auto min-h-0 max-h-96">
+          <Table
             className="min-w-full"
-            style={{ 
+            style={{
               width: '100%',
               tableLayout: 'fixed'
             }}
           >
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, index) => {
-                  const nextHeader = headerGroup.headers[index + 1]
-                  const canResize = enableColumnResizing && 
-                    nextHeader && 
-                    header.column.getCanResize() && 
-                    nextHeader.column.getCanResize()
-                  
-                  const customSize = columnSizes[header.id]
-                  const columnWidth = enableColumnResizing ? 
-                    (customSize ? `${customSize}px` : `${header.getSize()}px`) : 
-                    undefined
-                  
-                  // 고정 크기 컬럼과 액션 컬럼 바로 앞 컬럼은 세로선 제거
-                  const isSelectColumn = selectable && header.id === 'select'
-                  const isActionColumn = actionColumn && header.id === 'actions'
-                  const isFixedColumn = isSelectColumn || isActionColumn
-                  const isLastColumn = index === headerGroup.headers.length - 1
-                  const nextIsActionColumn = nextHeader && nextHeader.id === 'actions' && actionColumn
-                  
-                  const shouldRemoveBorder = isFixedColumn || isLastColumn || nextIsActionColumn
-                  
-                  const borderClass = shouldRemoveBorder ? 
-                    "relative overflow-hidden" : 
-                    "border-r border-gray-200 relative overflow-hidden"
-                  
-                  return (
-                    <TableHead 
-                      key={header.id} 
-                      className={borderClass}
-                      style={{ width: columnWidth }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      {canResize && (
-                        <div
-                          onMouseDown={createResizeHandler(header.id, nextHeader.id)}
-                          className="absolute top-0 right-0 h-full w-3 cursor-col-resize select-none touch-none flex items-center justify-center"
-                          style={{ right: '-6px' }}
-                        >
-                          <div
-                            className="w-[2px] h-full bg-gray-300 opacity-0 hover:opacity-100 hover:bg-blue-500 transition-all"
-                          />
-                        </div>
-                      )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={index}>
+                  {finalColumns.map((column, colIndex) => (
+                    <TableCell key={colIndex} className="!px-2">
+                      <div className="h-6 bg-gray-200 rounded animate-pulse" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -406,7 +427,7 @@ export function DataTable<TData, TValue>({
                   colSpan={finalColumns.length}
                   className="h-24 text-center !px-2"
                 >
-                  결과가 없습니다.
+                  {noDataMessage || "결과가 없습니다."}
                 </TableCell>
               </TableRow>
             )}

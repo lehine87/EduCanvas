@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button, Badge, Loading, Modal, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
+import { ApprovalModal } from './ApprovalModal'
 import type { UserProfile } from '@/types/auth.types'
 
 interface PendingApprovalsTableProps {
@@ -16,6 +17,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
   const [isLoading, setIsLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const supabase = createClient()
@@ -66,14 +68,24 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
     }
   }, [tenantId, loadPendingUsers, externalPendingUsers])
 
-  const handleApproveUser = async (userId: string, approved: boolean) => {
+  // 승인 모달 열기
+  const handleOpenApprovalModal = (user: UserProfile) => {
+    setSelectedUser(user)
+    setShowApprovalModal(true)
+  }
+
+  // 거부 처리
+  const handleRejectUser = async (userId: string) => {
+    if (!confirm('정말로 이 사용자의 가입을 거부하시겠습니까?')) {
+      return
+    }
+
     setActionLoading(userId)
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`🔄 사용자 ${approved ? '승인' : '거부'} 처리 시작:`, userId)
+        console.log('🔄 사용자 거부 처리 시작:', userId)
       }
 
-      // 승인/거부 API 호출
       const response = await fetch('/api/tenant-admin/approve-member', {
         method: 'POST',
         headers: {
@@ -81,7 +93,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
         },
         body: JSON.stringify({
           userId,
-          action: approved ? 'approve' : 'reject',
+          action: 'reject',
           tenantId
         })
       })
@@ -89,13 +101,13 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
       const result = await response.json()
 
       if (!response.ok) {
-        console.error('❌ 승인 처리 API 실패:', result.error)
-        alert(result.error || '승인 처리에 실패했습니다.')
+        console.error('❌ 거부 처리 API 실패:', result.error)
+        alert(result.error || '거부 처리에 실패했습니다.')
         return
       }
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ 사용자 승인 처리 성공:', approved ? '승인' : '거부')
+        console.log('✅ 사용자 거부 처리 성공')
       }
 
       // 로컬 상태에서 제거
@@ -104,15 +116,29 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
       // 상위 컴포넌트에 변경 알림
       onApprovalChange()
 
-      // 성공 메시지
       alert(result.message)
 
     } catch (error) {
-      console.error('❌ 사용자 승인 처리 예외:', error)
-      alert('승인 처리 중 오류가 발생했습니다.')
+      console.error('❌ 사용자 거부 처리 예외:', error)
+      alert('거부 처리 중 오류가 발생했습니다.')
     } finally {
       setActionLoading(null)
     }
+  }
+
+  // 승인 완료 후 처리
+  const handleApprovalComplete = () => {
+    // 로컬 상태에서 제거
+    if (selectedUser) {
+      setPendingUsers(prev => prev.filter(user => user.id !== selectedUser.id))
+    }
+    
+    // 상위 컴포넌트에 변경 알림
+    onApprovalChange()
+
+    // 모달 닫기
+    setSelectedUser(null)
+    setShowApprovalModal(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -241,7 +267,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
                         size="sm"
                         variant="outline"
                         className="text-red-600 border-red-300 hover:bg-red-50"
-                        onClick={() => handleApproveUser(user.id, false)}
+                        onClick={() => handleRejectUser(user.id)}
                         disabled={actionLoading === user.id}
                       >
                         거부
@@ -250,7 +276,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
                       <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApproveUser(user.id, true)}
+                        onClick={() => handleOpenApprovalModal(user)}
                         disabled={actionLoading === user.id}
                       >
                         승인
@@ -330,7 +356,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
                 variant="outline"
                 className="text-red-600 border-red-300 hover:bg-red-50"
                 onClick={() => {
-                  handleApproveUser(selectedUser.id, false)
+                  handleRejectUser(selectedUser.id)
                   setShowDetailModal(false)
                 }}
                 disabled={actionLoading === selectedUser.id}
@@ -341,7 +367,7 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
               <Button
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => {
-                  handleApproveUser(selectedUser.id, true)
+                  handleOpenApprovalModal(selectedUser)
                   setShowDetailModal(false)
                 }}
                 disabled={actionLoading === selectedUser.id}
@@ -352,6 +378,15 @@ export function PendingApprovalsTable({ tenantId, pendingUsers: externalPendingU
           </div>
         )}
       </Modal>
+
+      {/* 승인 모달 */}
+      <ApprovalModal
+        isOpen={showApprovalModal}
+        onClose={() => setShowApprovalModal(false)}
+        user={selectedUser}
+        tenantId={tenantId}
+        onApprovalComplete={handleApprovalComplete}
+      />
     </>
   )
 }

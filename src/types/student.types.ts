@@ -81,6 +81,7 @@ export interface StudentFilters {
   
   // 카테고리 필터
   grade?: string[]  // 학년 (초1, 중2, 고3 등)
+  grade_level?: string  // 단일 학년 필터링용
   class_id?: string[]
   status?: StudentStatus[]
   
@@ -100,6 +101,7 @@ export interface StudentFilters {
   // 페이지네이션
   cursor?: string
   limit?: number
+  offset?: number
   
   // 추가 옵션
   include_enrollment?: boolean

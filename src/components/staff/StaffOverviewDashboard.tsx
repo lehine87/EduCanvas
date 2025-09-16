@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { DataTable, SortableHeader } from '@/components/data-table'
 import StaffStatsGrid from './StaffStatsGrid'
 import StaffSearchAndFilters from './StaffSearchAndFilters'
-import { useInstructorsWithFilters, useInstructorStats } from '@/hooks/queries'
+import { useStaffs } from '@/hooks/queries/useStaffs'
 import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
@@ -162,7 +162,7 @@ export default function StaffOverviewDashboard({
     isError,
     error,
     refetch
-  } = useInstructorsWithFilters(filters)
+  } = useStaffs(filters)
 
   // 전체 강사 통계 데이터 (임시로 비활성화)
   const allInstructorsStats: InstructorDashboardStats | null = null

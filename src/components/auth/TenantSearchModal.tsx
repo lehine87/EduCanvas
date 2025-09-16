@@ -7,7 +7,8 @@ import { Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import type { Tenant } from '@/types/auth.types'
+import { useTenantSearchMutation } from '@/hooks/useAuth'
+import type { Tenant } from '@/lib/api-client'
 
 interface TenantSearchModalProps {
   isOpen: boolean
@@ -18,10 +19,12 @@ interface TenantSearchModalProps {
 export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchModalProps) {
   const [searchType, setSearchType] = useState<'code' | 'name'>('code')
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<Tenant[]>([])
   const [error, setError] = useState<string | undefined>(undefined)
   const [hasSearched, setHasSearched] = useState(false)
+
+  // API Client 패턴 사용
+  const tenantSearchMutation = useTenantSearchMutation()
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -35,32 +38,17 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
       return
     }
 
-    setIsSearching(true)
     setError(undefined)
     setSearchResults([])
 
     try {
       console.log('🔍 학원 검색 API 호출:', { type: searchType, query: searchQuery })
 
-      const response = await fetch('/api/auth/search-tenants', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          searchType: searchType,
-          searchQuery: searchQuery.trim()
-        })
+      // API Client 패턴으로 검색 호출
+      const result = await tenantSearchMutation.mutateAsync({
+        searchType: searchType,
+        searchQuery: searchQuery.trim()
       })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        console.error('검색 API 오류:', result.error)
-        setError(result.error || '검색 중 오류가 발생했습니다.')
-        setIsSearching(false)
-        return
-      }
 
       console.log('✅ 검색 완료:', result.count, '개 결과')
       setSearchResults(result.results || [])
@@ -76,9 +64,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
 
     } catch (error) {
       console.error('검색 예외:', error)
-      setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsSearching(false)
+      setError('검색 중 오류가 발생했습니다. 다시 시도해주세요.')
     }
   }
 
@@ -98,7 +84,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isSearching) {
+    if (e.key === 'Enter' && !tenantSearchMutation.isPending) {
       handleSearch()
     }
   }
@@ -150,7 +136,7 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
                 ? '123456 (6자리 숫자)' 
                 : 'ABC 영어학원'
             }
-            disabled={isSearching}
+            disabled={tenantSearchMutation.isPending}
             maxLength={searchType === 'code' ? 6 : 50}
           />
           {error && (
@@ -161,10 +147,10 @@ export function TenantSearchModal({ isOpen, onClose, onSelect }: TenantSearchMod
             <Button
               type="button"
               onClick={handleSearch}
-              disabled={isSearching || !searchQuery.trim()}
+              disabled={tenantSearchMutation.isPending || !searchQuery.trim()}
               className="w-full"
             >
-              {isSearching ? (
+              {tenantSearchMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   검색 중...

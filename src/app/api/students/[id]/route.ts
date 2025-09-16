@@ -80,13 +80,20 @@ const StudentUpdateSchema = z.object({
 export const GET = withRouteValidation({
   querySchema: StudentDetailQuerySchema,
   requireAuth: true,
-  handler: async (req, { query, user }) => {
+  handler: async (req, { query, user, timer }) => {
+    const performanceTimer = {
+      start: Date.now(),
+      checkpoints: {} as Record<string, number>
+    }
+
     try {
-      // Next.js 15: params 추출
+      // 성능 측정: URL 파싱
+      performanceTimer.checkpoints.urlParsing = Date.now()
+
       const url = new URL(req.url)
       const pathSegments = url.pathname.split('/')
       const id = pathSegments[pathSegments.length - 1]
-      
+
       if (!id) {
         return createValidationErrorResponse(
           [{ field: 'id', message: 'Student ID is required' }],
@@ -94,17 +101,25 @@ export const GET = withRouteValidation({
         )
       }
 
-      console.log('🔧 [DEBUG] User from middleware:', user)
-      
-      // 권한 검증: 학생 데이터 조회 권한 체크
-      // TODO: 권한 시스템 수정 필요 - tenant_memberships.role이 UUID임
-      // 임시로 tenant_id가 있으면 허용
+      // 성능 측정: 권한 검증
+      performanceTimer.checkpoints.authCheck = Date.now()
+
       if (!user.tenant_id) {
         return createValidationErrorResponse(
           [{ field: 'auth', message: 'Tenant access required' }],
           'Unauthorized'
         )
       }
+
+      console.log('🔍 [API Performance] Pre-service call:', {
+        elapsed: Date.now() - performanceTimer.start,
+        user_id: user.id,
+        tenant_id: user.tenant_id,
+        student_id: id
+      })
+
+      // 성능 측정: DB 서비스 호출
+      performanceTimer.checkpoints.serviceCall = Date.now()
 
       const result = await getStudentByIdService(
         id,
@@ -115,22 +130,32 @@ export const GET = withRouteValidation({
           include_payment_history: query.include_payment_history
         }
       )
-      
+
+      // 성능 측정: 서비스 완료
+      performanceTimer.checkpoints.serviceComplete = Date.now()
+
       if (!result.student) {
+        console.log('🔍 [API Performance] Student not found:', {
+          elapsed: Date.now() - performanceTimer.start,
+          student_id: id
+        })
         return createValidationErrorResponse(
           [{ field: 'id', message: 'Student not found' }],
           'Student not found'
         )
       }
 
-      // 추가 보안: 반환된 학생 데이터에 대한 테넌트 접근 권한 체크
-      if (result.student && result.student.tenant_id) {
-        const studentData = result.student as Database['public']['Tables']['students']['Row'] & { tenant_id: string }
-        const dataAccessCheck = await checkStudentDataAccess(user, studentData)
-        if (!dataAccessCheck.granted) {
-          return dataAccessCheck.error
-        }
-      }
+      // 성능 로깅
+      const totalTime = Date.now() - performanceTimer.start
+      const serviceTime = performanceTimer.checkpoints.serviceComplete - performanceTimer.checkpoints.serviceCall
+
+      console.log('🔍 [API Performance] Request completed:', {
+        total_ms: totalTime,
+        service_ms: serviceTime,
+        overhead_ms: totalTime - serviceTime,
+        student_id: id,
+        tenant_id: user.tenant_id
+      })
 
       return createSuccessResponse(
         result,
@@ -138,8 +163,14 @@ export const GET = withRouteValidation({
       )
 
     } catch (error) {
-      console.error('Student detail retrieval error:', error)
-      
+      const totalTime = Date.now() - performanceTimer.start
+      console.error('🔍 [API Performance] Request failed:', {
+        total_ms: totalTime,
+        error: error instanceof Error ? error.message : String(error),
+        student_id: pathSegments[pathSegments.length - 1],
+        tenant_id: user?.tenant_id
+      })
+
       return createServerErrorResponse(
         'Failed to retrieve student details',
         error instanceof Error ? error : new Error(String(error))

@@ -12,9 +12,9 @@ export * from './useUpdateStaff'
 export * from './useDeleteStaff'
 
 // Alias exports for backward compatibility
-export { useInstructor as useStaff, useInstructor as useInstructorDetail } from './useStaff'
-export { useInstructorsWithFilters } from './useStaffs'
-export { useInstructorStats, useInstructorSearch } from './useStaff'
+export { useStaff as useInstructor, useStaff as useInstructorDetail } from './useStaffs'
+export { useStaffs as useInstructorsWithFilters } from './useStaffs'
+export { useStaffSearch as useInstructorSearch } from './useStaffs'
 
 // Re-export types for convenience
 export type { 
